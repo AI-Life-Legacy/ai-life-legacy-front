@@ -42,6 +42,8 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter  # 위젯 테스트 프레임워크
+  mockito: ^5.4.4  # 목(Mock) 객체 생성 라이브러리
+  build_runner: ^2.4.9  # 코드 생성 러너
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
