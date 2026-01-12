@@ -2,7 +2,7 @@
 class Env {
   static const apiBase = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://ai-life-legacy-backend-nestjs.onrender.com',
+    defaultValue: 'http://3.38.182.196:80',
   );
 
   /// 환경 설정 값을 로드합니다. (String.fromEnvironment는 컴파일 타임 상수이므로 별도 로드 로직이 불필요합니다.)
