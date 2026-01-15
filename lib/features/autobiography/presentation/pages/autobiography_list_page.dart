@@ -115,6 +115,7 @@ class _AutobiographyListPageState extends State<AutobiographyListPage> {
       padding: const EdgeInsets.all(16),
       itemCount: _sections.length,
       itemBuilder: (context, index) {
+        if (index >= _sections.length) return const SizedBox.shrink();
         final section = _sections[index];
         final isExpanded = _expandedIndex == index;
 

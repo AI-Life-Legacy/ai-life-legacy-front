@@ -55,6 +55,11 @@ class HomePage extends GetView<HomeController> {
           return ListView.builder(
             itemCount: controller.chapters.length,
             itemBuilder: (context, index) {
+              if (index >= controller.chapters.length) {
+                print(
+                    '[HomePage] RangeError Prevention: index=$index, length=${controller.chapters.length}');
+                return const SizedBox.shrink();
+              }
               final chapter = controller.chapters[index];
               return Padding(
                 padding: const EdgeInsets.only(bottom: 16.0),
