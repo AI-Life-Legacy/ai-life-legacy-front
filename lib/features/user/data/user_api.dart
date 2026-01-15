@@ -60,7 +60,20 @@ class UserApi {
     );
     return SuccessResponse<UserAnswerDto>.fromJson(
       response.data,
-      (json) => UserAnswerDto.fromJson(json as Map<String, dynamic>),
+      (json) {
+        if (json == null || json is String) {
+          throw DioException(
+            requestOptions: RequestOptions(path: ApiEndpoints.userAnswers),
+            response: Response(
+              requestOptions: RequestOptions(path: ApiEndpoints.userAnswers),
+              statusCode: 404,
+              statusMessage: 'Not Found',
+            ),
+            type: DioExceptionType.badResponse,
+          );
+        }
+        return UserAnswerDto.fromJson(json as Map<String, dynamic>);
+      },
     );
   }
 

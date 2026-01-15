@@ -25,6 +25,7 @@ class SelfIntroController extends GetxController {
   final RxBool isRecording = false.obs;
   final RxInt recordingSeconds = 0.obs;
   Timer? recordingTimer;
+  final RxBool isVoiceRecorderVisible = false.obs; // UI State: Voice Recorder Toggle
 
   // UI State: 채팅 메시지 리스트 및 스크롤 제어
   final RxList<ChatMessage> messages = <ChatMessage>[].obs;
@@ -369,6 +370,10 @@ class SelfIntroController extends GetxController {
 
   void clearText() {
     textController.clear();
+  }
+
+  void toggleVoiceRecorderVisible() {
+    isVoiceRecorderVisible.value = !isVoiceRecorderVisible.value;
   }
 }
 
