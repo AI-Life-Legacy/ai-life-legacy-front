@@ -7,6 +7,7 @@ import 'package:ai_life_legacy/features/autobiography/presentation/pages/autobio
 import 'package:ai_life_legacy/features/user/data/models/user.dto.dart';
 import 'package:ai_life_legacy/features/user/data/user_repository.dart';
 import 'package:ai_life_legacy/app/core/utils/toast_utils.dart';
+import 'package:ai_life_legacy/app/core/routes/app_routes.dart'; // import added
 
 class AutobiographyListPage extends StatefulWidget {
   const AutobiographyListPage({super.key});
@@ -67,10 +68,27 @@ class _AutobiographyListPageState extends State<AutobiographyListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white, // 배경색 흰색으로 변경
       appBar: AppBar(
-        title: const Text('나의 자서전'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
+        scrolledUnderElevation: 0, // 스크롤 시 색상 변경 방지
+        elevation: 0,
+        title: const Text(
+          '나의 자서전',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined, color: Colors.black),
+            onPressed: () => Get.toNamed(Routes.myPage),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: _loadSections,

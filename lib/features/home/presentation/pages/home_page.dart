@@ -1,275 +1,93 @@
+import 'package:ai_life_legacy/features/autobiography/presentation/pages/autobiography_list_page.dart';
+import 'package:ai_life_legacy/features/home/presentation/pages/home_tab_view.dart';
+import 'package:ai_life_legacy/features/onboarding/presentation/pages/self_intro_page.dart';
+import 'package:ai_life_legacy/features/chapter_chat/presentation/pages/chapter_chat_page.dart';
+import 'package:ai_life_legacy/features/avatar_chat/presentation/pages/avatar_chat_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:ai_life_legacy/features/home/presentation/controllers/home_controller.dart';
-import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
 
 class HomePage extends GetView<HomeController> {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          '나의 자서전',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_outlined, color: Colors.black),
-            onPressed: () => Get.toNamed(Routes.myPage),
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Obx(() {
-          if (controller.loading.value && controller.chapters.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          // 목차 데이터가 없을 경우 (Case 미생성 상태)
-          // 에러가 있더라도 사용자에게는 "작성 안내" Empty State를 우선 노출하여 경험 유도
-          if (controller.chapters.isEmpty) {
-            return _buildEmptyState();
-          }
-
-          // 이미 목차가 있는 상태에서 갱신 실패 등의 에러 발생 시에만 스낵바 노출
-          if (controller.errorMessage.isNotEmpty) {
-            Get.rawSnackbar(
-              message: controller.errorMessage.value,
-              backgroundColor: Colors.redAccent.withOpacity(0.9),
-              snackPosition: SnackPosition.BOTTOM,
-            );
-          }
-
-          return ListView.builder(
-            itemCount: controller.chapters.length,
-            itemBuilder: (context, index) {
-              final chapter = controller.chapters[index];
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 16.0),
-                child: _buildChapterCard(chapter),
-              );
-            },
-          );
-        }),
-      ),
-      bottomNavigationBar: _buildBottomNavigationBar(),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.edit_note, size: 48, color: Colors.blueAccent),
-          const SizedBox(height: 16),
-          const Text(
-            '아직 자기소개가 작성되지 않아\n목차가 보이지 않습니다.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.black87, fontSize: 16, height: 1.5),
-          ),
-          const SizedBox(height: 12),
-          GestureDetector(
-            onTap: () => Get.toNamed(Routes.selfIntro),
-            child: const Text(
-              '이어서 작성하러 가시겠습니까?',
-              style: TextStyle(
-                color: Colors.blue,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                decoration: TextDecoration.underline,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildChapterCard(ChapterModel chapter) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => controller.onChapterTap(chapter),
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Chapter ${chapter.id}',
-                  style: const TextStyle(
-                    color: Color(0xFF4A9EFF),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  chapter.title,
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  chapter.subtitle,
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                _buildProgressBar(chapter),
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) async {
+        if (didPop) return;
+        final shouldClose = await controller.onBackPressed();
+        if (shouldClose) {
+          SystemNavigator.pop();
+        }
+      },
+      child: Scaffold(
+        body: Obx(() => IndexedStack(
+              index: controller.selectedTabIndex.value,
+              children: const [
+                HomeTabView(),
+                AvatarChatPage(),
+                AutobiographyListPage(),
+                ChapterChatPage(),
               ],
-            ),
-          ),
-        ),
+            )),
+        bottomNavigationBar: _buildBottomNavigationBar(),
       ),
-    );
-  }
-
-  Widget _buildProgressBar(ChapterModel chapter) {
-    final clamped = chapter.progress.clamp(0.0, 1.0);
-    final widthFactor = clamped.isNaN ? 0.0 : clamped.toDouble();
-    final progressPercent = (widthFactor * 100).round();
-    final questionLabel = chapter.totalQuestions == 0
-        ? '질문 준비 중'
-        : '답변 ${chapter.answeredQuestions}/${chapter.totalQuestions}개';
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Container(
-                height: 8,
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: FractionallySizedBox(
-                  alignment: Alignment.centerLeft,
-                  widthFactor: widthFactor,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFF4FC3F7),
-                          Color(0xFF2196F3),
-                        ],
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                      ),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              '$progressPercent% 완료',
-              style: const TextStyle(
-                color: Colors.black87,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            Text(
-              questionLabel,
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 12,
-              ),
-            ),
-          ],
-        ),
-      ],
     );
   }
 
   Widget _buildBottomNavigationBar() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 10,
-            offset: const Offset(0, -2),
+    return Obx(() {
+      if (controller.selectedTabIndex.value == 3) {
+        return const SizedBox.shrink();
+      }
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              spreadRadius: 1,
+              blurRadius: 10,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: BottomNavigationBar(
+          currentIndex: controller.selectedTabIndex.value,
+          onTap: controller.changeTab,
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: Colors.white,
+          selectedItemColor: const Color(0xFF4A9EFF),
+          unselectedItemColor: Colors.grey[600],
+          selectedLabelStyle: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
           ),
-        ],
-      ),
-      child: Obx(() => BottomNavigationBar(
-            currentIndex: controller.selectedTabIndex.value,
-            onTap: controller.changeTab,
-            type: BottomNavigationBarType.fixed,
-            backgroundColor: Colors.white,
-            selectedItemColor: const Color(0xFF4A9EFF),
-            unselectedItemColor: Colors.grey[600],
-            selectedLabelStyle: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
+          unselectedLabelStyle: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w400,
+          ),
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined, size: 24),
+              activeIcon: Icon(Icons.home, size: 24),
+              label: '홈',
             ),
-            unselectedLabelStyle: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w400,
+            BottomNavigationBarItem(
+              icon: Icon(Icons.face_outlined, size: 24),
+              activeIcon: Icon(Icons.face, size: 24),
+              label: 'AI 아바타',
             ),
-            items: const [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.home_outlined, size: 24),
-                activeIcon: Icon(Icons.home, size: 24),
-                label: '홈',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.edit_outlined, size: 24),
-                activeIcon: Icon(Icons.edit, size: 24),
-                label: '자기소개 작성',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.folder_outlined, size: 24),
-                activeIcon: Icon(Icons.folder, size: 24),
-                label: '자서전 확인',
-              ),
-            ],
-          )),
-    );
+            BottomNavigationBarItem(
+              icon: Icon(Icons.folder_outlined, size: 24),
+              activeIcon: Icon(Icons.folder, size: 24),
+              label: '자서전 확인',
+            ),
+          ],
+        ),
+      );
+    });
   }
 }

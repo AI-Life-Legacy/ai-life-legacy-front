@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
 import 'package:ai_life_legacy/features/user/data/user_repository.dart';
 import 'package:ai_life_legacy/app/core/utils/toast_utils.dart';
+import 'package:ai_life_legacy/features/chapter_chat/presentation/controllers/chapter_chat_controller.dart';
 
 /// Home Feature의 비즈니스 로직을 제어합니다.
 /// 사용자 목차(TOC) 로드, 탭 네비게이션, 챕터 클릭 이벤트 등을 처리합니다.
@@ -84,41 +85,47 @@ class HomeController extends GetxController {
   /// 챕터 카드 클릭 시 이벤트 핸들러
   void onChapterTap(ChapterModel chapter) {
     print("챕터 ${chapter.id} 클릭됨: ${chapter.title}");
-    // 클릭한 챕터 ID를 전달하며 자기소개(Onboarding) 페이지로 이동
-    // 복귀 시 목차 목록 새로고침
-    Get.toNamed(Routes.selfIntro, arguments: {'tocId': chapter.id})
-        ?.then((_) => loadUserContents());
+    
+    // 챕터별 채팅 컨트롤러에 로드 요청
+    try {
+      final chatController = Get.find<ChapterChatController>();
+      chatController.loadQuestions(chapter.id);
+    } catch (e) {
+      Get.log("ChapterChatController not found: $e");
+    }
+
+    // 챕터 채팅 탭(인덱스 3)으로 이동
+    changeTab(3);
   }
 
   /// 하단 탭 바 선택 변경 핸들러
   void changeTab(int index) {
-    // 탭 인덱스에 따른 단순 기능 실행 (페이지 이동 X, 기능 수행 O)
-
-    switch (index) {
-      case 0:
-        // 홈: 현재 화면 (새로고침?)
-        loadUserContents();
-        break;
-      case 1:
-        // 자기소개 작성
-        if (chapters.isNotEmpty) {
-          ToastUtils.showInfoToast('이미 자기소개를 완료하셨습니다.');
-        } else {
-          Get.toNamed(Routes.selfIntro);
-        }
-        break;
-      case 2:
-        // 자서전 확인 탭
-        if (chapters.isEmpty) {
-          ToastUtils.showInfoToast('먼저 자기소개를 작성해주세요.');
-        } else {
-          Get.toNamed(Routes.autobiography);
-        }
-        break;
+    if (index == 0) {
+      loadUserContents();
     }
+    selectedTabIndex.value = index;
   }
 
-  void onBackPressed() => Get.back();
+  DateTime? lastPressedAt;
+
+  Future<bool> onBackPressed() async {
+    // 1. 챕터 채팅 탭(3)에 있는 경우 홈으로 복귀
+    if (selectedTabIndex.value == 3) {
+      changeTab(0);
+      return false; // 앱 종료 방지
+    }
+
+    // 2. 다른 탭(0, 1, 2)에 있는 경우 -> 더블 탭 종료 로직
+    final now = DateTime.now();
+    if (lastPressedAt == null || 
+        now.difference(lastPressedAt!) > const Duration(seconds: 2)) {
+      lastPressedAt = now;
+      ToastUtils.showInfoToast("'뒤로' 버튼을 한 번 더 누르면 종료됩니다.");
+      return false; // 앱 종료 방지
+    }
+
+    return true; // 앱 종료 허용
+  }
 }
 
 class ChapterModel {

@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:ai_life_legacy/features/onboarding/presentation/controllers/self_intro_controller.dart';
-import 'package:ai_life_legacy/features/home/presentation/controllers/home_controller.dart';
-import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
+import 'package:ai_life_legacy/features/chapter_chat/presentation/controllers/chapter_chat_controller.dart';
 import 'package:ai_life_legacy/features/common/presentation/widgets/unified_chat_input_widget.dart';
 
-class SelfIntroPage extends GetView<SelfIntroController> {
-  const SelfIntroPage({super.key});
+class ChapterChatPage extends GetView<ChapterChatController> {
+  const ChapterChatPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -16,8 +14,12 @@ class SelfIntroPage extends GetView<SelfIntroController> {
         backgroundColor: Colors.white,
         scrolledUnderElevation: 0,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
+          onPressed: controller.backToHome,
+        ),
         title: const Text(
-          '자기소개',
+          '자서전 작성',
           style: TextStyle(
             color: Colors.black,
             fontSize: 18,
@@ -25,17 +27,9 @@ class SelfIntroPage extends GetView<SelfIntroController> {
           ),
         ),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_outlined, color: Colors.black),
-            onPressed: () => Get.toNamed(Routes.myPage),
-          ),
-          const SizedBox(width: 8),
-        ],
       ),
       body: Column(
         children: [
-          // 메인 컨텐츠 영역
           Expanded(
             child: Obx(() {
               return ListView(
@@ -43,7 +37,7 @@ class SelfIntroPage extends GetView<SelfIntroController> {
                 padding: const EdgeInsets.all(20),
                 children: [
                   const SizedBox(height: 20),
-                  // 질문 카드
+                  // Current Question Display
                   Obx(() => Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(24),
@@ -61,29 +55,26 @@ class SelfIntroPage extends GetView<SelfIntroController> {
                         ),
                       )),
                   const SizedBox(height: 24),
-                  // 다시 들려줘 버튼 (그대로)
+                  
+                  // Replay Button
                   OutlinedButton(
                     onPressed: controller.replayCurrentQuestion,
                     style: OutlinedButton.styleFrom(
                       foregroundColor: const Color(0xFF5B9FED),
-                      side:
-                          const BorderSide(color: Color(0xFF5B9FED), width: 2),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 32, vertical: 14),
+                      side: const BorderSide(color: Color(0xFF5B9FED), width: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(24)),
                     ),
                     child: const Text('다시 들려줘',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w600)),
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                   ),
                   const SizedBox(height: 24),
 
-                  // 채팅 메시지(말풍선) 리스트 렌더링
-                  ...controller.messages
-                      .map((m) => _Bubble(text: m.text, isUser: m.isUser)),
+                  // Chat Bubbles
+                  ...controller.messages.map((m) => _Bubble(text: m.text, isUser: m.isUser)),
 
-                  const SizedBox(height: 80), // 하단 입력 영역과 겹치지 않게 여유
+                  const SizedBox(height: 80),
                 ],
               );
             }),
@@ -106,7 +97,6 @@ class SelfIntroPage extends GetView<SelfIntroController> {
   }
 }
 
-// 말풍선 위젯
 class _Bubble extends StatelessWidget {
   final String text;
   final bool isUser;
@@ -130,8 +120,7 @@ class _Bubble extends StatelessWidget {
           color: bg,
           borderRadius: BorderRadius.circular(14),
         ),
-        child:
-            Text(text, style: TextStyle(color: fg, fontSize: 16, height: 1.4)),
+        child: Text(text, style: TextStyle(color: fg, fontSize: 16, height: 1.4)),
       ),
     );
   }
