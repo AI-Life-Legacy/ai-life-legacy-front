@@ -27,4 +27,5 @@ class ApiEndpoints {
   // AI (인공지능)
   static const aiQuestion = '/ai/question'; // POST
   static const aiCombine = '/ai/combine'; // POST
+  static const aiChat = '/ai/chat'; // POST
 }

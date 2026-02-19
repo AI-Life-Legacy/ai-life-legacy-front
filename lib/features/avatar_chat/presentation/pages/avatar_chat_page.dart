@@ -38,24 +38,28 @@ class AvatarChatPage extends GetView<AvatarChatController> {
                 padding: const EdgeInsets.all(16),
                 itemCount: controller.messages.length,
                 itemBuilder: (context, index) {
-                  final msg = controller.messages[index];
-                  // 간단한 더미 UI: 왼쪽(시스템), 오른쪽(유저)
-                  // 메시지 내용에 따라 시스템 메시지 여부 판단 (더미 로직)
-                  final isSystem = msg.contains("입니다") || msg.contains("도와") || msg.contains("죄송"); 
+                  final message = controller.messages[index];
+                  final isUser = message.isUser;
                   
                   return Align(
-                    alignment: isSystem ? Alignment.centerLeft : Alignment.centerRight,
+                    alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
                     child: Container(
-                      margin: const EdgeInsets.symmetric(vertical: 4),
-                      padding: const EdgeInsets.all(12),
+                      margin: EdgeInsets.only(
+                        left: isUser ? 60 : 0,
+                        right: isUser ? 0 : 60,
+                        bottom: 10,
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                       decoration: BoxDecoration(
-                        color: isSystem ? Colors.grey[200] : const Color(0xFF4A9EFF),
-                        borderRadius: BorderRadius.circular(12),
+                        color: isUser ? const Color(0xFF4A9EFF) : Colors.grey[200],
+                        borderRadius: BorderRadius.circular(14),
                       ),
                       child: Text(
-                        msg,
+                        message.text,
                         style: TextStyle(
-                          color: isSystem ? Colors.black : Colors.white,
+                          color: isUser ? Colors.white : Colors.black87,
+                          fontSize: 16,
+                          height: 1.4,
                         ),
                       ),
                     ),
