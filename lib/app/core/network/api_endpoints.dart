@@ -25,7 +25,10 @@ class ApiEndpoints {
       '/life-legacy/toc/$tocId/questions/$questionId/answers'; // POST
 
   // AI (인공지능)
-  static const aiQuestion = '/ai/question'; // POST
-  static const aiCombine = '/ai/combine'; // POST
-  static const aiChat = '/ai/chat'; // POST
+  static const aiCase = '/api/case'; // POST
+  static const aiSync = '/api/sync'; // POST
+  static const aiQuestion = '/api/question'; // POST
+  static const aiAutobiography = '/api/autobiography'; // POST
+  static const aiChat = '/api/chat'; // POST
+  static const aiSearch = '/api/search'; // POST
 }

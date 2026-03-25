@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:ai_life_legacy/features/onboarding/presentation/controllers/self_intro_controller.dart';
-import 'package:ai_life_legacy/features/home/presentation/controllers/home_controller.dart';
 import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
 import 'package:ai_life_legacy/features/common/presentation/widgets/unified_chat_input_widget.dart';
 
@@ -82,6 +81,43 @@ class SelfIntroPage extends GetView<SelfIntroController> {
                   // 채팅 메시지(말풍선) 리스트 렌더링
                   ...controller.messages
                       .map((m) => _Bubble(text: m.text, isUser: m.isUser)),
+
+                  // 수동 꼬리질문 버튼 영역
+                  Obx(() => controller.canThinkDeeper.value
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 20),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  onPressed: controller.generateFollowUpQuestion,
+                                  icon: const Icon(Icons.psychology_outlined),
+                                  label: const Text('네, 더 깊게 생각할게요'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF5B9FED),
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: OutlinedButton(
+                                  onPressed: controller.skipFollowUp,
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: Colors.black54,
+                                    side: const BorderSide(color: Colors.black12),
+                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  ),
+                                  child: const Text('아니오, 다음 질문 주세요'),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : const SizedBox.shrink()),
 
                   const SizedBox(height: 80), // 하단 입력 영역과 겹치지 않게 여유
                 ],

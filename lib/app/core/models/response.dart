@@ -17,7 +17,8 @@ class SuccessResponse<T> {
     T Function(dynamic) fromJsonT,
   ) {
     // AI 서비스와 일반 서비스의 응답 필드 불일치 해결 ('result' vs 'data')
-    final dataField = json['result'] ?? json['data'];
+    // 만약 둘 다 없으면 전체 json을 데이터로 간주 (루트 레벨에 데이터가 있는 경우)
+    final dataField = json['result'] ?? json['data'] ?? json;
 
     return SuccessResponse<T>(
       status: (json['status'] ?? json['statusCode']) as int,

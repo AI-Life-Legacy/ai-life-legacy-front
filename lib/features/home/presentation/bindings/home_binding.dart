@@ -10,6 +10,7 @@ import 'package:ai_life_legacy/app/core/ai/ai_repository.dart';
 import 'package:ai_life_legacy/features/onboarding/presentation/controllers/self_intro_controller.dart';
 import 'package:ai_life_legacy/features/chapter_chat/presentation/controllers/chapter_chat_controller.dart';
 import '../../../avatar_chat/presentation/controllers/avatar_chat_controller.dart';
+import '../controllers/search_controller.dart' as custom;
 
 class HomeBinding extends Bindings {
   @override
@@ -38,6 +39,9 @@ class HomeBinding extends Bindings {
         Get.find<AutobiographyRepository>(), Get.find<AiRepository>()), fenix: true);
         
     // AvatarChatController 의존성 주입
-    Get.lazyPut(() => AvatarChatController(), fenix: true);
+    Get.lazyPut(() => AvatarChatController(Get.find<AiRepository>()), fenix: true);
+    
+    // SearchController 의존성 주입
+    Get.lazyPut(() => custom.SearchController(Get.find<AiRepository>()), fenix: true);
   }
 }

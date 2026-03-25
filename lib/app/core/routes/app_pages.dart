@@ -13,6 +13,7 @@ import 'package:ai_life_legacy/features/home/presentation/bindings/home_binding.
 import 'package:ai_life_legacy/features/onboarding/presentation/bindings/onboarding_binding.dart';
 import 'package:ai_life_legacy/features/profile/presentation/pages/my_page.dart';
 import 'package:ai_life_legacy/features/profile/presentation/bindings/my_page_binding.dart';
+import 'package:ai_life_legacy/features/home/presentation/pages/search_page.dart';
 
 class AppPages {
   /// GetMaterialApp에 등록할 페이지 리스트
@@ -57,6 +58,13 @@ class AppPages {
       bindings: [
         HomeBinding(),
       ],
+    ),
+
+    // 5.5. 검색 화면 (/search)
+    GetPage(
+      name: Routes.search,
+      page: () => const SearchPage(),
+      binding: HomeBinding(),
     ),
     // 6. 마이페이지 화면 (/mypage)
     GetPage(

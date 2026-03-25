@@ -39,8 +39,8 @@ class SelfIntroController extends GetxController {
   final Rx<AnswerPhase> answerPhase = AnswerPhase.primary.obs;
   final RxBool loading = false.obs;
   final RxString errorMessage = ''.obs;
+  final RxBool canThinkDeeper = false.obs;
   String? _pendingPrimaryAnswer;
-  String? _pendingFollowUpQuestion;
   final StringBuffer _accumulatedAnswers = StringBuffer();
 
   @override
@@ -147,30 +147,61 @@ class SelfIntroController extends GetxController {
   ) async {
     _pendingPrimaryAnswer = answer;
     try {
-      // 1차 답변 후, AI를 통해 2차 질문(꼬리질문)을 생성합니다.
-      final aiResponse = await aiRepo.makeReQuestion(
-        MakeReQuestionDto(
+      // 1. 답변을 AI 서버에 동기화 (실패해도 조용히 진행)
+      await aiRepo.sync(AiSyncRequestDto(content: answer));
+    } catch (e) {
+      print('[SelfIntro] AI Sync failed: $e');
+    }
+
+    // 2. 무조건 수동 트리거 버튼 노출 (사용자가 더 깊게 생각할지, 다음으로 넘길지 선택)
+    canThinkDeeper.value = true;
+    _scrollToBottom();
+  }
+
+  /// AI 꼬리질문 생성 (수동 트리거)
+  Future<void> generateFollowUpQuestion() async {
+    if (questions.isEmpty || currentQuestionIndex.value >= questions.length)
+      return;
+    final question = questions[currentQuestionIndex.value];
+    final answer = _pendingPrimaryAnswer;
+    if (answer == null) return;
+
+    loading.value = true;
+    canThinkDeeper.value = false;
+
+    try {
+      final aiResponse = await aiRepo.getQuestion(
+        AiQuestionRequestDto(
           question: question.questionText,
           data: answer,
         ),
       );
-      final followUp = aiResponse.data.content.trim();
+      final followUp = aiResponse.data.message.trim();
       if (followUp.isEmpty) {
         await _persistAnswer(question, answer);
-        _resetPendingState();
         _moveToNextQuestion();
         return;
       }
-      _pendingFollowUpQuestion = followUp;
       answerPhase.value = AnswerPhase.followUp;
       addMessage(followUp, isUser: false);
     } catch (e) {
       errorMessage.value = e.toString();
-      // 오류 시 그냥 답변 저장하고 다음으로
       await _persistAnswer(question, answer);
-      _resetPendingState();
       _moveToNextQuestion();
+    } finally {
+      loading.value = false;
     }
+  }
+
+  /// 꼬리질문 없이 다음으로 이동
+  Future<void> skipFollowUp() async {
+    final question = questions[currentQuestionIndex.value];
+    final answer = _pendingPrimaryAnswer;
+    if (answer != null) {
+      await _persistAnswer(question, answer);
+    }
+    canThinkDeeper.value = false;
+    _moveToNextQuestion();
   }
 
   Future<void> _handleFollowUpAnswer(
@@ -178,9 +209,7 @@ class SelfIntroController extends GetxController {
     String answer,
   ) async {
     final primary = _pendingPrimaryAnswer;
-    final followUpQuestion = _pendingFollowUpQuestion;
-
-    if (primary == null || followUpQuestion == null) {
+    if (primary == null) {
       await _persistAnswer(question, answer);
       _resetPendingState();
       answerPhase.value = AnswerPhase.primary;
@@ -188,26 +217,17 @@ class SelfIntroController extends GetxController {
       return;
     }
 
-    String finalAnswer = answer;
     try {
-      final combineRes = await aiRepo.combine(
-        CombineDto(
-          question1: question.questionText,
-          data1: primary,
-          question2: followUpQuestion,
-          data2: answer,
-        ),
-      );
-      final combined = combineRes.data.content.trim();
-      if (combined.isNotEmpty) {
-        finalAnswer = combined;
-      }
+      // 2차 답변도 AI 서버에 동기화
+      await aiRepo.sync(AiSyncRequestDto(content: answer));
     } catch (e) {
       errorMessage.value = e.toString();
     }
 
-    await _persistAnswer(question, finalAnswer);
-    addMessage(finalAnswer, isUser: false);
+    // 기존 로컬 저장용으로 답변 병합 (백엔드 combine 대신 프론트에서 단순 결합하여 저장)
+    final combinedAnswer = "$primary\n추가 답변: $answer";
+    await _persistAnswer(question, combinedAnswer);
+    addMessage(combinedAnswer, isUser: false);
     _resetPendingState();
     answerPhase.value = AnswerPhase.primary;
     _moveToNextQuestion();
@@ -215,6 +235,8 @@ class SelfIntroController extends GetxController {
 
   void _moveToNextQuestion() {
     if (questions.isEmpty) return;
+    canThinkDeeper.value = false;
+    _resetPendingState();
 
     if (currentQuestionIndex.value < questions.length - 1) {
       currentQuestionIndex.value++;
@@ -263,22 +285,22 @@ class SelfIntroController extends GetxController {
       final fullText = _accumulatedAnswers.toString().trim();
       print(
           '[SelfIntro] Finalizing... User Answers Length: ${fullText.length}');
+      // 1. 답변을 분석하여 유저 케이스를 생성
       addMessage('답변을 분석하여 유저 케이스를 생성 중입니다...', isUser: false);
+      final caseResponse = await aiRepo.getCase(AiCaseRequestDto(data: fullText));
+      final userCase = caseResponse.data.caseName;
+      print('[SelfIntro] Determined User Case: $userCase');
 
-      // 백엔드에 자기소개 저장 및 케이스 생성 요청 (반환값 없음)
-      print('[SelfIntro] Saving User Intro to Backend...');
-      await userRepo.saveSelfIntro(UserIntroDto(userIntroText: fullText));
-      print(
-          '[SelfIntro] User Intro Saved. Backend will determine UserCase internally.');
+      // 2. 백엔드에 자기소개 및 케이스 저장
+      await userRepo.saveSelfIntro(UserIntroDto(
+        userIntroText: fullText,
+      ));
 
       // 3. 홈으로 이동
       print('[SelfIntro] Redirecting to Home...');
-      Get.offAllNamed(Routes.home);
+      Get.offAllNamed(Routes.home, arguments: {'userCase': userCase});
     } catch (e) {
       print('[SelfIntro] Error during finalization: $e');
-      if (e is Error) {
-        print('[SelfIntro] StackTrace: ${e.stackTrace}');
-      }
       errorMessage.value = e.toString();
       addMessage('마무리 중 오류가 발생했습니다: $e', isUser: false);
     } finally {
@@ -288,7 +310,6 @@ class SelfIntroController extends GetxController {
 
   void _resetPendingState() {
     _pendingPrimaryAnswer = null;
-    _pendingFollowUpQuestion = null;
   }
 
   String get currentQuestionText {

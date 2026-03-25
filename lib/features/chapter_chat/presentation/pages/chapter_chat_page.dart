@@ -74,6 +74,43 @@ class ChapterChatPage extends GetView<ChapterChatController> {
                   // Chat Bubbles
                   ...controller.messages.map((m) => _Bubble(text: m.text, isUser: m.isUser)),
 
+                  // Manual Trigger Buttons
+                  Obx(() => controller.canThinkDeeper.value
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 20),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  onPressed: controller.generateFollowUpQuestion,
+                                  icon: const Icon(Icons.psychology_outlined),
+                                  label: const Text('네, 더 깊게 생각할게요'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF5B9FED),
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: OutlinedButton(
+                                  onPressed: controller.skipFollowUp,
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: Colors.black54,
+                                    side: const BorderSide(color: Colors.black12),
+                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  ),
+                                  child: const Text('아니오, 다음 질문 주세요'),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : const SizedBox.shrink()),
+
                   const SizedBox(height: 80),
                 ],
               );

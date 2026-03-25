@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:ai_life_legacy/features/avatar_chat/data/avatar_chat_api.dart';
-import 'package:ai_life_legacy/features/avatar_chat/data/models/avatar_chat.dto.dart';
+import 'package:ai_life_legacy/app/core/ai/ai_repository.dart';
+import 'package:ai_life_legacy/app/core/ai/models/ai.dto.dart';
 
 /// 채팅 메시지 모델
 class ChatMessage {
@@ -23,7 +23,9 @@ class AvatarChatController extends GetxController {
   final RxInt recordingSeconds = 0.obs;
   Timer? _recordingTimer;
   
-  final AvatarChatApi _api = AvatarChatApi();
+  final AiRepository aiRepo;
+  
+  AvatarChatController(this.aiRepo);
 
   @override
   void onInit() {
@@ -48,11 +50,14 @@ class AvatarChatController extends GetxController {
     
     try {
       // API 호출
-      final response = await _api.sendMessage(
-        AvatarChatRequestDto(message: text),
+      final response = await aiRepo.sendMessage(
+        AiChatRequestDto(
+          message: text,
+          role: "아버지", // 기본 페르소나 설정
+        ),
       );
       
-      // AI 응답 메시지 추가 (result 안의 message 사용)
+      // AI 응답 메시지 추가
       final aiResponse = response.data.message;
       messages.add(ChatMessage(aiResponse, isUser: false));
       _scrollToBottom();
