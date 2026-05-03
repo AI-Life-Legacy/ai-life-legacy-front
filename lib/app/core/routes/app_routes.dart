@@ -2,12 +2,24 @@
 
 abstract class Routes {
   static const main = '/';
-  static const login = '/login'; // 로그인
-  static const signup = '/signup'; // 회원가입
+  static const login = '/login'; 
+  static const signup = '/signup'; 
   static const chapterChat = '/chapter-chat';
   static const search = '/search';
-  static const home = '/home'; // 홈
-  static const selfIntro = '/self_intro'; // 자기소개 작성
-  static const autobiography = '/AutobiographyList'; // 자서전 목록
-  static const myPage = '/mypage'; // 마이페이지
+  static const home = '/home'; 
+  static const dashboard = '/dashboard';
+  static const selfIntro = '/self_intro'; 
+  static const complete = '/complete';
+  static const autobiography = '/AutobiographyList'; 
+  static const write = '/write';
+  static const completion = '/completion';
+  static const genConfirm = '/gen_confirm';
+  static const generating = '/generating';
+  static const generated = '/generated';
+  static const locked = '/locked';
+  static const viewerEntry = '/viewer_entry';
+  static const viewerRole = '/viewer_role';
+  static const viewerChat = '/viewer_chat';
+  static const viewerAudio = '/viewer_audio';
+  static const myPage = '/mypage'; 
 }

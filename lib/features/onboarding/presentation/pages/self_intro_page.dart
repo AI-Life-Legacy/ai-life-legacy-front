@@ -1,173 +1,177 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:ai_life_legacy/features/onboarding/presentation/controllers/self_intro_controller.dart';
 import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
-import 'package:ai_life_legacy/features/common/presentation/widgets/unified_chat_input_widget.dart';
+import 'package:ai_life_legacy/app/core/theme/app_theme.dart';
+import 'package:ai_life_legacy/features/onboarding/presentation/controllers/self_intro_controller.dart';
 
-class SelfIntroPage extends GetView<SelfIntroController> {
+class SelfIntroPage extends StatefulWidget {
   const SelfIntroPage({super.key});
+
+  @override
+  State<SelfIntroPage> createState() => _SelfIntroPageState();
+}
+
+class _SelfIntroPageState extends State<SelfIntroPage> {
+  final nameController = TextEditingController(text: "Margaret Thompson");
+  final ageController = TextEditingController(text: "72");
+  final summaryController = TextEditingController(text: "농촌 지역 학교에서 아이들을 가르치며 3명의 자녀를 키웠습니다.");
+
+  SelfIntroController get controller => Get.find<SelfIntroController>();
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    ageController.dispose();
+    summaryController.dispose();
+    super.dispose();
+  }
+
+  void _saveAndContinue() {
+    // Navigate to 04_Complete
+    Get.toNamed('/complete');
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.bg,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        scrolledUnderElevation: 0,
+        backgroundColor: AppTheme.bg,
         elevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: AppTheme.text, size: 20),
+          onPressed: () => Get.back(),
+        ),
         title: const Text(
-          '자기소개',
+          '프로필 설정',
           style: TextStyle(
-            color: Colors.black,
-            fontSize: 18,
+            fontFamily: AppTheme.fontFamily,
+            fontSize: 16,
             fontWeight: FontWeight.w600,
+            color: AppTheme.text,
           ),
         ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_outlined, color: Colors.black),
-            onPressed: () => Get.toNamed(Routes.myPage),
-          ),
-          const SizedBox(width: 8),
-        ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(color: AppTheme.border, height: 1),
+        ),
       ),
       body: Column(
         children: [
-          // 메인 컨텐츠 영역
           Expanded(
-            child: Obx(() {
-              return ListView(
-                controller: controller.scrollController,
-                padding: const EdgeInsets.all(20),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 20),
-                  // 질문 카드
-                  Obx(() => Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF5F5F5),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Text(
-                          controller.currentQuestionText,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            height: 1.5,
-                            color: Colors.black87,
-                          ),
-                        ),
-                      )),
-                  const SizedBox(height: 24),
-                  // 다시 들려줘 버튼 (그대로)
-                  OutlinedButton(
-                    onPressed: controller.replayCurrentQuestion,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF5B9FED),
-                      side:
-                          const BorderSide(color: Color(0xFF5B9FED), width: 2),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 32, vertical: 14),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24)),
+                  const Text(
+                    'Margaret Thompson님, 환영합니다',
+                    style: TextStyle(
+                      fontFamily: AppTheme.fontFamily,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.text,
                     ),
-                    child: const Text('다시 들려줘',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w600)),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 4),
+                  const Text(
+                    '기본 프로필을 설정하고 자서전을 시작해요.',
+                    style: TextStyle(
+                      fontFamily: AppTheme.fontFamily,
+                      fontSize: 13,
+                      color: AppTheme.textSec,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  
+                  // Name
+                  const Text(
+                    '이름',
+                    style: TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 11, fontWeight: FontWeight.w500, color: AppTheme.textPh),
+                  ),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: nameController,
+                    style: const TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 14),
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppTheme.border)),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppTheme.border)),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppTheme.cta)),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
 
-                  // 채팅 메시지(말풍선) 리스트 렌더링
-                  ...controller.messages
-                      .map((m) => _Bubble(text: m.text, isUser: m.isUser)),
+                  // Age
+                  const Text(
+                    '나이',
+                    style: TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 11, fontWeight: FontWeight.w500, color: AppTheme.textPh),
+                  ),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: ageController,
+                    keyboardType: TextInputType.number,
+                    style: const TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 14),
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppTheme.border)),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppTheme.border)),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppTheme.cta)),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
 
-                  // 수동 꼬리질문 버튼 영역
-                  Obx(() => controller.canThinkDeeper.value
-                      ? Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 20),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: ElevatedButton.icon(
-                                  onPressed: controller.generateFollowUpQuestion,
-                                  icon: const Icon(Icons.psychology_outlined),
-                                  label: const Text('네, 더 깊게 생각할게요'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF5B9FED),
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: OutlinedButton(
-                                  onPressed: controller.skipFollowUp,
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: Colors.black54,
-                                    side: const BorderSide(color: Colors.black12),
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                  ),
-                                  child: const Text('아니오, 다음 질문 주세요'),
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      : const SizedBox.shrink()),
-
-                  const SizedBox(height: 80), // 하단 입력 영역과 겹치지 않게 여유
+                  // Summary
+                  const Text(
+                    '소개 요약',
+                    style: TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 11, fontWeight: FontWeight.w500, color: AppTheme.textPh),
+                  ),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: summaryController,
+                    maxLines: 4,
+                    style: const TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 14),
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppTheme.border)),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppTheme.border)),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppTheme.cta)),
+                    ),
+                  ),
                 ],
-              );
-            }),
+              ),
+            ),
           ),
-
-          // Unified Input Widget
-          UnifiedChatInputWidget(
-            textController: controller.textController,
-            onSubmitted: controller.submitAnswer,
-            onToggleVoice: controller.toggleVoiceRecorderVisible,
-            onToggleRecording: controller.toggleRecording,
-            isVoiceRecorderVisible: controller.isVoiceRecorderVisible,
-            isRecording: controller.isRecording,
-            isLoading: controller.loading,
-            formattedTime: controller.getFormattedTime(),
+          
+          // Footer CTA
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _saveAndContinue,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.cta,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: 0,
+                ),
+                child: const Text(
+                  '저장 및 계속',
+                  style: TextStyle(
+                    fontFamily: AppTheme.fontFamily,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// 말풍선 위젯
-class _Bubble extends StatelessWidget {
-  final String text;
-  final bool isUser;
-  const _Bubble({required this.text, required this.isUser});
-
-  @override
-  Widget build(BuildContext context) {
-    final bg = isUser ? const Color(0xFF5B9FED) : const Color(0xFFEDEDED);
-    final fg = isUser ? Colors.white : Colors.black87;
-    final align = isUser ? Alignment.centerRight : Alignment.centerLeft;
-    final margin = isUser
-        ? const EdgeInsets.only(left: 60, bottom: 10)
-        : const EdgeInsets.only(right: 60, bottom: 10);
-
-    return Align(
-      alignment: align,
-      child: Container(
-        margin: margin,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child:
-            Text(text, style: TextStyle(color: fg, fontSize: 16, height: 1.4)),
       ),
     );
   }
