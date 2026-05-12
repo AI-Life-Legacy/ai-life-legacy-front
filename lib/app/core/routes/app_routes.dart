@@ -12,9 +12,11 @@ abstract class Routes {
   static const complete = '/complete';
   static const autobiography = '/AutobiographyList'; 
   static const write = '/write';
+  static const chapterComplete = '/chapter-complete';
   static const completion = '/completion';
   static const genConfirm = '/gen_confirm';
   static const generating = '/generating';
+  static const chapterGenerating = '/chapter_generating';
   static const generated = '/generated';
   static const locked = '/locked';
   static const viewerEntry = '/viewer_entry';

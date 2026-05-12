@@ -205,7 +205,7 @@ class ChapterChatController extends GetxController {
     } else {
       currentQuestionIndex.value = questions.length;
       addMessage('모든 질문에 답변하셨습니다!', isUser: false);
-      Get.snackbar('완료', '모든 답변이 저장되었습니다.');
+      print('[ChapterChatController] 모든 답변이 저장되었습니다.');
       // 여기서 챕터 완료 처리를 하거나 홈으로 돌아갈 수 있음
     }
   }
