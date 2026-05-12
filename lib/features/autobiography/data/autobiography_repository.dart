@@ -17,14 +17,24 @@ class AutobiographyRepositoryImpl implements AutobiographyRepository {
   AutobiographyRepositoryImpl(this.api);
 
   @override
-  Future<SuccessResponse<List<TocQuestionDto>>> getQuestions(int tocId) =>
-      api.getQuestions(tocId);
+  Future<SuccessResponse<List<TocQuestionDto>>> getQuestions(int tocId) async {
+    final response = await api.getQuestions(tocId);
+    return SuccessResponse.fromJson(
+      response.data,
+      (json) => (json as List).map((e) => TocQuestionDto.fromJson(e)).toList(),
+    );
+  }
 
   @override
   Future<SuccessResponse<void>> saveAnswer(
     int tocId,
     int questionId,
     AnswerSaveDto dto,
-  ) =>
-      api.saveAnswer(tocId, questionId, dto);
+  ) async {
+    final response = await api.saveAnswer(tocId, questionId, dto);
+    return SuccessResponse.fromJson(
+      response.data,
+      (json) => null,
+    );
+  }
 }
