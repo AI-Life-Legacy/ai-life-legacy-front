@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:ai_life_legacy/app/core/theme/app_theme.dart';
-import 'package:ai_life_legacy/features/autobiography/presentation/controllers/autobiography_controller.dart';
+import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
 
 class GenConfirmPage extends StatefulWidget {
   const GenConfirmPage({super.key});
@@ -94,9 +94,7 @@ class _GenConfirmPageState extends State<GenConfirmPage> {
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () {
-                           // Route to generation loading and trigger API
-                           final controller = Get.find<AutobiographyController>();
-                           controller.generateFullBook();
+                           Get.offNamed(Routes.generating);
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.cta,

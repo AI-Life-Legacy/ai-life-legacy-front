@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:ai_life_legacy/app/core/theme/app_theme.dart';
+import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
+import 'package:ai_life_legacy/features/autobiography/presentation/controllers/autobiography_controller.dart';
 
 class GeneratingPage extends StatefulWidget {
   const GeneratingPage({super.key});
@@ -10,14 +13,90 @@ class GeneratingPage extends StatefulWidget {
 }
 
 class _GeneratingPageState extends State<GeneratingPage> {
+  final AutobiographyController _controller = Get.find<AutobiographyController>();
+  
+  Timer? _progressTimer;
+  double _progress = 0.0;
+  bool _hasError = false;
+  String _errorMessage = '';
+
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(milliseconds: 3800), () {
-      if (mounted) {
-        Get.offNamed('/generated');
+    _startGeneration();
+  }
+
+  @override
+  void dispose() {
+    _progressTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startGeneration() {
+    setState(() {
+      _progress = 0.0;
+      _hasError = false;
+      _errorMessage = '';
+    });
+
+    // 시작 5분 (300초) 기준, 0.1초마다 0.0316% 증가 -> 300초에 95% 도달
+    // (95 / 300) / 10 = 0.03166...
+    _progressTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+      if (_progress < 95.0) {
+        setState(() {
+          _progress += (95.0 / 3000.0);
+          if (_progress > 95.0) _progress = 95.0;
+        });
       }
     });
+
+    _executeApi();
+  }
+
+  Future<void> _executeApi() async {
+    final success = await _controller.generateFullBook();
+    _progressTimer?.cancel();
+
+    if (!mounted) return;
+
+    if (success) {
+      setState(() {
+        _progress = 100.0;
+      });
+      
+      // 성공 후 100% 보여주고 이동
+      Future.delayed(const Duration(seconds: 1), () {
+        if (mounted) {
+          Get.offNamed(Routes.generated);
+        }
+      });
+    } else {
+      setState(() {
+        _hasError = true;
+        _errorMessage = '자서전 생성에 실패했습니다.\n잠시 후 다시 시도해주세요.';
+      });
+    }
+  }
+
+  String get _currentTitle {
+    if (_progress < 25) return '기억을 모으는 중...';
+    if (_progress < 50) return '이야기를 엮는 중...';
+    if (_progress < 75) return '문장을 다듬는 중...';
+    return 'PDF를 만드는 중...';
+  }
+
+  String get _currentDescription {
+    if (_progress < 25) return '당신의 이야기들을 찾고 있어요';
+    if (_progress < 50) return '흩어진 이야기들을 하나의 흐름으로 연결하고 있어요';
+    if (_progress < 75) return '당신의 목소리를 담아 정성스럽게 다듬고 있어요';
+    return '한 권의 책으로 엮어내고 있어요';
+  }
+
+  int get _currentStep {
+    if (_progress < 25) return 1;
+    if (_progress < 50) return 2;
+    if (_progress < 75) return 3;
+    return 4;
   }
 
   @override
@@ -31,44 +110,136 @@ class _GeneratingPageState extends State<GeneratingPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                width: 56,
-                height: 56,
-                margin: const EdgeInsets.only(bottom: 20),
+                width: 72,
+                height: 72,
+                margin: const EdgeInsets.only(bottom: 24),
                 decoration: const BoxDecoration(
-                  color: AppTheme.successBg,
+                  color: AppTheme.bgAlt,
                   shape: BoxShape.circle,
                 ),
-                child: const Center(
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      color: AppTheme.success,
-                      strokeWidth: 3,
-                    ),
+                child: Center(
+                  child: Icon(
+                    _hasError ? Icons.error_outline : Icons.menu_book,
+                    size: 32,
+                    color: _hasError ? AppTheme.error : AppTheme.text,
                   ),
                 ),
               ),
-              const Text(
-                '아바타 학습 중입니다',
-                style: TextStyle(
-                  fontFamily: AppTheme.fontFamily,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.text,
+              
+              if (_hasError) ...[
+                const Text(
+                  '오류 발생',
+                  style: TextStyle(
+                    fontFamily: AppTheme.fontFamily,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.error,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                '기록하신 자서전 내용을 바탕으로 Margaret 님의 기억과 감성을 학습하고 있습니다. 잠시만 기다려주세요.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: AppTheme.fontFamily,
-                  fontSize: 13,
-                  color: AppTheme.textSec,
-                  height: 1.5,
+                const SizedBox(height: 8),
+                Text(
+                  _errorMessage,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontFamily: AppTheme.fontFamily,
+                    fontSize: 14,
+                    color: AppTheme.textSec,
+                    height: 1.5,
+                  ),
                 ),
-              ),
+                const SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _startGeneration,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.cta,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      elevation: 0,
+                    ),
+                    child: const Text('다시 시도', style: TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 15, fontWeight: FontWeight.w500)),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Get.back(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.bgAlt,
+                      foregroundColor: AppTheme.text,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10), side: const BorderSide(color: AppTheme.border)),
+                      elevation: 0,
+                    ),
+                    child: const Text('취소', style: TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 15, fontWeight: FontWeight.w500)),
+                  ),
+                ),
+              ] else ...[
+                Text(
+                  _currentTitle,
+                  style: const TextStyle(
+                    fontFamily: AppTheme.fontFamily,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.text,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _currentDescription,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontFamily: AppTheme.fontFamily,
+                    fontSize: 14,
+                    color: AppTheme.textSec,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 48),
+                
+                // 진행바
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: _progress / 100.0,
+                        backgroundColor: AppTheme.border,
+                        color: AppTheme.success,
+                        minHeight: 8,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '단계 $_currentStep / 4',
+                          style: const TextStyle(
+                            fontFamily: AppTheme.fontFamily,
+                            fontSize: 13,
+                            color: AppTheme.textSec,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        Text(
+                          '${_progress.toInt()}%',
+                          style: const TextStyle(
+                            fontFamily: AppTheme.fontFamily,
+                            fontSize: 13,
+                            color: AppTheme.success,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
             ],
           ),
         ),

@@ -13,28 +13,12 @@ class GeneratedPage extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // Header
+            // Header (Empty to keep spacing if needed, or remove)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Align(
                 alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () => Get.offAllNamed(Routes.home),
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  child: const Text(
-                    '완료',
-                    style: TextStyle(
-                      fontFamily: AppTheme.fontFamily,
-                      fontSize: 14,
-                      color: AppTheme.textSec,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
+                child: SizedBox(height: 24), // Placeholder
               ),
             ),
             
@@ -118,6 +102,30 @@ class GeneratedPage extends StatelessWidget {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
+                        onPressed: () => Get.offAllNamed(Routes.home),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.cta,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: const Text(
+                          '홈으로 가기',
+                          style: TextStyle(
+                            fontFamily: AppTheme.fontFamily,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
                         onPressed: () => Get.toNamed(Routes.viewerChat),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.bgAlt,
@@ -130,7 +138,38 @@ class GeneratedPage extends StatelessWidget {
                           elevation: 0,
                         ),
                         child: const Text(
-                          '대화 테스트하기',
+                          '아바타와 대화하기',
+                          style: TextStyle(
+                            fontFamily: AppTheme.fontFamily,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Get.snackbar(
+                            '안내',
+                            '준비 중인 기능입니다.',
+                            snackPosition: SnackPosition.BOTTOM,
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.bgAlt,
+                          foregroundColor: AppTheme.text,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            side: const BorderSide(color: AppTheme.border),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: const Text(
+                          'PDF 보기',
                           style: TextStyle(
                             fontFamily: AppTheme.fontFamily,
                             fontSize: 15,

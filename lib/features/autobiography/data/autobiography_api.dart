@@ -74,7 +74,7 @@ class AutobiographyApi {
   Future<Response> generateAutobiography() async {
     return await _apiProvider.post(
       ApiEndpoints.aiAutobiography,
-      options: Options(receiveTimeout: const Duration(seconds: 120)),
+      options: Options(receiveTimeout: const Duration(minutes: 6)),
     );
   }
 

@@ -380,27 +380,22 @@ class AutobiographyController extends GetxController {
     }
   }
 
-  Future<void> generateFullBook() async {
+  Future<bool> generateFullBook() async {
+    if (isGenerating.value) return false;
     try {
       isGenerating.value = true;
-      Get.toNamed(Routes.generating);
       
       final response = await _api.generateAutobiography();
       if (response.statusCode == 200 || response.statusCode == 201) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('avatarUnlocked', true);
-        Get.offNamed(Routes.generated);
+        return true;
       } else {
         throw Exception('Server returned status: ${response.statusCode}');
       }
     } catch (e) {
-      Get.back(); // Back from loading
-      Get.snackbar(
-        '생성 실패',
-        '자서전 생성에 실패했습니다. 다시 시도해주세요.',
-        snackPosition: SnackPosition.BOTTOM,
-      );
       print('[AutobiographyController] generateFullBook error: $e');
+      return false;
     } finally {
       isGenerating.value = false;
     }
