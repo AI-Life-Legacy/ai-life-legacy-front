@@ -35,7 +35,7 @@ class HomeTabView extends GetView<HomeController> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Obx(() {
-          if (controller.loading.value && controller.chapters.isEmpty) {
+          if (controller.isLoading.value && controller.chapters.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
 
@@ -43,7 +43,7 @@ class HomeTabView extends GetView<HomeController> {
             return _buildEmptyState();
           }
 
-          if (controller.errorMessage.isNotEmpty) {
+          if (controller.errorMessage.value.isNotEmpty) {
             Get.rawSnackbar(
               message: controller.errorMessage.value,
               backgroundColor: Colors.redAccent.withOpacity(0.9),
@@ -96,7 +96,12 @@ class HomeTabView extends GetView<HomeController> {
     );
   }
 
-  Widget _buildChapterCard(ChapterModel chapter) {
+  Widget _buildChapterCard(dynamic chapter) {
+    final tocId = chapter['tocId'] ?? chapter['id'] ?? chapter['n'] ?? 0;
+    final chapterNumber = chapter['n'] ?? chapter['chapterNumber'] ?? tocId;
+    final title = chapter['title'] ?? chapter['tocTitle'] ?? chapter['name'] ?? '제목 없음';
+    final subtitle = chapter['subtitle'] ?? chapter['description'] ?? '';
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -121,7 +126,7 @@ class HomeTabView extends GetView<HomeController> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Chapter ${chapter.id}',
+                  'Chapter $chapterNumber',
                   style: const TextStyle(
                     color: Color(0xFF4A9EFF),
                     fontSize: 14,
@@ -130,22 +135,24 @@ class HomeTabView extends GetView<HomeController> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  chapter.title,
+                  title,
                   style: const TextStyle(
                     color: Colors.black,
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(height: 12),
-                Text(
-                  chapter.subtitle,
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
+                if (subtitle.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                    ),
                   ),
-                ),
+                ],
                 const SizedBox(height: 16),
                 _buildProgressBar(chapter),
               ],
@@ -156,13 +163,42 @@ class HomeTabView extends GetView<HomeController> {
     );
   }
 
-  Widget _buildProgressBar(ChapterModel chapter) {
-    final clamped = chapter.progress.clamp(0.0, 1.0);
+  Widget _buildProgressBar(dynamic chapter) {
+    double toDouble(dynamic value) {
+      if (value == null) return 0.0;
+      if (value is int) return value.toDouble();
+      if (value is double) return value;
+      if (value is String) return double.tryParse(value) ?? 0.0;
+      return 0.0;
+    }
+
+    final done = chapter['done'] ??
+        chapter['answeredCount'] ??
+        chapter['completedQuestionCount'] ??
+        chapter['completedQuestions'] ??
+        0;
+    final total = chapter['total'] ??
+        chapter['totalCount'] ??
+        chapter['questionCount'] ??
+        chapter['totalQuestions'] ??
+        0;
+    final status = chapter['status']?.toString().toLowerCase() ?? '';
+
+    double progress = 0.0;
+    if (chapter['percent'] != null) {
+      final p = toDouble(chapter['percent']);
+      progress = p <= 1 ? p : p / 100;
+    } else if (toDouble(total) > 0) {
+      progress = toDouble(done) / toDouble(total);
+    } else if (status == 'complete' || status == 'completed') {
+      progress = 1.0;
+    }
+
+    final clamped = progress.clamp(0.0, 1.0);
     final widthFactor = clamped.isNaN ? 0.0 : clamped.toDouble();
     final progressPercent = (widthFactor * 100).round();
-    final questionLabel = chapter.totalQuestions == 0
-        ? '질문 준비 중'
-        : '답변 ${chapter.answeredQuestions}/${chapter.totalQuestions}개';
+
+    final questionLabel = toDouble(total) == 0 ? '질문 준비 중' : '답변 $done/${total}개';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

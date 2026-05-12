@@ -1,137 +1,314 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:ai_life_legacy/app/core/theme/app_theme.dart';
+import 'package:ai_life_legacy/app/core/theme/widgets/app_buttons.dart';
+import 'package:ai_life_legacy/app/core/theme/widgets/app_indicators.dart';
+import 'package:ai_life_legacy/features/autobiography/presentation/controllers/autobiography_list_controller.dart';
+import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
 
-class AutobiographyListPage extends StatelessWidget {
+class AutobiographyListPage extends GetView<AutobiographyListController> {
   const AutobiographyListPage({super.key});
+
+  void _onCreateAutobiographyPressed() {
+    final canGenerate = controller.totalQuestions.value > 0 &&
+        controller.answeredQuestions.value >= controller.totalQuestions.value;
+
+    if (!canGenerate) {
+      Get.snackbar(
+        '안내',
+        '${controller.remainingQuestions.value}개 질문에 아직 답변이 필요해요. 모든 질문에 답변한 뒤 자서전을 만들 수 있어요.',
+        backgroundColor: AppTheme.error,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+        margin: const EdgeInsets.all(16),
+      );
+      return;
+    }
+
+    Get.toNamed(Routes.genConfirm, arguments: {'canGenerate': canGenerate});
+  }
 
   @override
   Widget build(BuildContext context) {
-    final chapters = [
-      {'title': '유년기: 고향의 기억', 'done': true},
-      {'title': '청소년기: 학창 시절', 'done': true},
-    ];
-
     return Scaffold(
       backgroundColor: AppTheme.bg,
       appBar: AppBar(
-        backgroundColor: AppTheme.bg,
+        title: const Text('나의 자서전', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+        backgroundColor: Colors.white,
         elevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: AppTheme.text, size: 20),
-          onPressed: () => Get.back(),
-        ),
-        title: const Text(
-          '챕터 완료 리스트',
-          style: TextStyle(
-            fontFamily: AppTheme.fontFamily,
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.text,
+        actions: [
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.info_outline, color: AppTheme.textSec),
           ),
-        ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(color: AppTheme.border, height: 1),
-        ),
+        ],
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
-              Expanded(
-                child: ListView.builder(
-                  itemCount: chapters.length,
-                  itemBuilder: (context, i) {
-                    final ch = chapters[i];
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppTheme.bg,
-                        border: Border.all(color: AppTheme.border),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '챕터 ${i + 1}. ${ch["title"]}',
-                                style: const TextStyle(
-                                  fontFamily: AppTheme.fontFamily,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppTheme.text,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              const Text(
-                                '답변 완료 8개 / 8개',
-                                style: TextStyle(
-                                  fontFamily: AppTheme.fontFamily,
-                                  fontSize: 12,
-                                  color: AppTheme.textSec,
-                                ),
-                              ),
-                            ],
-                          ),
-                          GestureDetector(
-                            onTap: () => Get.toNamed('/write'),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: AppTheme.bgAlt,
-                                border: Border.all(color: AppTheme.border),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: const Text(
-                                '수정',
-                                style: TextStyle(
-                                  fontFamily: AppTheme.fontFamily,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
+      body: Obx(() {
+        if (controller.isLoading.value && controller.chapters.isEmpty) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        return Column(
+          children: [
+            Container(
+              margin: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppTheme.bgAlt,
+                border: Border.all(color: AppTheme.border),
+                borderRadius: BorderRadius.circular(10),
               ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Get.toNamed('/completion'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.cta,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    elevation: 0,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${controller.totalChapters.value}개 챕터 중 ${controller.completedChapters.value}개 완료',
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppTheme.text),
                   ),
-                  child: const Text(
-                    '완료 상태로 전환',
-                    style: TextStyle(
-                      fontFamily: AppTheme.fontFamily,
-                      fontSize: 15,
-                    ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    '질문을 탭하면 답변을 수정할 수 있어요.',
+                    style: TextStyle(fontSize: 12, color: AppTheme.textPh),
                   ),
-                ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '전체 질문 ${controller.answeredQuestions.value} / ${controller.totalQuestions.value}개 답변 완료',
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppTheme.textSec),
+                      ),
+                      Text(
+                        '${(controller.totalProgress.value * 100).toInt()}%',
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.cta),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  AppProgressBar(
+                    value: controller.totalProgress.value,
+                    height: 8,
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
-      ),
+            ),
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: controller.chapters.length,
+                itemBuilder: (context, index) {
+                  final ch = controller.chapters[index];
+                  return _ChapterCard(ch: ch);
+                },
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                border: Border(top: BorderSide(color: AppTheme.border)),
+              ),
+              child: Column(
+                children: [
+                  if (controller.remainingQuestions.value > 0)
+                    Text(
+                      '${controller.remainingQuestions.value}개 질문에 아직 답변이 필요해요',
+                      style: const TextStyle(fontSize: 12, color: AppTheme.warning),
+                    )
+                  else
+                    const Text(
+                      '모든 질문에 답변했어요',
+                      style: TextStyle(fontSize: 12, color: AppTheme.success),
+                    ),
+                  const SizedBox(height: 10),
+                  PrimaryButton(
+                    text: '내 자서전 만들기',
+                    onPressed: _onCreateAutobiographyPressed,
+                    disabled: controller.totalQuestions.value == 0 || controller.answeredQuestions.value < controller.totalQuestions.value,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      }),
     );
+  }
+}
+
+class _ChapterCard extends GetView<AutobiographyListController> {
+  final Map<String, dynamic> ch;
+  const _ChapterCard({required this.ch});
+
+  @override
+  Widget build(BuildContext context) {
+    final tocId = ch['tocId'] ?? ch['id'] ?? ch['n'];
+    final title = ch['title'] ?? ch['tocTitle'] ?? ch['name'] ?? '제목 없음';
+    final done = (ch['done'] as num?)?.toInt() ?? 0;
+    final total = (ch['total'] as num?)?.toInt() ?? 0;
+    final percent = (ch['percent'] as num?)?.toInt() ?? 0;
+    
+    String statusStr = ch['status']?.toString().toLowerCase() ?? '';
+
+    final bool isCompleted = statusStr == 'completed' ||
+        statusStr == 'complete' ||
+        (total > 0 && done >= total) ||
+        percent >= 100;
+
+    final bool isInProgress = done > 0 && !isCompleted;
+
+    if (statusStr.isEmpty || statusStr == 'null') {
+      if (isCompleted) {
+        statusStr = 'complete';
+      } else if (isInProgress) {
+        statusStr = 'in-progress';
+      } else {
+        statusStr = 'not-started';
+      }
+    }
+
+    final Color progressColor = isCompleted
+        ? Colors.green
+        : isInProgress
+            ? Colors.black87
+            : Colors.grey.shade300;
+
+    final double progress = total > 0 ? done / total : 0.0;
+
+    return Obx(() {
+      final isExpanded = controller.expandedTocId.value == tocId;
+      final questions = controller.tocQuestions[tocId] ?? [];
+      final isLoadingQuestions = controller.loadingQuestionTocIds.contains(tocId);
+
+      return Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: AppTheme.border),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          children: [
+            InkWell(
+              onTap: () => controller.toggleChapter(tocId),
+              borderRadius: BorderRadius.circular(10),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: AppTheme.bgAlt,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'Ch.$tocId',
+                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: AppTheme.textSec),
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            StatusBadge(status: statusStr),
+                            const SizedBox(width: 8),
+                            Icon(
+                              isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                              color: AppTheme.textPh,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      title,
+                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.text),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '$done / $total 질문 답변 완료',
+                          style: const TextStyle(fontSize: 12, color: AppTheme.textSec),
+                        ),
+                        Text(
+                          '${(progress * 100).toInt()}%',
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.cta),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    AppProgressBar(value: progress, height: 6, fill: progressColor),
+                  ],
+                ),
+              ),
+            ),
+            if (isExpanded)
+              Container(
+                decoration: const BoxDecoration(
+                  border: Border(top: BorderSide(color: AppTheme.border)),
+                  color: AppTheme.bg,
+                ),
+                padding: const EdgeInsets.all(12),
+                child: isLoadingQuestions
+                    ? const Center(
+                        child: Padding(
+                        padding: EdgeInsets.all(16.0),
+                        child: CircularProgressIndicator(),
+                      ))
+                    : questions.isEmpty
+                        ? const Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: Text('질문 목록이 없습니다.', style: TextStyle(color: AppTheme.textSec)),
+                          )
+                        : Column(
+                            children: questions.map((q) {
+                              final qIndex = questions.indexOf(q) + 1;
+                              final qText = q['questionText'] ?? q['question'] ?? q['text'] ?? '제목 없음';
+                              final isQDone = q['isAnswered'] == true ||
+                                  q['status'] == 'completed' ||
+                                  q['done'] == true ||
+                                  q['answerId'] != null ||
+                                  qIndex <= done;
+                              
+                              return InkWell(
+                                onTap: () => controller.onQuestionTap(tocId, q),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text('$qIndex. ', style: const TextStyle(fontSize: 13, color: AppTheme.text)),
+                                      Expanded(
+                                        child: Text(
+                                          qText,
+                                          style: const TextStyle(fontSize: 13, color: AppTheme.text),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        isQDone ? '완료' : '미완료',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: isQDone ? AppTheme.cta : AppTheme.textPh,
+                                          fontWeight: isQDone ? FontWeight.w600 : FontWeight.w400,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+              ),
+          ],
+        ),
+      );
+    });
   }
 }

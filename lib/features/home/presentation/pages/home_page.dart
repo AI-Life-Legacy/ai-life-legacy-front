@@ -1,286 +1,286 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
 import 'package:ai_life_legacy/app/core/theme/app_theme.dart';
 import 'package:ai_life_legacy/features/home/presentation/controllers/home_controller.dart';
+import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
 
 class HomePage extends GetView<HomeController> {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // We can use controller.chapters, but for now we mix mock data
-    final chapters = [
-      {'n': 1, 'title': '유년기: 고향의 기억', 'done': true},
-      {'n': 2, 'title': '청소년기: 학창 시절', 'done': true},
-      {'n': 3, 'title': '첫 직장과 경험', 'done': true},
-      {'n': 4, 'title': '가족의 형성', 'done': false},
-      {'n': 5, 'title': '교직 생활의 보람', 'done': false},
-      {'n': 6, 'title': '황혼의 지혜', 'done': false},
-      {'n': 7, 'title': '남기고 싶은 이야기', 'done': false},
-    ];
-    final total = chapters.length;
-    final totalDone = chapters.where((c) => c['done'] == true).length;
-
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        if (didPop) return;
-        Get.toNamed(Routes.dashboard);
-      },
-      child: Scaffold(
-        backgroundColor: AppTheme.bg,
-        body: SafeArea(
-          child: Column(
-            children: [
-              // Header
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Life Legacy',
-                      style: TextStyle(
-                        fontFamily: AppTheme.fontFamily,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.text,
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () => Get.toNamed('/search'),
-                          child: Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: AppTheme.bg,
-                              border: Border.all(color: AppTheme.border),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(Icons.search, size: 16, color: AppTheme.text),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        GestureDetector(
-                          onTap: () => Get.toNamed('/mypage'),
-                          child: Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: AppTheme.bg,
-                              border: Border.all(color: AppTheme.border),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(Icons.settings, size: 18, color: AppTheme.text),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+    return Scaffold(
+      backgroundColor: AppTheme.bg,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Greeting
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    '안녕하세요, Margaret 님',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.text),
+                  ),
+                  IconButton(
+                    onPressed: () => Get.toNamed(Routes.search),
+                    icon: const Icon(Icons.search, color: AppTheme.textSec),
+                  ),
+                ],
               ),
-              
-              // Content
-              Expanded(
-                child: ListView(
-                  padding: EdgeInsets.zero,
-                  children: [
-                    // Profile Section
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: const BoxDecoration(
-                        color: AppTheme.bgAlt,
-                        border: Border(bottom: BorderSide(color: AppTheme.border)),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 56,
-                            height: 56,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: AppTheme.border),
+            ),
+
+            Expanded(
+              child: Obx(() {
+                if (controller.isLoading.value && controller.chapters.isEmpty) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                return RefreshIndicator(
+                  onRefresh: controller.fetchToc,
+                  child: ListView(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    children: [
+                      // Premium Progress card
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 24),
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
                             ),
-                            child: const Center(
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${controller.totalChapters.value}개 챕터 중 ${controller.completedChapters.value}개 완료',
+                              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.text),
+                            ),
+                            const SizedBox(height: 4),
+                            const Text(
+                              '잘 하고 계세요. 계속 이어가봐요.',
+                              style: TextStyle(fontSize: 13, color: AppTheme.textSec),
+                            ),
+                            const SizedBox(height: 20),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: LinearProgressIndicator(
+                                value: controller.totalProgress.value,
+                                minHeight: 8,
+                                backgroundColor: const Color(0xFFF0F0F0),
+                                valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.cta),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Align(
+                              alignment: Alignment.centerRight,
                               child: Text(
-                                'MT',
-                                style: TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 18, fontWeight: FontWeight.w600),
+                                '${controller.progressPercent.value}%',
+                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.cta),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 14),
-                          const Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Margaret Thompson',
-                                style: TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.text),
-                              ),
-                              SizedBox(height: 2),
-                              Text(
-                                '72세 • 은퇴한 교육자',
-                                style: TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 12, color: AppTheme.textSec),
-                              ),
-                            ],
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
 
-                    // Progress summary
-                    Container(
-                      margin: const EdgeInsets.all(16),
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppTheme.bgAlt,
-                        border: Border.all(color: AppTheme.border),
-                        borderRadius: BorderRadius.circular(12),
+                      const Padding(
+                        padding: EdgeInsets.only(left: 4, bottom: 12),
+                        child: Text(
+                          '나의 챕터',
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textPh),
+                        ),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            '7개 챕터 중 3개 완료',
-                            style: TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 15, fontWeight: FontWeight.w500, color: AppTheme.text),
-                          ),
-                          const SizedBox(height: 2),
-                          const Text(
-                            '잘 하고 계세요. 계속 이어가봐요.',
-                            style: TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 13, color: AppTheme.textSec),
-                          ),
-                          const SizedBox(height: 14),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(3),
-                            child: LinearProgressIndicator(
-                              value: totalDone / total,
-                              minHeight: 6,
-                              backgroundColor: AppTheme.border,
-                              valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.cta),
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: Text(
-                              '${((totalDone / total) * 100).toInt()}%',
-                              style: const TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 11, color: AppTheme.textPh),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
 
-                    // Chapters
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('나의 챕터', style: AppTheme.sectionLabel),
-                          const SizedBox(height: 12),
-                          ...chapters.map((ch) {
-                            final isDone = ch['done'] as bool;
-                            final num = ch['n'];
-                            return GestureDetector(
-                              onTap: () => Get.toNamed('/chapter-chat', arguments: {'chapter': ch}),
-                              child: Container(
-                                margin: const EdgeInsets.only(bottom: 10),
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                                decoration: BoxDecoration(
-                                  color: AppTheme.bg,
-                                  border: Border.all(color: AppTheme.border),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Container(
-                                          width: 24,
-                                          height: 24,
-                                          decoration: BoxDecoration(
-                                            color: isDone ? AppTheme.successBg : AppTheme.bgAlt,
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: Center(
-                                            child: Text(
-                                              isDone ? '✓' : '$num',
-                                              style: TextStyle(
-                                                fontFamily: AppTheme.fontFamily,
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w600,
-                                                color: isDone ? AppTheme.success : AppTheme.textPh,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Text(
-                                          ch['title'] as String,
-                                          style: TextStyle(
-                                            fontFamily: AppTheme.fontFamily,
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w500,
-                                            color: isDone ? AppTheme.text : AppTheme.textSec,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    Text(
-                                      isDone ? '보기' : '진행중',
-                                      style: TextStyle(
-                                        fontFamily: AppTheme.fontFamily,
-                                        fontSize: 11,
-                                        color: isDone ? AppTheme.textPh : AppTheme.warning,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                      ...controller.chapters.map((ch) => _ChapterCard(ch: ch)),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
+                );
+              }),
+            ),
 
-              // Footer CTA
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                decoration: const BoxDecoration(
-                  border: Border(top: BorderSide(color: AppTheme.border)),
-                ),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => Get.toNamed('/gen_confirm'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.successBg,
-                      foregroundColor: AppTheme.success,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        side: const BorderSide(color: AppTheme.success),
-                      ),
-                      elevation: 0,
+            // Bottom Nav
+            _BottomNav(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ChapterCard extends StatelessWidget {
+  final Map<String, dynamic> ch;
+
+  const _ChapterCard({required this.ch});
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = Get.find<HomeController>();
+    final status = ch['status']?.toString().toLowerCase() ?? 'not-started';
+    final done = (ch['done'] as num?)?.toInt() ?? 0;
+    final total = (ch['total'] as num?)?.toInt() ?? 0;
+    final percent = (ch['percent'] as num?)?.toInt() ?? 0;
+
+    final bool isCompleted = status == 'completed' ||
+        status == 'complete' ||
+        (total > 0 && done >= total) ||
+        percent >= 100;
+
+    final bool isInProgress = done > 0 && !isCompleted;
+
+    final Color progressColor = isCompleted
+        ? Colors.green
+        : isInProgress
+            ? Colors.black87
+            : Colors.grey.shade300;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFFEEEEEE),
+          width: 1,
+        ),
+      ),
+      child: InkWell(
+        onTap: () => controller.onChapterTap(ch),
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF5F5F5),
+                      borderRadius: BorderRadius.circular(6),
                     ),
-                    child: const Text(
-                      '아바타 생성하기',
-                      style: TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 15, fontWeight: FontWeight.w500),
+                    child: Text(
+                      'Ch.${ch['tocId'] ?? ch['id']}',
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.textSec),
                     ),
                   ),
+                  _StatusBadge(status: status),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                ch['title'] ?? '제목 없음',
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.text),
+              ),
+              const SizedBox(height: 16),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: (ch['percent'] ?? 0) / 100.0,
+                  minHeight: 4,
+                  backgroundColor: const Color(0xFFF5F5F5),
+                  valueColor: AlwaysStoppedAnimation<Color>(progressColor),
                 ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '${ch['done'] ?? 0} / ${ch['total'] ?? 0} 질문 답변 완료',
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppTheme.textPh),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  final String status;
+  const _StatusBadge({required this.status});
+
+  @override
+  Widget build(BuildContext context) {
+    String text;
+    Color bgColor;
+    Color textColor;
+
+    if (status == 'complete' || status == 'completed') {
+      text = '완료 ✓';
+      bgColor = const Color(0xFFE8F5E9);
+      textColor = const Color(0xFF2E7D32);
+    } else if (status == 'in-progress') {
+      text = '진행 중';
+      bgColor = const Color(0xFFFFF8E1);
+      textColor = const Color(0xFFF57F17);
+    } else {
+      text = '시작 전';
+      bgColor = const Color(0xFFF5F5F5);
+      textColor = AppTheme.textPh;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: textColor),
+      ),
+    );
+  }
+}
+
+class _BottomNav extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: AppTheme.border)),
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _navItem(Icons.home, '홈', true, () {}),
+          _navItem(Icons.person_outline, '아바타', false, () => Get.toNamed(Routes.locked)),
+          _navItem(Icons.book_outlined, '자서전', false, () => Get.toNamed(Routes.autobiography)),
+        ],
+      ),
+    );
+  }
+
+  Widget _navItem(IconData icon, String label, bool isActive, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: isActive ? AppTheme.text : AppTheme.textSec),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
+              color: isActive ? AppTheme.text : AppTheme.textSec,
+            ),
+          ),
+        ],
       ),
     );
   }

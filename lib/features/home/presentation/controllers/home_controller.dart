@@ -1,163 +1,182 @@
 import 'package:get/get.dart';
-import 'package:dio/dio.dart';
-import 'dart:async';
+import 'package:ai_life_legacy/features/home/data/home_api.dart';
 import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
-import 'package:ai_life_legacy/features/user/data/user_repository.dart';
-import 'package:ai_life_legacy/app/core/utils/toast_utils.dart';
-import 'package:ai_life_legacy/features/chapter_chat/presentation/controllers/chapter_chat_controller.dart';
 
-/// Home Feature의 비즈니스 로직을 제어합니다.
-/// 사용자 목차(TOC) 로드, 탭 네비게이션, 챕터 클릭 이벤트 등을 처리합니다.
 class HomeController extends GetxController {
-  final UserRepository userRepo;
-  HomeController(this.userRepo);
+  final HomeApi _homeApi;
 
-  // Reactive State: UI 업데이트를 위한 상태 변수
-  final RxList<ChapterModel> chapters = <ChapterModel>[].obs;
-  final RxInt selectedTabIndex = 0.obs;
-  final RxBool loading = false.obs;
-  final RxString errorMessage = ''.obs;
+  HomeController(this._homeApi);
+
+  final chapters = <Map<String, dynamic>>[].obs;
+  final isLoading = false.obs;
+  final totalProgress = 0.0.obs;
+  final totalChapters = 0.obs;
+  final completedChapters = 0.obs;
+  final progressPercent = 0.obs;
+  
+  final totalQuestions = 0.obs;
+  final answeredQuestions = 0.obs;
+  final remainingQuestions = 0.obs;
+  
+  final currentIndex = 0.obs;
+  final errorMessage = ''.obs;
+
+  // alias for backward compatibility or different naming in UI
+  bool get loading => isLoading.value;
 
   @override
   void onInit() {
     super.onInit();
-    loadUserContents();
+    fetchToc();
   }
 
-  /// 사용자 목차(TOC) 목록을 서버로부터 불러옵니다.
-  Future<void> loadUserContents() async {
-    loading.value = true;
-    errorMessage.value = '';
+  Future<void> fetchToc() async {
     try {
-      final tocResult = await userRepo.getUserToc();
-      final initialChapters = tocResult.data
-          .map(
-            (toc) => ChapterModel(
-              id: toc.id,
-              title: toc.title,
-              subtitle: '진행률 ${(toc.percent).toStringAsFixed(1)}%',
-              progress: toc.percent / 100.0,
-            ),
-          )
-          .toList();
+      isLoading.value = true;
+      errorMessage.value = '';
 
-      final ids = <int>{};
-      final uniqueChapters = <ChapterModel>[];
-      for (var chapter in initialChapters) {
-        if (ids.add(chapter.id)) {
-          uniqueChapters.add(chapter);
+      final response = await _homeApi.getToc();
+
+      print('GET /users/me/toc status: ${response.statusCode}');
+      print('GET /users/me/toc data: ${response.data}');
+
+      if (response.statusCode == 200) {
+        final raw = response.data;
+
+        // Handle common response structure { success: true, result: ... }
+        final result = raw is Map<String, dynamic> && raw.containsKey('result')
+            ? raw['result']
+            : raw;
+
+        List<dynamic> rawChapters = [];
+
+        if (result is List) {
+          rawChapters = result;
+        } else if (result is Map<String, dynamic>) {
+          totalChapters.value = result['totalChapters'] ?? 0;
+          completedChapters.value = result['completedChapters'] ?? 0;
+          progressPercent.value = result['progressPercent'] ?? 0;
+          totalProgress.value = (result['progressPercent'] ?? 0) / 100.0;
+
+          rawChapters = result['chapters'] ??
+              result['toc'] ??
+              result['items'] ??
+              result['data'] ??
+              [];
+        }
+
+        chapters.assignAll(
+          rawChapters
+              .whereType<Map>()
+              .map((e) => Map<String, dynamic>.from(e))
+              .toList(),
+        );
+
+        final tq = chapters.fold<int>(
+          0,
+          (sum, ch) => sum + ((ch['total'] as num?)?.toInt() ?? 0),
+        );
+
+        final aq = chapters.fold<int>(
+          0,
+          (sum, ch) => sum + ((ch['done'] as num?)?.toInt() ?? 0),
+        );
+
+        totalQuestions.value = tq;
+        answeredQuestions.value = aq;
+        remainingQuestions.value = tq - aq;
+
+        // If backend didn't provide total progress, calculate it locally
+        if (totalProgress.value == 0.0 && chapters.isNotEmpty) {
+          _calculateProgress();
         }
       }
-      chapters.assignAll(uniqueChapters);
     } catch (e) {
-      if (e is DioException) {
-        final status = e.response?.statusCode;
-        final data = e.response?.data;
-        Get.log('GET /users/me/toc 실패 → status:$status body:$data');
-        final serverMessage = _extractServerMessage(data);
-        errorMessage.value = status != null
-            ? '[$status] ${serverMessage ?? e.message ?? '요청에 실패했습니다.'}'
-            : (serverMessage ?? e.message ?? '요청에 실패했습니다.');
-      } else {
-        errorMessage.value = e.toString();
-      }
-      chapters.value = [];
+      print('HomeController.fetchToc error: $e');
+      errorMessage.value = '목차를 불러오는 데 실패했습니다.';
     } finally {
-      loading.value = false;
+      isLoading.value = false;
     }
   }
 
-  String? _extractServerMessage(dynamic data) {
-    if (data == null) return null;
-    if (data is String) return data;
-    if (data is Map<String, dynamic>) {
-      if (data['message'] is List && data['message'].isNotEmpty) {
-        return data['message'].first.toString();
-      }
-      if (data['message'] != null) return data['message'].toString();
-      if (data['error'] != null) return data['error'].toString();
-    }
-    return data.toString();
-  }
-
-  // _calculateProgress 관련 로직은 loadUserContents 내부에 통합됨
-
-  /// 챕터 카드 클릭 시 이벤트 핸들러
-  void onChapterTap(ChapterModel chapter) {
-    print("챕터 ${chapter.id} 클릭됨: ${chapter.title}");
-    
-    // 챕터별 채팅 컨트롤러에 로드 요청
-    try {
-      final chatController = Get.find<ChapterChatController>();
-      chatController.loadQuestions(chapter.id);
-    } catch (e) {
-      Get.log("ChapterChatController not found: $e");
-    }
-
-    // 챕터 채팅 탭(인덱스 3)으로 이동
-    changeTab(3);
-  }
-
-  /// 하단 탭 바 선택 변경 핸들러
   void changeTab(int index) {
-    if (index == 0) {
-      loadUserContents();
-    }
-    selectedTabIndex.value = index;
+    currentIndex.value = index;
   }
 
-  DateTime? lastPressedAt;
+  Future<void> onChapterTap(dynamic chapter) async {
+    final tocId = chapter['tocId'] ?? chapter['id'] ?? chapter['n'];
+    final chapterNumber = chapter['n'] ?? chapter['chapterNumber'] ?? tocId;
+    final title = chapter['title'] ?? chapter['tocTitle'] ?? chapter['name'] ?? '제목 없음';
 
-  Future<bool> onBackPressed() async {
-    // 1. 챕터 채팅 탭(3)에 있는 경우 홈으로 복귀
-    if (selectedTabIndex.value == 3) {
-      changeTab(0);
-      return false; // 앱 종료 방지
+    final navigationFuture = Get.toNamed(Routes.chapterChat, arguments: {
+      'tocId': tocId,
+      'title': title,
+      'chapterNumber': chapterNumber,
+      'done': chapter['done'],
+      'total': chapter['total'],
+      'status': chapter['status'],
+      'percent': chapter['percent'],
+    });
+
+    if (navigationFuture != null) {
+      await navigationFuture;
     }
-
-    // 2. 다른 탭(0, 1, 2)에 있는 경우 -> 더블 탭 종료 로직
-    final now = DateTime.now();
-    if (lastPressedAt == null || 
-        now.difference(lastPressedAt!) > const Duration(seconds: 2)) {
-      lastPressedAt = now;
-      ToastUtils.showInfoToast("'뒤로' 버튼을 한 번 더 누르면 종료됩니다.");
-      return false; // 앱 종료 방지
-    }
-
-    return true; // 앱 종료 허용
+    
+    await fetchToc();
   }
-}
 
-class ChapterModel {
-  final int id;
-  final String title;
-  final String subtitle;
-  final double progress;
-  final int answeredQuestions;
-  final int totalQuestions;
+  void _calculateProgress() {
+    if (chapters.isEmpty) {
+      totalProgress.value = 0.0;
+      return;
+    }
 
-  ChapterModel({
-    required this.id,
-    required this.title,
-    required this.subtitle,
-    required this.progress,
-    this.answeredQuestions = 0,
-    this.totalQuestions = 0,
-  });
-}
+    double sum = 0.0;
 
-class ChapterProgressInfo {
-  final int totalQuestions;
-  final int answeredQuestions;
+    for (final ch in chapters) {
+      // 1. Try percent field
+      if (ch['percent'] != null) {
+        sum += _normalizePercent(ch['percent']);
+        continue;
+      }
 
-  const ChapterProgressInfo({
-    required this.totalQuestions,
-    required this.answeredQuestions,
-  });
+      // 2. Try done/total or answeredCount/totalCount
+      final done = ch['done'] ??
+          ch['answeredCount'] ??
+          ch['completedQuestionCount'] ??
+          ch['completedQuestions'];
 
-  double get progress =>
-      totalQuestions == 0 ? 0.0 : answeredQuestions / totalQuestions;
+      final total = ch['total'] ??
+          ch['totalCount'] ??
+          ch['questionCount'] ??
+          ch['totalQuestions'];
 
-  factory ChapterProgressInfo.zero() =>
-      const ChapterProgressInfo(totalQuestions: 0, answeredQuestions: 0);
+      if (done != null && total != null && _toDouble(total) > 0) {
+        sum += _toDouble(done) / _toDouble(total);
+        continue;
+      }
+
+      // 3. Fallback to status
+      final status = ch['status']?.toString().toLowerCase();
+      if (status == 'complete' || status == 'completed') {
+        sum += 1.0;
+      }
+    }
+
+    totalProgress.value = sum / chapters.length;
+  }
+
+  double _normalizePercent(dynamic value) {
+    final n = _toDouble(value);
+    // If it's 0~1, use as is. If 0~100, normalize.
+    return n <= 1 ? n : n / 100;
+  }
+
+  double _toDouble(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is int) return value.toDouble();
+    if (value is double) return value;
+    if (value is String) return double.tryParse(value) ?? 0.0;
+    return 0.0;
+  }
 }
