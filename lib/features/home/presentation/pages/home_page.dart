@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ai_life_legacy/app/core/theme/app_theme.dart';
 import 'package:ai_life_legacy/features/home/presentation/controllers/home_controller.dart';
 import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
@@ -257,7 +258,15 @@ class _BottomNav extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _navItem(Icons.home, '홈', true, () {}),
-          _navItem(Icons.person_outline, '아바타', false, () => Get.toNamed(Routes.locked)),
+          _navItem(Icons.person_outline, '아바타', false, () async {
+            final prefs = await SharedPreferences.getInstance();
+            final unlocked = prefs.getBool('avatarUnlocked') ?? false;
+            if (unlocked) {
+              Get.toNamed(Routes.viewerChat);
+            } else {
+              Get.toNamed(Routes.locked);
+            }
+          }),
           _navItem(Icons.book_outlined, '자서전', false, () => Get.toNamed(Routes.autobiography)),
         ],
       ),

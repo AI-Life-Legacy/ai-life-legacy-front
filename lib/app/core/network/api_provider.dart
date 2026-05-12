@@ -11,8 +11,8 @@ class ApiProvider extends GetxService {
     return await _dio.get(path, queryParameters: queryParameters);
   }
 
-  Future<Response> post(String path, {dynamic data, Map<String, dynamic>? queryParameters}) async {
-    return await _dio.post(path, data: data, queryParameters: queryParameters);
+  Future<Response> post(String path, {dynamic data, Map<String, dynamic>? queryParameters, Options? options}) async {
+    return await _dio.post(path, data: data, queryParameters: queryParameters, options: options);
   }
 
   Future<Response> put(String path, {dynamic data, Map<String, dynamic>? queryParameters}) async {

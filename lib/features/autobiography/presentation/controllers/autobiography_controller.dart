@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ai_life_legacy/features/autobiography/data/autobiography_api.dart';
 import 'package:ai_life_legacy/features/user/data/models/user.dto.dart';
 import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
@@ -385,11 +386,20 @@ class AutobiographyController extends GetxController {
       Get.toNamed(Routes.generating);
       
       final response = await _api.generateAutobiography();
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('avatarUnlocked', true);
         Get.offNamed(Routes.generated);
+      } else {
+        throw Exception('Server returned status: ${response.statusCode}');
       }
     } catch (e) {
       Get.back(); // Back from loading
+      Get.snackbar(
+        '생성 실패',
+        '자서전 생성에 실패했습니다. 다시 시도해주세요.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
       print('[AutobiographyController] generateFullBook error: $e');
     } finally {
       isGenerating.value = false;

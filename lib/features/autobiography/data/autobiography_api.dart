@@ -72,7 +72,10 @@ class AutobiographyApi {
 
   /// 자서전 생성 및 PDF 발행
   Future<Response> generateAutobiography() async {
-    return await _apiProvider.post(ApiEndpoints.aiAutobiography);
+    return await _apiProvider.post(
+      ApiEndpoints.aiAutobiography,
+      options: Options(receiveTimeout: const Duration(seconds: 120)),
+    );
   }
 
   /// 답변 조회

@@ -58,6 +58,7 @@ class ChapterChatPage extends GetView<AutobiographyController> {
     }
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       backgroundColor: AppTheme.bg,
       appBar: AppBar(
         leading: IconButton(

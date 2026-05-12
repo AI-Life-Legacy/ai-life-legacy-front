@@ -118,7 +118,7 @@ class GeneratedPage extends StatelessWidget {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: () => Get.toNamed('/viewer_chat'),
+                        onPressed: () => Get.toNamed(Routes.viewerChat),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.bgAlt,
                           foregroundColor: AppTheme.text,

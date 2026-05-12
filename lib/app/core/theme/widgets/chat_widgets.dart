@@ -52,13 +52,18 @@ class AIQuestionCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          Text(
-            text,
-            style: const TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w500,
-              color: AppTheme.text,
-              height: 1.5,
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 130),
+            child: SingleChildScrollView(
+              child: Text(
+                text,
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w500,
+                  color: AppTheme.text,
+                  height: 1.5,
+                ),
+              ),
             ),
           ),
           if (showListen) ...[
@@ -96,37 +101,42 @@ class AIBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.76),
-        margin: const EdgeInsets.only(bottom: 2),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: AppTheme.bgAlt,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                text,
-                style: const TextStyle(
-                  fontSize: 15,
-                  color: AppTheme.text,
-                  height: 1.5,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        Flexible(
+          child: Container(
+            constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
+            margin: const EdgeInsets.only(bottom: 2),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppTheme.bgAlt,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    text,
+                    softWrap: true,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      color: AppTheme.text,
+                      height: 1.5,
+                    ),
+                  ),
                 ),
-              ),
+                if (time != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4, left: 4),
+                    child: Text(time!, style: AppTextStyles.caption),
+                  ),
+              ],
             ),
-            if (time != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 4, left: 4),
-                child: Text(time!, style: AppTextStyles.caption),
-              ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }
@@ -143,41 +153,46 @@ class UserBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerRight,
-      child: Container(
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.76),
-        margin: const EdgeInsets.only(bottom: 2),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: AppTheme.cta,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                text,
-                style: const TextStyle(
-                  fontSize: 15,
-                  color: Colors.white,
-                  height: 1.5,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Flexible(
+          child: Container(
+            constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
+            margin: const EdgeInsets.only(bottom: 2),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppTheme.cta,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    text,
+                    softWrap: true,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      color: Colors.white,
+                      height: 1.5,
+                    ),
+                  ),
                 ),
-              ),
+                if (time != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4, right: 4),
+                    child: Text(
+                      time!,
+                      style: AppTextStyles.caption,
+                      textAlign: TextAlign.right,
+                    ),
+                  ),
+              ],
             ),
-            if (time != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 4, right: 4),
-                child: Text(
-                  time!,
-                  style: AppTextStyles.caption,
-                  textAlign: TextAlign.right,
-                ),
-              ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }

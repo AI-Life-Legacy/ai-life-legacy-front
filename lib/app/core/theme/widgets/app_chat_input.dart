@@ -65,35 +65,43 @@ class _AppChatInputState extends State<AppChatInput> {
         border: Border(top: BorderSide(color: AppTheme.border)),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Expanded(
-            child: Container(
-              constraints: const BoxConstraints(minHeight: 40),
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              decoration: BoxDecoration(
-                border: Border.all(color: AppTheme.border),
-                borderRadius: BorderRadius.circular(20),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                minHeight: 48,
+                maxHeight: 140,
               ),
-              child: TextField(
-                enabled: widget.enabled,
-                controller: _textController,
-                decoration: InputDecoration(
-                  hintText: widget.placeholder,
-                  hintStyle: TextStyle(
-                    fontSize: 15,
-                    color: widget.enabled ? AppTheme.textPh : AppTheme.textPh.withOpacity(0.5),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                decoration: BoxDecoration(
+                  border: Border.all(color: AppTheme.border),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: TextField(
+                  enabled: widget.enabled,
+                  controller: _textController,
+                  minLines: 1,
+                  maxLines: 5,
+                  keyboardType: TextInputType.multiline,
+                  textInputAction: TextInputAction.newline,
+                  scrollPhysics: const BouncingScrollPhysics(),
+                  decoration: InputDecoration(
+                    hintText: widget.placeholder,
+                    hintStyle: TextStyle(
+                      fontSize: 15,
+                      color: widget.enabled ? AppTheme.textPh : AppTheme.textPh.withOpacity(0.5),
+                    ),
+                    border: InputBorder.none,
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
                   ),
-                  border: InputBorder.none,
-                  isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: widget.enabled ? AppTheme.text : AppTheme.textPh,
+                  ),
                 ),
-                style: TextStyle(
-                  fontSize: 15,
-                  color: widget.enabled ? AppTheme.text : AppTheme.textPh,
-                ),
-                maxLines: null,
-                textInputAction: TextInputAction.send,
-                onSubmitted: (_) => widget.enabled ? _handleSend() : null,
               ),
             ),
           ),
