@@ -1,136 +1,132 @@
-/// Auth 기능 관련 UI 상태 및 비즈니스 로직 제어 Controller
-/// 세션 확인, 로그인, 회원가입, 로그아웃 등의 기능을 수행합니다.
-
-import 'package:dio/dio.dart';
 import 'package:get/get.dart';
-import 'package:ai_life_legacy/features/auth/data/auth_repository.dart';
+import 'package:ai_life_legacy/features/auth/data/auth_api.dart';
 import 'package:ai_life_legacy/features/auth/data/models/auth.dto.dart';
-import 'package:ai_life_legacy/features/user/data/user_repository.dart';
 import 'package:ai_life_legacy/app/core/utils/token_storage.dart';
 import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
 
 class AuthController extends GetxController {
-  final AuthRepository repo;
-  final UserRepository userRepo;
-  AuthController(this.repo, this.userRepo);
+  final AuthApi _authApi;
 
-  // RxBool: 반응형 상태 변수
-  final RxBool isLoggedIn = false.obs;
-  final RxBool loading = false.obs;
-  final RxString errorMessage = ''.obs;
+  AuthController(this._authApi);
 
-  @override
-  void onInit() {
-    super.onInit();
-    _refreshSession(); // 초기화 시 세션 유효성 확인
+  final emailController = Rx<String>('');
+  final passwordController = Rx<String>('');
+  
+  final isLoading = false.obs;
+  final showPassword = false.obs;
+  final errorMessage = ''.obs;
+
+  void toggleShowPassword() => showPassword.toggle();
+
+  void clearFields() {
+    emailController.value = '';
+    passwordController.value = '';
   }
 
-  /// 세션 상태 갱신. 반환값 없음.
-  Future<void> _refreshSession() async {
-    loading.value = true;
-    try {
-      // Access Token 존재 및 세션 유효성 확인 성공 시 로그인 상태 true
-      final token = TokenStorage.getAccessToken();
-      isLoggedIn.value = token != null && await repo.checkSession();
-    } catch (e) {
-      isLoggedIn.value = false;
-    } finally {
-      loading.value = false;
+  Future<void> login() async {
+    if (isLoading.value) return;
+
+    final email = emailController.value.trim();
+    final password = passwordController.value.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      errorMessage.value = '이메일과 비밀번호를 입력해주세요.';
+      return;
     }
-  }
 
-  /// 회원가입
-  Future<bool> signUp(String email, String password) async {
-    loading.value = true;
-    errorMessage.value = '';
     try {
-      final credentials = AuthCredentialsDto(email: email, password: password);
-      final result = await repo.signUp(credentials);
-
-      // 발급받은 토큰 저장
-      await TokenStorage.saveTokens(
-        accessToken: result.data.accessToken,
-        refreshToken: result.data.refreshToken,
+      errorMessage.value = '';
+      isLoading.value = true;
+      final response = await _authApi.login(
+        AuthCredentialsDto(
+          email: email,
+          password: password,
+        ),
       );
 
-      // 회원가입 완료 후 온보딩(자기소개) 페이지로 이동
-      Get.offAllNamed(Routes.selfIntro);
-      isLoggedIn.value = true;
-      return true;
-    } catch (e) {
-      errorMessage.value = e.toString();
-      return false;
-    } finally {
-      loading.value = false;
-    }
-  }
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = response.data;
+        print('[AuthController] login response data: $data');
 
-  /// 로그인
-  Future<bool> login(String email, String password) async {
-    loading.value = true;
-    errorMessage.value = '';
-    try {
-      final credentials = AuthCredentialsDto(email: email, password: password);
-      print('[Auth] Requesting Login...');
-      final result = await repo.login(credentials);
-      print('[Auth] Login Success. Tokens received.');
+        // 백엔드 응답 구조: { status, message, result: { accessToken, refreshToken } }
+        final tokenData = data['result'] ?? data['data'] ?? data;
+        print('[AuthController] tokenData: $tokenData');
 
-      // 토큰 저장
-      await TokenStorage.saveTokens(
-        accessToken: result.data.accessToken,
-        refreshToken: result.data.refreshToken,
-      );
+        final accessToken = tokenData['accessToken'];
+        final refreshToken = tokenData['refreshToken'];
 
-      // 유저 케이스(TOC) 존재 여부 확인 후 네비게이션 분기 처리
-      print('[Auth] Checking User TOC...');
-      try {
-        final tocRes = await userRepo.getUserToc();
-        print('[Auth] TOC retrieved: ${tocRes.data}');
-
-        if (tocRes.data.isEmpty) {
-          print('[Auth] User has no TOC. Redirecting to SelfIntro.');
-          Get.offAllNamed(Routes.selfIntro);
-        } else {
+        if (accessToken != null && refreshToken != null) {
+          await TokenStorage.saveTokens(
+            accessToken: accessToken,
+            refreshToken: refreshToken,
+          );
+          clearFields();
           Get.offAllNamed(Routes.home);
-        }
-      } catch (e) {
-        // 404 등 에러 시 신규 유저로 간주
-        print('[Auth] Failed to get TOC: $e');
-        if (e is DioException) {
-          final status = e.response?.statusCode;
-          final msg = e.response?.data.toString() ?? '';
-
-          // 404: Not Found (신규 유저)
-          // 500 & 'Cannot read properties of null': 백엔드 이슈 대응(신규 유저로 처리)
-          if (status == 404 ||
-              (status == 500 &&
-                  msg.contains("Cannot read properties of null"))) {
-            print('[Auth] TOC missing (404/500-NPE) -> Treating as new user');
-            Get.offAllNamed(Routes.selfIntro);
-          } else {
-            // 그 외 에러 발생 시 홈 화면으로 이동 (기존 로직 유지)
-            Get.offAllNamed(Routes.home);
-          }
         } else {
-          Get.offAllNamed(Routes.home);
+          errorMessage.value = '서버 응답에서 토큰을 추출할 수 없습니다.';
         }
       }
-
-      isLoggedIn.value = true;
-      return true;
     } catch (e) {
-      print('[Auth] Login Flow Failed: $e');
-      errorMessage.value = e.toString();
-      return false;
+      errorMessage.value = '이메일 또는 비밀번호를 확인해주세요.';
     } finally {
-      loading.value = false;
+      isLoading.value = false;
     }
   }
 
-  /// 로그아웃
+  Future<void> signUp() async {
+    if (isLoading.value) return;
+
+    final email = emailController.value.trim();
+    final password = passwordController.value.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      errorMessage.value = '이메일과 비밀번호를 모두 입력해주세요.';
+      return;
+    }
+
+    try {
+      errorMessage.value = '';
+      isLoading.value = true;
+      final response = await _authApi.signUp(
+        AuthCredentialsDto(
+          email: email,
+          password: password,
+        ),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = response.data;
+        print('[AuthController] signUp response data: $data');
+
+        final tokenData = data['result'] ?? data['data'] ?? data;
+
+        final accessToken = tokenData['accessToken'];
+        final refreshToken = tokenData['refreshToken'];
+
+        if (accessToken != null && refreshToken != null) {
+          await TokenStorage.saveTokens(
+            accessToken: accessToken,
+            refreshToken: refreshToken,
+          );
+          clearFields();
+          Get.offAllNamed(Routes.selfIntro);
+        } else {
+          errorMessage.value = '서버 응답에서 토큰을 추출할 수 없습니다.';
+        }
+      }
+    } catch (e) {
+      // 409 Conflict 등의 에러 처리
+      errorMessage.value = '회원가입에 실패했습니다. 다시 시도해주세요.';
+      if (e.toString().contains('409')) {
+        errorMessage.value = '이미 가입된 이메일입니다.';
+      }
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   Future<void> logout() async {
-    await TokenStorage.clearAll();
-    isLoggedIn.value = false;
-    Get.offAllNamed(Routes.main);
+    await TokenStorage.clearTokens();
+    Get.offAllNamed(Routes.login);
   }
 }

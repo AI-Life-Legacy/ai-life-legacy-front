@@ -28,20 +28,35 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Success201Response<JwtTokenResponseDto>> signUp(
     AuthCredentialsDto credentials,
-  ) =>
-      api.signUp(credentials);
+  ) async {
+    final response = await api.signUp(credentials);
+    return Success201Response.fromJson(
+      response.data,
+      (json) => JwtTokenResponseDto.fromJson(json),
+    );
+  }
 
   @override
   Future<SuccessResponse<JwtTokenResponseDto>> login(
     AuthCredentialsDto credentials,
-  ) =>
-      api.login(credentials);
+  ) async {
+    final response = await api.login(credentials);
+    return SuccessResponse.fromJson(
+      response.data,
+      (json) => JwtTokenResponseDto.fromJson(json),
+    );
+  }
 
   @override
   Future<SuccessResponse<JwtTokenResponseDto>> refreshToken(
     RefreshTokenDto refreshTokenDto,
-  ) =>
-      api.refreshToken(refreshTokenDto);
+  ) async {
+    final response = await api.refreshToken(refreshTokenDto);
+    return SuccessResponse.fromJson(
+      response.data,
+      (json) => JwtTokenResponseDto.fromJson(json),
+    );
+  }
 
   @override
   Future<bool> checkSession() => api.checkSession();

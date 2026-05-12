@@ -1,79 +1,44 @@
-/// Auth 관련 원격 API 호출을 담당하는 Data Source 레이어입니다.
-/// 네트워킹 코드를 분리하여 테스트와 유지보수를 용이하게 합니다.
-
-import 'package:dio/dio.dart';
-import 'package:ai_life_legacy/app/core/network/dio_client.dart';
-import 'package:ai_life_legacy/app/core/network/api_endpoints.dart';
-import 'package:ai_life_legacy/app/core/models/response.dart';
 import 'package:ai_life_legacy/features/auth/data/models/auth.dto.dart';
+import 'package:ai_life_legacy/app/core/network/api_provider.dart';
+import 'package:ai_life_legacy/app/core/network/api_endpoints.dart';
+import 'package:dio/dio.dart';
 
 class AuthApi {
-  // 전역 Dio 인스턴스 사용 (인터셉터 및 토큰 설정 공유)
-  final Dio _dio = DioClient.instance;
+  final ApiProvider _apiProvider;
+
+  AuthApi(this._apiProvider);
 
   /// 회원가입
-  Future<Success201Response<JwtTokenResponseDto>> signUp(
-    AuthCredentialsDto credentials,
-  ) async {
-    final response = await _dio.post(
+  Future<Response> signUp(AuthCredentialsDto credentials) async {
+    return await _apiProvider.post(
       ApiEndpoints.signUp,
       data: credentials.toJson(),
-    );
-
-    return Success201Response<JwtTokenResponseDto>.fromJson(
-      response.data,
-      (json) => JwtTokenResponseDto.fromJson(json as Map<String, dynamic>),
     );
   }
 
   /// 로그인
-  Future<SuccessResponse<JwtTokenResponseDto>> login(
-    AuthCredentialsDto credentials,
-  ) async {
-    try {
-      final response = await _dio.post(
-        ApiEndpoints.login,
-        data: credentials.toJson(),
-      );
-
-      return SuccessResponse<JwtTokenResponseDto>.fromJson(
-        response.data,
-        (json) => JwtTokenResponseDto.fromJson(json as Map<String, dynamic>),
-      );
-    } on DioException catch (e) {
-      if (e.response != null) {
-        print('Login Error Status: ${e.response?.statusCode}');
-        print('Login Error Data: ${e.response?.data}');
-      }
-      rethrow;
-    }
+  Future<Response> login(AuthCredentialsDto credentials) async {
+    return await _apiProvider.post(
+      ApiEndpoints.login,
+      data: credentials.toJson(),
+    );
   }
 
   /// 토큰 갱신
-  Future<SuccessResponse<JwtTokenResponseDto>> refreshToken(
-    RefreshTokenDto refreshTokenDto,
-  ) async {
-    final response = await _dio.post(
+  Future<Response> refreshToken(RefreshTokenDto refreshTokenDto) async {
+    return await _apiProvider.post(
       ApiEndpoints.refreshToken,
       data: refreshTokenDto.toJson(),
     );
-
-    return SuccessResponse<JwtTokenResponseDto>.fromJson(
-      response.data,
-      (json) => JwtTokenResponseDto.fromJson(json as Map<String, dynamic>),
-    );
   }
 
-  /// 세션 유효성 확인 호출.
-  /// 반환: Future<bool> → 로그인 상태(true)/비로그인(false).
-  /// 실제 연동 시, statusCode/응답 본문을 확인해 bool로 맵핑.
+  /// 세션 확인 (프로필 조회로 확인)
   Future<bool> checkSession() async {
-    // 실제 연동 시:
-    // final res = await _dio.get(ApiEndpoints.authSession);
-    // return res.statusCode == 200 && res.data['loggedIn'] == true;
-
-    // 현재는 더미 딜레이 후 항상 false(비로그인) 반환
-    await Future.delayed(const Duration(milliseconds: 200));
-    return false;
+    try {
+      final response = await _apiProvider.get(ApiEndpoints.profile);
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
   }
 }

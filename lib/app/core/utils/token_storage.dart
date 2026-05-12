@@ -59,7 +59,7 @@ class TokenStorage {
   }
 
   /// 저장된 모든 토큰 정보를 삭제합니다 (로그아웃 시 호출).
-  static Future<void> clearAll() async {
+  static Future<void> clearTokens() async {
     _accessToken = null;
     _refreshToken = null;
     _uuid = null;

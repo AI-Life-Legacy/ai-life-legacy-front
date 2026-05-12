@@ -17,6 +17,8 @@ class ApiEndpoints {
   static String userAnswerUpdate(int answerId) =>
       '/users/me/answers/$answerId'; // PATCH
   static const deleteUser = '/users/me'; // DELETE
+  static const profile = '/users/me'; // GET
+  static const viewerCode = '/users/me/viewer-code'; // GET
 
   // Life Legacy (자서전)
   static String lifeLegacyQuestions(int tocId) =>

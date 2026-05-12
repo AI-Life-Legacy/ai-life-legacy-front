@@ -274,7 +274,7 @@ class SelfIntroController extends GetxController {
   Future<void> _finalizeSelfIntro() async {
     if (currentTocId != null) {
       // Chapter mode finish
-      Get.snackbar('완료', '작성이 완료되었습니다.');
+      print('[SelfIntroController] 작성이 완료되었습니다.');
       Get.back(); // Return to Home
       return;
     }

@@ -37,14 +37,36 @@ class DioClient {
       ),
     );
 
+    // 토큰 없이 접근 가능한 공개 API 경로 목록
+    final publicPaths = [
+      '/auth/login',
+      '/auth/signup',
+      '/auth/refresh-token',
+    ];
+
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
-          // 요청 헤더에 Access Token 자동 주입
-          final accessToken = TokenStorage.getAccessToken();
-          if (accessToken != null) {
-            options.headers['Authorization'] = 'Bearer $accessToken';
+          final path = options.path;
+          final isPublic = publicPaths.any((p) => path.contains(p));
+
+          print('[DioClient] Request: ${options.method} $path');
+
+          if (!isPublic) {
+            // 공개 API가 아닌 경우에만 Access Token 주입
+            final accessToken = TokenStorage.getAccessToken();
+            print('[DioClient] AccessToken exists: ${accessToken != null && accessToken.isNotEmpty}');
+            if (accessToken != null && accessToken.isNotEmpty) {
+              options.headers['Authorization'] = 'Bearer $accessToken';
+              print('[DioClient] Authorization header attached');
+            } else {
+              print('[DioClient] WARNING: No access token available for request');
+            }
+          } else {
+            print('[DioClient] Public path — skipping Authorization');
           }
+
+          options.headers['Content-Type'] = 'application/json';
           return handler.next(options);
         },
         onError: (error, handler) async {
@@ -59,7 +81,7 @@ class DioClient {
             } catch (e) {
               // 토큰 갱신 실패 시 로그아웃 처리 및 에러 전파
               print('[DioClient] Token refresh failed: $e');
-              await TokenStorage.clearAll();
+              await TokenStorage.clearTokens();
               return handler.reject(error);
             }
           } else {

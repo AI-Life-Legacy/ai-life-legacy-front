@@ -1,313 +1,80 @@
-# 기능별 API 매핑 가이드
+# API_MAPPING_GUIDE.md
+(AI 자서전 Life Legacy - Flutter/GetX 프론트엔드 API 연동 명세서)
 
-## 📱 화면별 API 사용 가이드
-
-### 1. 메인 페이지 (MainPage)
-**파일**: `lib/features/main/presentation/pages/main_page.dart`
-
-**역할**: 앱 시작 화면, 자서전 작성/보기 선택
-
-**사용 API**:
-- ❌ API 호출 없음 (정적 화면)
-- ✅ 로그인 상태 확인을 위해 AuthController 사용
+이 문서는 `ai-life-legacy-front` 프로젝트의 Feature-first 아키텍처에 맞추어, 현재 설계된 백엔드(NestJS, FastAPI) API를 프론트엔드의 각 기능(Feature) 모듈에 매핑한 테이블과 향후 추가가 필요한 API를 정리한 문서입니다.
 
 ---
 
-### 2. 로그인 페이지 (LoginPage)
-**파일**: `lib/features/auth/presentation/pages/login_page.dart`
+## 1. 현재 연동 가능한 API 매핑 (Feature 모듈별)
 
-**역할**: 사용자 로그인/회원가입
+### 🔐 인증 모듈 (`lib/features/auth/`)
+| 파일 경로 (data/) | HTTP | 엔드포인트 | 역할 및 설명 |
+| :--- | :--- | :--- | :--- |
+| `auth_api.dart` | `POST` | `/auth/signup` | 신규 사용자 등록 및 토큰 발급 |
+| `auth_api.dart` | `POST` | `/auth/login` | 이메일/비밀번호 로그인 및 토큰 발급 |
+| `auth_api.dart` | `POST` | `/auth/refresh-token` | 만료된 액세스 토큰 갱신 (인터셉터 등에서 공통 사용) |
 
-**사용 API**:
+### 👋 온보딩 모듈 (`lib/features/onboarding/`)
+| 파일 경로 (data/) | HTTP | 엔드포인트 | 역할 및 설명 |
+| :--- | :--- | :--- | :--- |
+| `onboarding_api.dart` | `POST` | `/users/me/intro` | 유저의 기본 자기소개 텍스트 저장 |
+| `onboarding_api.dart` | `POST` | `/api/case` | 입력된 자기소개를 바탕으로 유저의 라이프 스타일 케이스 분류 |
 
-#### 2-1. 회원가입 (Sign Up)
-```
-POST /auth/signup
-```
-- **요청**: `AuthCredentialsDto` (email, password)
-- **응답**: `Success201Response<JwtTokenResponseDto>`
-- **사용 시점**: 회원가입 버튼 클릭 시
-- **변경사항**: 현재 쿠폰번호 입력 필드 → email/password로 변경 필요
+### 🏠 홈 및 검색 모듈 (`lib/features/home/`, `lib/features/search/`)
+| 파일 경로 (data/) | HTTP | 엔드포인트 | 역할 및 설명 |
+| :--- | :--- | :--- | :--- |
+| `home_api.dart` | `GET` | `/users/me/toc` | 유저 맞춤형 목차와 각 항목별 진행률 조회 |
+| `search_api.dart` | `POST` | `/api/search` | 유저의 과거 기록 중 특정 키워드와 관련된 원문 검색 |
 
-#### 2-2. 로그인 (Sign In)
-```
-POST /auth/signin
-```
-- **요청**: `AuthCredentialsDto` (email, password)
-- **응답**: `SuccessResponse<JwtTokenResponseDto>`
-- **사용 시점**: 로그인 버튼 클릭 시
-- **변경사항**: 현재 쿠폰번호 입력 필드 → email/password로 변경 필요
+### ✍️ 자서전 집필 모듈 (`lib/features/autobiography/`)
+| 파일 경로 (data/) | HTTP | 엔드포인트 | 역할 및 설명 |
+| :--- | :--- | :--- | :--- |
+| `autobiography_api.dart`| `GET` | `/users/me/toc-questions` | 해당 목차에 포함된 질문 리스트 조회 |
+| `autobiography_api.dart`| `GET` | `/life-legacy/toc/:tocId/questions`| 특정 목차에 해당하는 모든 질문 리스트 조회 |
+| `autobiography_api.dart`| `POST` | `/api/question` | 유저의 1차 답변을 분석하여 심화(꼬리) 질문 생성 |
+| `autobiography_api.dart`| `POST` | `/api/combine` | 1차 답변과 2차(꼬리 질문) 답변을 자연스러운 문장으로 병합 |
+| `autobiography_api.dart`| `POST` | `/life-legacy/toc/:tocId/questions/:questionId/answers`| 각 질문에 대한 최종 완성된 자서전 문구 저장 |
+| `autobiography_api.dart`| `GET` | `/users/me/answers` | 특정 목차/질문에 대해 유저가 작성한 전체 답변 조회 |
+| `autobiography_api.dart`| `PATCH`| `/users/me/answers/:answerId` | 이미 작성된 자서전 답변 내용 직접 수정 |
+| `autobiography_api.dart`| `POST` | `/api/autobiography` | 모든 답변을 종합하여 자서전 제작 및 PDF 발행 |
 
-#### 2-3. 토큰 갱신 (Refresh Token)
-```
-POST /auth/refresh
-```
-- **요청**: `RefreshTokenDto` (refreshToken)
-- **응답**: `SuccessResponse<JwtTokenResponseDto>`
-- **사용 시점**: AccessToken 만료 시 자동 호출 (인터셉터에서 처리)
+### 🗣️ 아바타 채팅 및 뷰어 모듈 (`lib/features/avatar_chat/`, `lib/features/viewer/`)
+| 파일 경로 (data/) | HTTP | 엔드포인트 | 역할 및 설명 |
+| :--- | :--- | :--- | :--- |
+| `avatar_chat_api.dart` | `POST` | `/api/chat` | 본인 계정에서 AI 아바타와 대화 진행 |
+| `viewer_api.dart` | `POST` | `/api/chat` | 공유받은 관람자(가족/지인)가 아바타와 대화 진행 |
 
----
-
-### 3. 홈 페이지 (HomePage)
-**파일**: `lib/features/journal/presentation/pages/home_page.dart`
-
-**역할**: 자서전 목차(Contents) 목록 표시
-
-**사용 API**:
-
-#### 3-1. 유저 맞춤형 목차 조회
-```
-GET /users/:uuid/contents
-```
-- **파라미터**: uuid (JWT에서 추출)
-- **응답**: `SuccessResponse<List<UserContentDto>>`
-- **사용 시점**: 페이지 진입 시 `initState()` 또는 `onInit()`
-- **매핑**: 
-  - `UserContentDto.id` → `ChapterModel.id`
-  - `UserContentDto.content` → `ChapterModel.title`
-  - Progress 계산 필요 (질문 완료 수 / 전체 질문 수)
-
-#### 3-2. 유저 케이스 조회 (선택적)
-```
-GET /users/:uuid/cases
-```
-- **파라미터**: uuid
-- **응답**: `SuccessResponse<UserCaseDto>`
-- **사용 시점**: 첫 진입 시 케이스 확인(없으면 케이스 분류 화면으로 이동 가능)
-
-**구현 예시**:
-```dart
-// JournalController에서
-void loadUserContents(String uuid) async {
-  final result = await userRepository.getUserContents(uuid);
-  chapters.value = result.result.map((content) => 
-    ChapterModel(
-      id: content.id,
-      title: content.content,
-      subtitle: '진행률 계산 필요',
-      progress: 0.0, // TODO: 설문 완료율 계산
-    )
-  ).toList();
-}
-```
+### ⚙️ 마이페이지 모듈 (`lib/features/mypage/`)
+| 파일 매핑 | HTTP | 엔드포인트 | 역할 및 설명 |
+| :--- | :--- | :--- | :--- |
+| `mypage_api.dart` | `DELETE`| `/users/me` | 회원 탈퇴 처리 및 유저 데이터 폐기 |
+| `mypage_api.dart` | `POST` | `/api/sync` | (옵션) 유저의 데이터를 AI 모델의 벡터 DB와 동기화 |
 
 ---
 
-### 4. 자기소개 작성 페이지 (SelfIntroPage)
-**파일**: `lib/features/journal/presentation/pages/selfIntro_page.dart`
+## 2. 아직 없거나 개발 대기 중인 API (To-Do List)
 
-**역할**: 특정 목차(Content)의 질문에 답변 작성
+현재 UI 설계와 기획(발표 자료 및 아키텍처)에는 존재하지만, 제공된 **API 명세서에는 누락되어 있거나 추가 개발이 필요한 API** 목록입니다. 백엔드 팀에 요청하여 추가 연동이 필요합니다.
 
-**사용 API**:
+### 📌 1. 관람자(가족/지인) 공유를 위한 뷰어 코드 기능
+UI 흐름상 자서전 완성 후 "가족에게 공유 — 뷰어 코드 받기" 버튼이 존재하며(ex. 코드 `A3F7K2`), 뷰어는 이 코드를 입력해 접근해야 합니다. (발표 자료 지적 사항/To-Do에 명시됨)
+* **[필요 API 1] 뷰어 코드 발급 (공유자용):**
+    * `POST /life-legacy/share` (또는 유사 엔드포인트)
+    * 역할: 특정 유저의 자서전에 접근할 수 있는 6자리 고유 코드 발급.
+* **[필요 API 2] 뷰어 코드 검증 및 입장 (관람자용):**
+    * `POST /auth/viewer-login` 또는 `POST /life-legacy/verify-code`
+    * 역할: 관람자가 입력한 코드가 유효한지 검증하고, 관람자용 임시 토큰이나 자서전 열람 권한 데이터를 반환.
 
-#### 4-1. 목차별 질문 조회
-```
-GET /users/:uuid/contents/:contentsId/questions
-```
-- **파라미터**: uuid, contentsId
-- **응답**: `SuccessResponse<UserContentAndQuestionsDto>`
-- **사용 시점**: 페이지 진입 시 또는 목차 선택 시
-- **매핑**: 
-  - 첫 번째 질문을 화면 상단에 표시
-  - `questions` 배열로 추가 질문 관리
+### 📌 2. PDF 다운로드/출력 기능
+`POST /api/autobiography`로 PDF를 '생성(발행)'한다고 되어있으나, 생성된 PDF 파일을 프론트엔드(모바일 기기)로 다운로드하거나 URL을 받아오기 위한 구체적인 명세가 필요합니다.
+* **[필요 API 1] 생성된 PDF 조회/다운로드:**
+    * `GET /life-legacy/pdf` 또는 `GET /life-legacy/export`
+    * 역할: 생성된 자서전 PDF 파일의 다운로드 링크(S3 Presigned URL 등) 또는 바이너리 데이터를 반환.
 
-#### 4-2. 유저 케이스 분류 AI (초기 진입 시)
-```
-POST /ai/case
-```
-- **요청**: `MakeCaseDto` (data: 사용자 입력 텍스트)
-- **응답**: `SuccessResponse<AiResponseDto>`
-- **사용 시점**: 
-  - 케이스가 없는 경우, 사용자가 초기 입력을 하면 AI가 케이스 분류
-  - 분류 결과로 케이스 저장 필요
+### 📌 3. Spring 인증 서버 분리에 따른 Endpoint 변경 대비
+발표 자료의 시스템 구성도에 따르면 현재 NestJS에 통합된 `/auth` 라우트를 향후 **Spring 기반의 공동 인증 서버**로 분리할 예정입니다.
+* **프론트엔드 대비 사항:** `lib/app/core/network/dio_client.dart` 등에서 Auth용 Base URL을 별도로 분리할 수 있도록 Config 환경 변수(env) 설정을 유연하게 구성해야 합니다.
 
-#### 4-3. 유저 케이스 저장
-```
-PUT /users/:uuid/cases
-```
-- **요청**: `SetUserCaseDto` (caseName)
-- **응답**: `SuccessResponse<UserCaseDto>`
-- **사용 시점**: AI 케이스 분류 후 자동 호출
-
-#### 4-4. 2차 질문 생성 AI
-```
-POST /ai/question
-```
-- **요청**: `MakeReQuestionDto` (question: 현재 질문, data: 사용자 답변)
-- **응답**: `SuccessResponse<AiResponseDto>`
-- **사용 시점**: 
-  - 사용자가 답변을 입력하면 AI가 추후 질문 생성
-  - 생성된 질문을 채팅에 추가
-
-#### 4-5. 자서전 답변 합치기 AI
-```
-POST /ai/combine
-```
-- **요청**: `CombineDto` (question1, data1, question2, data2)
-- **응답**: `SuccessResponse<AiResponseDto>`
-- **사용 시점**: 
-  - 여러 답변을 하나로 합칠 때
-  - 사용자가 요청하거나 자동으로 처리
-
-#### 4-6. 자서전 저장
-```
-POST /post/
-```
-- **요청**: `SavePostDto` (response: 최종 답변, contentId, questionId)
-- **응답**: `Success204Response`
-- **사용 시점**: 
-  - 사용자가 답변을 완료하고 저장 버튼 클릭 시
-  - 또는 자동 저장 기능 구현 시
-
-#### 4-7. 자서전 업데이트
-```
-PATCH /post/
-```
-- **요청**: `PatchPostDto` (response: 수정된 답변, contentId, questionId)
-- **응답**: `Success204Response`
-- **사용 시점**: 기존 답변을 수정할 때
-
-**구현 흐름**:
-```
-1. 페이지 진입 → GET /users/:uuid/contents/:contentsId/questions
-2. 질문 표시 → 사용자 답변 입력
-3. 답변 입력 → POST /ai/question (추후 질문 생성)
-4. 답변 완료 → POST /post/ (저장)
-5. 답변 수정 → PATCH /post/ (업데이트)
-```
-
----
-
-### 5. 자서전 보기 페이지 (미구현 - 추정)
-**역할**: 작성한 자서전 전체 조회
-
-**사용 API**:
-
-#### 5-1. 유저 자서전 데이터 조회
-```
-GET /users/:uuid/posts
-```
-- **파라미터**: uuid
-- **응답**: `SuccessResponse<List<UserPostsDto>>`
-- **사용 시점**: 페이지 진입 시
-- **매핑**: 
-  - `UserPostsDto.response` → 답변 내용
-  - `UserPostsDto.content` → 목차 이름
-  - `UserPostsDto.question` → 질문 내용
-
-**구현 필요**: 새로운 페이지 생성 필요
-
----
-
-### 6. 마이페이지 (MyPage)
-**파일**: `lib/features/profile/presentation/pages/my_page.dart`
-
-**역할**: 사용자 정보 관리, 회원탈퇴
-
-**사용 API**:
-
-#### 6-1. 회원탈퇴
-```
-DELETE /users/:uuid?deleteType={number}
-```
-- **파라미터**: uuid, deleteType (쿼리 파라미터)
-- **응답**: `Success204Response`
-- **사용 시점**: 회원탈퇴 버튼 클릭 시
-- **주의**: deleteType은 숫자로 탈퇴 사유 구분 (예: 1=개인정보, 2=서비스 불만 등)
-
----
-
-## 🔄 전체 플로우 요약
-
-### 회원가입/로그인 플로우
-```
-MainPage → LoginPage → [SignUp/SignIn] → HomePage
-```
-
-### 자서전 작성 플로우
-```
-HomePage → [목차 선택] → SelfIntroPage
-  ↓
-[질문 조회] → [답변 입력] → [AI 질문 생성] → [답변 저장]
-  ↓
-[추가 질문] → [답변 합치기] → [최종 저장]
-```
-
-### 자서전 보기 플로우
-```
-HomePage → [자서전 보기 탭] → PostsViewPage
-  ↓
-[전체 자서전 조회] → [목차별 정리 표시]
-```
-
----
-
-## 📋 API 우선순위별 구현 권장사항
-
-### Phase 1: 기본 인증 (필수)
-1. ✅ `POST /auth/signup` - 회원가입
-2. ✅ `POST /auth/signin` - 로그인
-3. ✅ `POST /auth/refresh` - 토큰 갱신 (인터셉터)
-
-### Phase 2: 목차 조회 (필수)
-1. ✅ `GET /users/:uuid/contents` - 목차 목록
-2. ✅ `GET /users/:uuid/contents/:contentsId/questions` - 질문 목록
-
-### Phase 3: 작성 기능 (핵심)
-1. ✅ `POST /post/` - 답변 저장
-2. ✅ `PATCH /post/` - 답변 수정
-3. ✅ `POST /ai/question` - 질문 생성 (선택)
-
-### Phase 4: AI 기능 (고급)
-1. ✅ `POST /ai/case` - 케이스 분류
-2. ✅ `PUT /users/:uuid/cases` - 케이스 저장
-3. ✅ `POST /ai/combine` - 답변 합치기
-
-### Phase 5: 조회 기능
-1. ✅ `GET /users/:uuid/posts` - 자서전 전체 조회
-2. ✅ `GET /users/:uuid/cases` - 케이스 조회
-
-### Phase 6: 관리 기능
-1. ✅ `DELETE /users/:uuid` - 회원탈퇴
-
----
-
-## 🔐 인증 처리
-
-**모든 보호된 API (✅ 필요)는 JWT 토큰을 헤더에 포함해야 합니다.**
-
-**Dio 인터셉터 예시**:
-```dart
-dio.interceptors.add(
-  InterceptorsWrapper(
-    onRequest: (options, handler) {
-      final token = TokenStorage.getAccessToken();
-      if (token != null) {
-        options.headers['Authorization'] = 'Bearer $token';
-      }
-      return handler.next(options);
-    },
-    onError: (error, handler) {
-      if (error.response?.statusCode == 401) {
-        // 토큰 갱신 로직
-        return _refreshTokenAndRetry(error.requestOptions);
-      }
-      return handler.next(error);
-    },
-  ),
-);
-```
-
----
-
-## 📝 참고사항
-
-1. **UUID 추출**: JWT 토큰에서 사용자 UUID 추출 필요 (토큰 디코딩)
-2. **진행률 계산**: 질문 완료 수를 기반으로 목차별 진행률 계산 필요
-3. **에러 처리**: 공통 `ErrorResponse`로 에러 핸들링
-4. **로딩 상태**: 각 API 호출 시 로딩 상태 관리 필요
-5. **오프라인**: 네트워크 오류 시 로컬 저장 및 재시도 로직 고려
-
-
-
-
+### 📌 4. 아바타 대화 세션 관리 및 문맥 분기 파라미터
+아바타 대화 시 '관련 문맥 양에 따른 응답 분기 알고리즘'이 적용될 예정입니다. 대화를 이어가기 위해선 단순 채팅 내용뿐만 아니라 세션(Session ID) 관리 기능이 필요할 수 있습니다.
+* **프론트엔드 대비 사항:** `POST /api/chat` 호출 시, `sessionId`나 `role` (큐레이터, 아빠, 엄마 등)을 함께 Body에 담아 보내도록 API 스펙 확장이 필요할 가능성이 높습니다. 백엔드 팀과 Request Body 구조 협의가 필요합니다.
