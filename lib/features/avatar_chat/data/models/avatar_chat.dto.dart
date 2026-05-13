@@ -1,4 +1,5 @@
 /// 아바타 채팅 관련 요청/응답 DTO 정의
+library;
 
 /// 아바타 채팅 요청 DTO
 class AvatarChatRequestDto {

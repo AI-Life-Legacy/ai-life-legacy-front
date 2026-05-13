@@ -8,13 +8,20 @@ class AvatarChatApi {
   AvatarChatApi(this._apiProvider);
 
   /// 아바타 채팅
-  /// Request: { message, role }
-  Future<Response> chat(String message, {String? role}) async {
+  /// Request: { message, role, role_id, session_id }
+  Future<Response> chat(
+    String message, {
+    String? role,
+    String? roleId,
+    String? sessionId,
+  }) async {
     return await _apiProvider.post(
       ApiEndpoints.aiChat,
       data: {
         'message': message,
         if (role != null) 'role': role,
+        if (roleId != null) 'role_id': roleId,
+        if (sessionId != null) 'session_id': sessionId,
       },
     );
   }
@@ -33,5 +40,10 @@ class AvatarChatApi {
   /// 뷰어 코드 가져오기
   Future<Response> getViewerCode() async {
     return await _apiProvider.get(ApiEndpoints.viewerCode);
+  }
+
+  /// TOC 가져오기 (총 챕터수 등 확인용)
+  Future<Response> getToc() async {
+    return await _apiProvider.get(ApiEndpoints.userToc);
   }
 }
