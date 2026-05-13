@@ -52,7 +52,7 @@ class LockedPage extends StatelessWidget {
                     ),
                     child: const Center(
                       child: Text(
-                        'MT',
+                        'U',
                         style: TextStyle(
                           fontFamily: AppTheme.fontFamily,
                           fontSize: 20,
@@ -64,7 +64,7 @@ class LockedPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Margaret Thompson',
+                    '사용자',
                     style: TextStyle(
                       fontFamily: AppTheme.fontFamily,
                       fontSize: 15,
@@ -107,40 +107,49 @@ class LockedPage extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.lock_outline, size: 40, color: AppTheme.border),
-                    const SizedBox(height: 16),
+                    const Icon(Icons.lock_outline, size: 48, color: AppTheme.border),
+                    const SizedBox(height: 24),
                     const Text(
-                      '자서전을 완성하면\n아바타 대화가 열려요',
+                      '자서전을 완성하면\n아바타 대화가 열려요.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontFamily: AppTheme.fontFamily,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
                         color: AppTheme.text,
-                        height: 1.5,
+                        height: 1.4,
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
+                    const Text(
+                      '먼저 자서전을 만들어주세요.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: AppTheme.fontFamily,
+                        fontSize: 14,
+                        color: AppTheme.textSec,
+                      ),
+                    ),
+                    const SizedBox(height: 32),
                     SizedBox(
-                      width: 200,
+                      width: 220,
                       child: ElevatedButton(
-                        onPressed: () => Get.offAllNamed(Routes.home),
+                        onPressed: () => Get.offNamed(Routes.autobiography),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.bgAlt,
-                          foregroundColor: AppTheme.text,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          backgroundColor: AppTheme.cta,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            side: const BorderSide(color: AppTheme.border),
+                            borderRadius: BorderRadius.circular(12),
                           ),
                           elevation: 0,
                         ),
                         child: const Text(
-                          '계속 쓰러 가기',
+                          '자서전 작성하러 가기',
                           style: TextStyle(
                             fontFamily: AppTheme.fontFamily,
                             fontSize: 15,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),

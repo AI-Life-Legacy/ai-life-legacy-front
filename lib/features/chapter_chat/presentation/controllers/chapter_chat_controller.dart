@@ -51,7 +51,7 @@ class ChapterChatController extends GetxController {
     currentQuestionIndex.value = 0;
 
     try {
-      print('[ChapterChat] Loading questions for TOC ID: $tocId');
+      debugPrint('[ChapterChat] Loading questions for TOC ID: $tocId');
       final result = await postRepo.getQuestions(tocId);
       questions.assignAll(result.data
           .map((e) => QuestionDto(id: e.id, questionText: e.question)));
@@ -106,7 +106,7 @@ class ChapterChatController extends GetxController {
       // 1. 답변 동기화 (실패해도 조용히 진행)
       await aiRepo.sync(AiSyncRequestDto(content: answer));
     } catch (e) {
-      print('[ChapterChat] AI Sync failed: $e');
+      debugPrint('[ChapterChat] AI Sync failed: $e');
     }
 
     // 2. 무조건 수동 트리거 버튼 노출 (사용자가 더 깊게 생각할지, 다음으로 넘길지 선택)
@@ -116,8 +116,9 @@ class ChapterChatController extends GetxController {
 
   /// AI 꼬리질문 생성 (수동 트리거)
   Future<void> generateFollowUpQuestion() async {
-    if (questions.isEmpty || currentQuestionIndex.value >= questions.length)
+    if (questions.isEmpty || currentQuestionIndex.value >= questions.length) {
       return;
+    }
     final question = questions[currentQuestionIndex.value];
     final answer = _pendingPrimaryAnswer;
     if (answer == null) return;
@@ -205,7 +206,7 @@ class ChapterChatController extends GetxController {
     } else {
       currentQuestionIndex.value = questions.length;
       addMessage('모든 질문에 답변하셨습니다!', isUser: false);
-      print('[ChapterChatController] 모든 답변이 저장되었습니다.');
+      debugPrint('[ChapterChatController] 모든 답변이 저장되었습니다.');
       // 여기서 챕터 완료 처리를 하거나 홈으로 돌아갈 수 있음
     }
   }

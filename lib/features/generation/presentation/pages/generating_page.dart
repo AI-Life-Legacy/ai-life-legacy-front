@@ -54,12 +54,13 @@ class _GeneratingPageState extends State<GeneratingPage> {
   }
 
   Future<void> _executeApi() async {
-    final success = await _controller.generateFullBook();
+    final bool force = Get.arguments?['force'] == true;
+    final result = await _controller.generateFullBook(force: force);
     _progressTimer?.cancel();
 
     if (!mounted) return;
 
-    if (success) {
+    if (result != null) {
       setState(() {
         _progress = 100.0;
       });
@@ -67,13 +68,18 @@ class _GeneratingPageState extends State<GeneratingPage> {
       // 성공 후 100% 보여주고 이동
       Future.delayed(const Duration(seconds: 1), () {
         if (mounted) {
-          Get.offNamed(Routes.generated);
+          Get.offNamed(Routes.generated, arguments: result);
         }
       });
     } else {
       setState(() {
         _hasError = true;
-        _errorMessage = '자서전 생성에 실패했습니다.\n잠시 후 다시 시도해주세요.';
+        final errorMsg = _controller.lastGenerationError.value;
+        if (force) {
+          _errorMessage = '다시 제작에 실패했습니다. 기존 자서전은 계속 볼 수 있어요.';
+        } else {
+          _errorMessage = errorMsg.isNotEmpty ? errorMsg : '자서전 생성에 실패했습니다.\n잠시 후 다시 시도해주세요.';
+        }
       });
     }
   }

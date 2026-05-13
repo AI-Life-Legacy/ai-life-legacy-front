@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
+import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ai_life_legacy/features/autobiography/data/autobiography_api.dart';
 import 'package:ai_life_legacy/features/user/data/models/user.dto.dart';
@@ -32,6 +33,7 @@ class AutobiographyController extends GetxController {
   final isGenerating = false.obs;
   final isGeneratingFollowUp = false.obs;
   final isSavingAnswer = false.obs;
+  final lastGenerationError = ''.obs;
   
   final currentTocId = 0.obs;
   
@@ -41,9 +43,143 @@ class AutobiographyController extends GetxController {
   final lastFollowUpAnswer = ''.obs;
   final currentFollowUpQuestion = ''.obs;
   
+  // Autobiography PDF state variables
+  final autobiographyGenerated = false.obs;
+  final pdfUrl = RxnString();
+  final pageCount = RxnInt();
+  final generatedAt = RxnString();
+  final isUnlocked = false.obs;
+  
   final scrollController = ScrollController();
   
   bool _closed = false;
+
+  @override
+  void onInit() {
+    super.onInit();
+    syncStatusWithServer();
+  }
+
+  Future<void> loadAutobiographyState() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      autobiographyGenerated.value = prefs.getBool('autobiographyGenerated') ?? false;
+      pdfUrl.value = prefs.getString('autobiographyPdfUrl');
+      pageCount.value = prefs.getInt('autobiographyPageCount');
+      generatedAt.value = prefs.getString('autobiographyGeneratedAt');
+      isUnlocked.value = prefs.getBool('avatarUnlocked') ?? false;
+      debugPrint('[AutobiographyController] State loaded: generated=${autobiographyGenerated.value}, pdfUrl=${pdfUrl.value}, isUnlocked=${isUnlocked.value}');
+    } catch (e) {
+      debugPrint('[AutobiographyController] loadAutobiographyState error: $e');
+    }
+  }
+
+  Future<void> syncStatusWithServer() async {
+    try {
+      final response = await _api.getAutobiographyStatus();
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        Map<String, dynamic>? dataMap;
+        if (response.data is Map<String, dynamic>) {
+          dataMap = response.data as Map<String, dynamic>;
+        }
+
+        Map<String, dynamic> targetMap = {};
+        if (dataMap != null) {
+          if (dataMap.containsKey('result') && dataMap['result'] is Map<String, dynamic>) {
+            targetMap = dataMap['result'] as Map<String, dynamic>;
+          } else {
+            targetMap = dataMap;
+          }
+        }
+
+        final status = targetMap['status']?.toString();
+        final pdfUrlVal = (targetMap['pdfUrl'] ?? targetMap['pdf_url'])?.toString();
+        final hasPdfUrl = pdfUrlVal != null && pdfUrlVal.trim().isNotEmpty;
+        debugPrint('[AutobiographyController] syncStatusWithServer status: $status, pdfUrl: $pdfUrlVal');
+
+        if (status == 'COMPLETED' || hasPdfUrl) {
+          int? pageCountVal;
+          final rawPageCount = targetMap['pageCount'] ?? targetMap['page_count'];
+          if (rawPageCount is int) {
+            pageCountVal = rawPageCount;
+          } else if (rawPageCount != null) {
+            pageCountVal = int.tryParse(rawPageCount.toString());
+          }
+
+          final generatedAtVal = (targetMap['generatedAt'] ?? targetMap['generated_at'])?.toString();
+
+          await saveAutobiographyState(
+            generated: true,
+            url: pdfUrlVal,
+            count: pageCountVal,
+            createdAt: generatedAtVal,
+          );
+
+          // COMPLETED이거나 PDF가 있으면 아바타도 잠금 해제
+          isUnlocked.value = true;
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setBool('avatarUnlocked', true);
+          debugPrint('[AutobiographyController] State synced with server COMPLETED/hasPdfUrl. pdfUrl=$pdfUrlVal');
+        } else {
+          // NOT_STARTED, FAILED, PROCESSING 등
+          // 기존 로컬 상태와 충돌하지 않게 처리: generated=false로 설정
+          await saveAutobiographyState(
+            generated: false,
+            url: null,
+            count: null,
+            createdAt: null,
+          );
+          isUnlocked.value = false;
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setBool('avatarUnlocked', false);
+          debugPrint('[AutobiographyController] State synced with server: $status. Reset local generated state.');
+        }
+      } else {
+        throw Exception('Server status check returned non-200 status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('[AutobiographyController] syncStatusWithServer error: $e. Fallback to SharedPreferences.');
+      await loadAutobiographyState();
+    }
+  }
+
+
+  Future<void> saveAutobiographyState({
+    required bool generated,
+    String? url,
+    int? count,
+    String? createdAt,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      autobiographyGenerated.value = generated;
+      pdfUrl.value = url;
+      pageCount.value = count;
+      generatedAt.value = createdAt;
+      isUnlocked.value = generated;
+
+      await prefs.setBool('autobiographyGenerated', generated);
+      await prefs.setBool('avatarUnlocked', generated);
+      if (url != null) {
+        await prefs.setString('autobiographyPdfUrl', url);
+      } else {
+        await prefs.remove('autobiographyPdfUrl');
+      }
+      if (count != null) {
+        await prefs.setInt('autobiographyPageCount', count);
+      } else {
+        await prefs.remove('autobiographyPageCount');
+      }
+      if (createdAt != null) {
+        await prefs.setString('autobiographyGeneratedAt', createdAt);
+      } else {
+        await prefs.remove('autobiographyGeneratedAt');
+      }
+      debugPrint('[AutobiographyController] State saved: generated=$generated, pdfUrl=$url, pageCount=$count');
+    } catch (e) {
+      debugPrint('[AutobiographyController] saveAutobiographyState error: $e');
+    }
+  }
 
   @override
   void onClose() {
@@ -113,7 +249,7 @@ class AutobiographyController extends GetxController {
         questions.clear();
       }
     } catch (e) {
-      print('[AutobiographyController] fetchQuestions error: $e');
+      debugPrint('[AutobiographyController] fetchQuestions error: $e');
       messages.add({
         'role': 'ai',
         'text': '질문을 불러오지 못했습니다. 다시 시도해주세요.',
@@ -247,7 +383,7 @@ class AutobiographyController extends GetxController {
       }
       messages.refresh();
     } catch (e) {
-      print('[AutobiographyController] generateFollowUpQuestion error: $e');
+      debugPrint('[AutobiographyController] generateFollowUpQuestion error: $e');
       if (!_closed) {
         messages.removeWhere((msg) => msg['type'] == 'loading');
         messages.add({
@@ -305,7 +441,7 @@ class AutobiographyController extends GetxController {
             'time': _formatTime(DateTime.now()),
           });
         } catch (e) {
-          print('[AutobiographyController] saveAnswer error: $e');
+          debugPrint('[AutobiographyController] saveAnswer error: $e');
           messages.add({
             'role': 'ai',
             'text': '저장 중 문제가 발생했어요. 그래도 다음으로 진행할게요.',
@@ -340,7 +476,7 @@ class AutobiographyController extends GetxController {
         return;
       }
 
-      print('[AutobiographyController] Chapter completed. Moving to chapter complete page.');
+      debugPrint('[AutobiographyController] Chapter completed. Moving to chapter complete page.');
       
       try {
         final tocResponse = await _api.getToc();
@@ -372,7 +508,7 @@ class AutobiographyController extends GetxController {
           },
         );
       } catch (e) {
-        print('[AutobiographyController] Failed to fetch TOC for complete page: $e');
+        debugPrint('[AutobiographyController] Failed to fetch TOC for complete page: $e');
         Get.offNamed(Routes.home);
       }
     } finally {
@@ -380,22 +516,92 @@ class AutobiographyController extends GetxController {
     }
   }
 
-  Future<bool> generateFullBook() async {
-    if (isGenerating.value) return false;
+  Future<Map<String, dynamic>?> generateFullBook({bool force = false}) async {
+    if (isGenerating.value) return null;
     try {
       isGenerating.value = true;
+      lastGenerationError.value = '';
       
-      final response = await _api.generateAutobiography();
+      final response = await _api.generateAutobiography(force: force);
       if (response.statusCode == 200 || response.statusCode == 201) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('avatarUnlocked', true);
-        return true;
+
+        // Parse response data safely
+        Map<String, dynamic>? dataMap;
+        if (response.data is Map<String, dynamic>) {
+          dataMap = response.data as Map<String, dynamic>;
+        }
+
+        Map<String, dynamic> targetMap = {};
+        if (dataMap != null) {
+          if (dataMap.containsKey('result') && dataMap['result'] is Map<String, dynamic>) {
+            targetMap = dataMap['result'] as Map<String, dynamic>;
+          } else {
+            targetMap = dataMap;
+          }
+        }
+
+        final status = targetMap['status']?.toString();
+        final pdfUrlVal = (targetMap['pdfUrl'] ?? targetMap['pdf_url'])?.toString();
+        
+        int? pageCountVal;
+        final rawPageCount = targetMap['pageCount'] ?? targetMap['page_count'];
+        if (rawPageCount is int) {
+          pageCountVal = rawPageCount;
+        } else if (rawPageCount != null) {
+          pageCountVal = int.tryParse(rawPageCount.toString());
+        }
+
+        final generatedAtVal = (targetMap['generatedAt'] ?? targetMap['generated_at'] ?? DateTime.now().toIso8601String()).toString();
+
+        if (pageCountVal != null) {
+          await prefs.setInt('pageCount', pageCountVal);
+        }
+
+        bool? cached;
+        final rawCached = targetMap['cached'];
+        if (rawCached is bool) {
+          cached = rawCached;
+        } else if (rawCached != null) {
+          cached = rawCached.toString().toLowerCase() == 'true';
+        }
+
+        // 성공했을 때만 저장된 pdfUrl/pageCount를 새 값으로 갱신 (요구사항 9)
+        await saveAutobiographyState(
+          generated: true,
+          url: pdfUrlVal,
+          count: pageCountVal,
+          createdAt: generatedAtVal,
+        );
+
+        return {
+          'status': status,
+          'pdfUrl': pdfUrlVal,
+          'pageCount': pageCountVal,
+          'cached': cached,
+        };
       } else {
         throw Exception('Server returned status: ${response.statusCode}');
       }
+    } on DioException catch (e) {
+      String errMsg = '자서전 생성에 실패했습니다.\n잠시 후 다시 시도해주세요.';
+      if (e.type == DioExceptionType.connectionTimeout || e.type == DioExceptionType.receiveTimeout) {
+        errMsg = '서버 응답 시간이 초과되었습니다.\n잠시 후 다시 시도해주세요.';
+      } else if (e.response != null && e.response!.data is Map) {
+        final data = e.response!.data;
+        final message = data['message'] ?? data['error'];
+        if (message != null) {
+          errMsg = message.toString();
+        }
+      }
+      debugPrint('[AutobiographyController] generateFullBook DioException: $e');
+      lastGenerationError.value = errMsg;
+      return null;
     } catch (e) {
-      print('[AutobiographyController] generateFullBook error: $e');
-      return false;
+      debugPrint('[AutobiographyController] generateFullBook error: $e');
+      lastGenerationError.value = '자서전 생성 중 오류가 발생했습니다.\n잠시 후 다시 시도해주세요.';
+      return null;
     } finally {
       isGenerating.value = false;
     }

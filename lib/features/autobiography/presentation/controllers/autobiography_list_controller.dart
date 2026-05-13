@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:ai_life_legacy/features/autobiography/data/autobiography_api.dart';
 import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
+import 'package:ai_life_legacy/features/autobiography/presentation/controllers/autobiography_controller.dart';
 
 class AutobiographyListController extends GetxController {
   final AutobiographyApi _api;
@@ -29,7 +31,18 @@ class AutobiographyListController extends GetxController {
     super.onInit();
     fetchToc();
     fetchTocQuestions();
+    syncAutobiographyStatus();
   }
+
+  Future<void> syncAutobiographyStatus() async {
+    try {
+      final autoController = Get.find<AutobiographyController>();
+      await autoController.syncStatusWithServer();
+    } catch (e) {
+      debugPrint('[AutobiographyListController] syncAutobiographyStatus error: $e');
+    }
+  }
+
 
   Future<void> fetchToc() async {
     try {
@@ -97,7 +110,7 @@ class AutobiographyListController extends GetxController {
     try {
       final response = await _api.getTocQuestions();
       final raw = response.data;
-      print('[AutobiographyListController] tocQuestions raw: $raw');
+      debugPrint('[AutobiographyListController] tocQuestions raw: $raw');
 
       final result = raw is Map<String, dynamic> ? raw['result'] : raw;
       
@@ -141,7 +154,7 @@ class AutobiographyListController extends GetxController {
       tocQuestions.assignAll(grouped);
       tocQuestions.refresh();
     } catch (e) {
-      print('[AutobiographyListController] fetchTocQuestions error: $e');
+      debugPrint('[AutobiographyListController] fetchTocQuestions error: $e');
     }
   }
 
@@ -176,7 +189,7 @@ class AutobiographyListController extends GetxController {
         }
       }
     } catch (e) {
-      print('Failed to load questions for tocId $tocId: $e');
+      debugPrint('Failed to load questions for tocId $tocId: $e');
     } finally {
       loadingQuestionTocIds.remove(tocId);
     }

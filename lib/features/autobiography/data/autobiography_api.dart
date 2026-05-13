@@ -71,12 +71,19 @@ class AutobiographyApi {
   }
 
   /// 자서전 생성 및 PDF 발행
-  Future<Response> generateAutobiography() async {
+  Future<Response> generateAutobiography({bool force = false}) async {
     return await _apiProvider.post(
       ApiEndpoints.aiAutobiography,
+      queryParameters: force ? {'force': 'true'} : null,
       options: Options(receiveTimeout: const Duration(minutes: 6)),
     );
   }
+
+  /// 자서전 최종 생성 상태 및 결과 조회
+  Future<Response> getAutobiographyStatus() async {
+    return await _apiProvider.get('/api/autobiography/status');
+  }
+
 
   /// 답변 조회
   /// Query: ?questionId=...&tocId=...
@@ -107,5 +114,11 @@ class AutobiographyApi {
         'questionId': questionId,
       },
     );
+  }
+
+  /// 가족 공유 코드 발급
+  /// Endpoint: POST /life-legacy/share
+  Future<Response> createShareCode() async {
+    return await _apiProvider.post('/life-legacy/share');
   }
 }

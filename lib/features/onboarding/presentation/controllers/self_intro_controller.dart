@@ -65,16 +65,16 @@ class SelfIntroController extends GetxController {
 
     try {
       if (currentTocId != null) {
-        print('[SelfIntro] Loading questions for TOC ID: $currentTocId');
+        debugPrint('[SelfIntro] Loading questions for TOC ID: $currentTocId');
         // Chapter Mode: 특정 목차(Chapter)에 대한 질문 목록을 서버에서 가져옵니다.
         final result = await postRepo.getQuestions(currentTocId!);
-        print('[SelfIntro] Questions fetched: ${result.data.length} items');
+        debugPrint('[SelfIntro] Questions fetched: ${result.data.length} items');
         // Convert to QuestionDto for compatibility if needed, or update the list type
         questions.assignAll(result.data
             .map((e) => QuestionDto(id: e.id, questionText: e.question)));
-        print('[SelfIntro] Questions assigned: ${questions.length} items');
+        debugPrint('[SelfIntro] Questions assigned: ${questions.length} items');
       } else {
-        print('[SelfIntro] Loading default question (Onboarding Mode)');
+        debugPrint('[SelfIntro] Loading default question (Onboarding Mode)');
         // Onboarding Mode: 신규 사용자를 위한 기본 자기소개 질문을 로드합니다.
         questions.assignAll([
           QuestionDto(
@@ -86,12 +86,12 @@ class SelfIntroController extends GetxController {
       if (questions.isNotEmpty) {
         addMessage(questions.first.questionText, isUser: false);
       } else {
-        print('[SelfIntro] Questions list is empty!');
+        debugPrint('[SelfIntro] Questions list is empty!');
         addMessage('질문을 불러올 수 없습니다.', isUser: false);
       }
     } catch (e, stack) {
-      print('[SelfIntro] Error loading questions: $e');
-      print(stack);
+      debugPrint('[SelfIntro] Error loading questions: $e');
+      debugPrint(stack.toString());
       errorMessage.value = e.toString();
       addMessage('오류 발생: $e', isUser: false);
     } finally {
@@ -106,7 +106,7 @@ class SelfIntroController extends GetxController {
     final text = textController.text.trim();
     if (text.isEmpty) return;
 
-    print('[SelfIntro] User submitting answer: $text');
+    debugPrint('[SelfIntro] User submitting answer: $text');
     addMessage(text);
     clearText();
     await _handleUserAnswer(text);
@@ -115,7 +115,7 @@ class SelfIntroController extends GetxController {
   Future<void> _handleUserAnswer(String answer) async {
     if (questions.isEmpty) return;
     if (currentQuestionIndex.value >= questions.length) {
-      print(
+      debugPrint(
           '[SelfIntro] All questions answered (index ${currentQuestionIndex.value} >= ${questions.length})');
       addMessage('모든 질문에 답변하셨습니다!', isUser: false);
       return;
@@ -124,7 +124,7 @@ class SelfIntroController extends GetxController {
     loading.value = true;
     errorMessage.value = '';
     final currentQuestion = questions[currentQuestionIndex.value];
-    print(
+    debugPrint(
         '[SelfIntro] Handling answer for Q${currentQuestionIndex.value} (Phase: ${answerPhase.value})');
 
     try {
@@ -134,7 +134,7 @@ class SelfIntroController extends GetxController {
         await _handleFollowUpAnswer(currentQuestion, answer);
       }
     } catch (e) {
-      print('[SelfIntro] Error handling answer: $e');
+      debugPrint('[SelfIntro] Error handling answer: $e');
       errorMessage.value = e.toString();
     } finally {
       loading.value = false;
@@ -150,7 +150,7 @@ class SelfIntroController extends GetxController {
       // 1. 답변을 AI 서버에 동기화 (실패해도 조용히 진행)
       await aiRepo.sync(AiSyncRequestDto(content: answer));
     } catch (e) {
-      print('[SelfIntro] AI Sync failed: $e');
+      debugPrint('[SelfIntro] AI Sync failed: $e');
     }
 
     // 2. 무조건 수동 트리거 버튼 노출 (사용자가 더 깊게 생각할지, 다음으로 넘길지 선택)
@@ -160,8 +160,9 @@ class SelfIntroController extends GetxController {
 
   /// AI 꼬리질문 생성 (수동 트리거)
   Future<void> generateFollowUpQuestion() async {
-    if (questions.isEmpty || currentQuestionIndex.value >= questions.length)
+    if (questions.isEmpty || currentQuestionIndex.value >= questions.length) {
       return;
+    }
     final question = questions[currentQuestionIndex.value];
     final answer = _pendingPrimaryAnswer;
     if (answer == null) return;
@@ -274,7 +275,7 @@ class SelfIntroController extends GetxController {
   Future<void> _finalizeSelfIntro() async {
     if (currentTocId != null) {
       // Chapter mode finish
-      print('[SelfIntroController] 작성이 완료되었습니다.');
+      debugPrint('[SelfIntroController] 작성이 완료되었습니다.');
       Get.back(); // Return to Home
       return;
     }
@@ -283,13 +284,13 @@ class SelfIntroController extends GetxController {
     loading.value = true;
     try {
       final fullText = _accumulatedAnswers.toString().trim();
-      print(
+      debugPrint(
           '[SelfIntro] Finalizing... User Answers Length: ${fullText.length}');
       // 1. 답변을 분석하여 유저 케이스를 생성
       addMessage('답변을 분석하여 유저 케이스를 생성 중입니다...', isUser: false);
       final caseResponse = await aiRepo.getCase(AiCaseRequestDto(data: fullText));
       final userCase = caseResponse.data.caseName;
-      print('[SelfIntro] Determined User Case: $userCase');
+      debugPrint('[SelfIntro] Determined User Case: $userCase');
 
       // 2. 백엔드에 자기소개 및 케이스 저장
       await userRepo.saveSelfIntro(UserIntroDto(
@@ -297,10 +298,10 @@ class SelfIntroController extends GetxController {
       ));
 
       // 3. 홈으로 이동
-      print('[SelfIntro] Redirecting to Home...');
+      debugPrint('[SelfIntro] Redirecting to Home...');
       Get.offAllNamed(Routes.home, arguments: {'userCase': userCase});
     } catch (e) {
-      print('[SelfIntro] Error during finalization: $e');
+      debugPrint('[SelfIntro] Error during finalization: $e');
       errorMessage.value = e.toString();
       addMessage('마무리 중 오류가 발생했습니다: $e', isUser: false);
     } finally {

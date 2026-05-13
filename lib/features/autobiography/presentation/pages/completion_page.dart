@@ -42,7 +42,7 @@ class CompletionPage extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               const Text(
-                'Margaret님의 소중한 삶의 기록이 전부 모였습니다. 이제 아바타 생성 기능이 열립니다.',
+                '사용자님의 소중한 삶의 기록이 전부 모였습니다. 이제 아바타 생성 기능이 열립니다.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: AppTheme.fontFamily,

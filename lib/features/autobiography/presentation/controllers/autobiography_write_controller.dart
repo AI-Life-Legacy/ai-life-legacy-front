@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:ai_life_legacy/features/autobiography/data/autobiography_api.dart';
 
@@ -41,7 +42,7 @@ class AutobiographyWriteController extends GetxController {
       );
 
       final raw = response.data;
-      print('[AutobiographyWriteController] getAnswer raw: $raw');
+      debugPrint('[AutobiographyWriteController] getAnswer raw: $raw');
 
       final result = raw is Map<String, dynamic> ? raw['result'] ?? raw : raw;
 
@@ -56,7 +57,7 @@ class AutobiographyWriteController extends GetxController {
         answerText.value = '';
       }
     } catch (e) {
-      print('[AutobiographyWriteController] fetchAnswer error: $e');
+      debugPrint('[AutobiographyWriteController] fetchAnswer error: $e');
       errorMessage.value = '답변을 불러오지 못했어요.';
       answerText.value = '';
     } finally {
@@ -83,7 +84,7 @@ class AutobiographyWriteController extends GetxController {
 
       Get.back(result: true);
     } catch (e) {
-      print('[AutobiographyWriteController] save error: $e');
+      debugPrint('[AutobiographyWriteController] save error: $e');
       errorMessage.value = '답변 저장에 실패했어요.';
       isSaving.value = false;
     }

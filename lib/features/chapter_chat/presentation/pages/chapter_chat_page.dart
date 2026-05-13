@@ -151,7 +151,7 @@ class _ChapterChatPageState extends State<ChapterChatPage> {
                   const SizedBox(height: 12),
                   Align(
                     alignment: Alignment.centerLeft,
-                    child: _buildAIBubble('그 수업이 Margaret님의 삶에 어떤 영감을 주었나요?', '오전 9:16'),
+                    child: _buildAIBubble('그 수업이 사용자님의 삶에 어떤 영감을 주었나요?', '오전 9:16'),
                   ),
                 ],
               ),

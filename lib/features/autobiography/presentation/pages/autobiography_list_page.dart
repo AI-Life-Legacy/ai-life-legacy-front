@@ -4,6 +4,7 @@ import 'package:ai_life_legacy/app/core/theme/app_theme.dart';
 import 'package:ai_life_legacy/app/core/theme/widgets/app_buttons.dart';
 import 'package:ai_life_legacy/app/core/theme/widgets/app_indicators.dart';
 import 'package:ai_life_legacy/features/autobiography/presentation/controllers/autobiography_list_controller.dart';
+import 'package:ai_life_legacy/features/autobiography/presentation/controllers/autobiography_controller.dart';
 import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
 
 class AutobiographyListPage extends GetView<AutobiographyListController> {
@@ -26,6 +27,61 @@ class AutobiographyListPage extends GetView<AutobiographyListController> {
     }
 
     Get.toNamed(Routes.genConfirm, arguments: {'canGenerate': canGenerate});
+  }
+
+  void _onViewAutobiographyPressed(AutobiographyController autoController) {
+    final url = autoController.pdfUrl.value;
+    final count = autoController.pageCount.value ?? 0;
+    
+    if (url == null || url.isEmpty) {
+      Get.snackbar(
+        '안내',
+        'PDF URL이 없습니다. 다시 제작해주세요.',
+        backgroundColor: AppTheme.error,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+        margin: const EdgeInsets.all(16),
+      );
+      return;
+    }
+
+    Get.toNamed(
+      Routes.generated,
+      arguments: {
+        'pdfUrl': url,
+        'pageCount': count,
+        'cached': true,
+      },
+    );
+  }
+
+  void _onRecreateAutobiographyPressed() {
+    Get.dialog(
+      AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        title: const Text(
+          '자서전을 다시 제작할까요?',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.text),
+        ),
+        content: const Text(
+          '기존에 만들어진 자서전은 현재 답변을 기준으로 다시 만들어집니다. 제작에는 몇 분 정도 걸릴 수 있어요.',
+          style: TextStyle(fontSize: 13, color: AppTheme.textSec, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('취소', style: TextStyle(color: AppTheme.textSec)),
+          ),
+          TextButton(
+            onPressed: () {
+              Get.back(); // 닫기
+              Get.toNamed(Routes.generating, arguments: {'force': true});
+            },
+            child: const Text('다시 제작하기', style: TextStyle(color: AppTheme.cta, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -108,26 +164,114 @@ class AutobiographyListPage extends GetView<AutobiographyListController> {
                 color: Colors.white,
                 border: Border(top: BorderSide(color: AppTheme.border)),
               ),
-              child: Column(
-                children: [
-                  if (controller.remainingQuestions.value > 0)
-                    Text(
-                      '${controller.remainingQuestions.value}개 질문에 아직 답변이 필요해요',
-                      style: const TextStyle(fontSize: 12, color: AppTheme.warning),
-                    )
-                  else
-                    const Text(
-                      '모든 질문에 답변했어요',
-                      style: TextStyle(fontSize: 12, color: AppTheme.success),
-                    ),
-                  const SizedBox(height: 10),
-                  PrimaryButton(
-                    text: '내 자서전 만들기',
-                    onPressed: _onCreateAutobiographyPressed,
-                    disabled: controller.totalQuestions.value == 0 || controller.answeredQuestions.value < controller.totalQuestions.value,
-                  ),
-                ],
-              ),
+              child: Obx(() {
+                final autoController = Get.find<AutobiographyController>();
+                final bool isGenerated = autoController.autobiographyGenerated.value;
+                final bool isAnsweringCompleted = controller.totalQuestions.value > 0 &&
+                    controller.answeredQuestions.value >= controller.totalQuestions.value;
+
+                if (isGenerated) {
+                  return Column(
+                    children: [
+                      const Text(
+                        '자서전이 완성되어 있어요',
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.success),
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        '답변을 수정했다면 자서전을 다시 제작할 수 있어요.',
+                        style: TextStyle(fontSize: 11, color: AppTheme.textPh),
+                      ),
+                      if (autoController.pageCount.value != null || autoController.pdfUrl.value != null) ...[
+                        const SizedBox(height: 6),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (autoController.pageCount.value != null) ...[
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.bgAlt,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  '총 ${autoController.pageCount.value}쪽',
+                                  style: const TextStyle(fontSize: 11, color: AppTheme.textSec, fontWeight: FontWeight.w500),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                            ],
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: autoController.pdfUrl.value != null ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                autoController.pdfUrl.value != null ? 'PDF 사용 가능' : 'PDF 없음',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: autoController.pdfUrl.value != null ? Colors.green.shade800 : Colors.red.shade800,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            flex: 1,
+                            child: SecondaryButton(
+                              text: '다시 제작하기',
+                              onPressed: _onRecreateAutobiographyPressed,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            flex: 2,
+                            child: PrimaryButton(
+                              text: '내 자서전 보기',
+                              onPressed: () => _onViewAutobiographyPressed(autoController),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
+                } else if (isAnsweringCompleted) {
+                  return Column(
+                    children: [
+                      const Text(
+                        '답변을 모아 한 권의 자서전을 만들 수 있어요',
+                        style: TextStyle(fontSize: 12, color: AppTheme.success),
+                      ),
+                      const SizedBox(height: 10),
+                      PrimaryButton(
+                        text: '내 자서전 만들기',
+                        onPressed: _onCreateAutobiographyPressed,
+                      ),
+                    ],
+                  );
+                } else {
+                  return Column(
+                    children: [
+                      const Text(
+                        '모든 질문에 답하면 자서전을 만들 수 있어요',
+                        style: TextStyle(fontSize: 12, color: AppTheme.warning),
+                      ),
+                      const SizedBox(height: 10),
+                      PrimaryButton(
+                        text: '자서전 만들기',
+                        onPressed: _onCreateAutobiographyPressed,
+                        disabled: true,
+                      ),
+                    ],
+                  );
+                }
+              }),
             ),
           ],
         );
