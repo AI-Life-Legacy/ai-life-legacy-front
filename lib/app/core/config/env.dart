@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:io';
 
 /// 환경 변수 관리 클래스. 빌드 타임 혹은 런타임 환경에 따라 값을 주입받습니다.
@@ -23,6 +24,6 @@ class Env {
 
   /// 환경 설정 값을 로드합니다.
   static void load() {
-    print("현재 서버: $apiBase");
+    debugPrint("현재 서버: $apiBase");
   }
 }

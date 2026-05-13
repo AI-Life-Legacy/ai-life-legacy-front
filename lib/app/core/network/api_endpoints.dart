@@ -1,4 +1,5 @@
 /// API 엔드포인트 URL 상수 관리 클래스
+library;
 
 class ApiEndpoints {
   // 루트 API

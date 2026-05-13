@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:ai_life_legacy/features/auth/data/auth_api.dart';
 import 'package:ai_life_legacy/features/auth/data/models/auth.dto.dart';
@@ -46,11 +47,11 @@ class AuthController extends GetxController {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = response.data;
-        print('[AuthController] login response data: $data');
+        debugPrint('[AuthController] login response data: $data');
 
         // 백엔드 응답 구조: { status, message, result: { accessToken, refreshToken } }
         final tokenData = data['result'] ?? data['data'] ?? data;
-        print('[AuthController] tokenData: $tokenData');
+        debugPrint('[AuthController] tokenData: $tokenData');
 
         final accessToken = tokenData['accessToken'];
         final refreshToken = tokenData['refreshToken'];
@@ -96,7 +97,7 @@ class AuthController extends GetxController {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = response.data;
-        print('[AuthController] signUp response data: $data');
+        debugPrint('[AuthController] signUp response data: $data');
 
         final tokenData = data['result'] ?? data['data'] ?? data;
 

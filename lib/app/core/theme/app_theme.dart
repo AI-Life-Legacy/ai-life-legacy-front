@@ -59,7 +59,6 @@ class AppTheme {
         seedColor: cta,
         primary: cta,
         secondary: success,
-        background: bg,
         surface: bg,
         error: error,
         onPrimary: Colors.white,

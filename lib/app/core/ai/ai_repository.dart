@@ -1,4 +1,5 @@
 /// AI 관련 Repository 인터페이스 및 구현
+library;
 
 import 'package:ai_life_legacy/app/core/models/response.dart';
 import 'package:ai_life_legacy/app/core/ai/ai_api.dart';

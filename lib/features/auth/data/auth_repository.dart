@@ -1,5 +1,6 @@
 /// Repository: Data Source(API, DB)와 Domain/Presentation 계층 사이의 중개자 역할
 /// 데이터를 상위 계층이 사용하기 쉬운 형태로 변환하여 제공합니다.
+library;
 import 'package:ai_life_legacy/features/auth/data/auth_api.dart';
 import 'package:ai_life_legacy/features/auth/data/models/auth.dto.dart';
 import 'package:ai_life_legacy/app/core/models/response.dart';

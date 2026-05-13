@@ -91,7 +91,7 @@ class _AppChatInputState extends State<AppChatInput> {
                     hintText: widget.placeholder,
                     hintStyle: TextStyle(
                       fontSize: 15,
-                      color: widget.enabled ? AppTheme.textPh : AppTheme.textPh.withOpacity(0.5),
+                      color: widget.enabled ? AppTheme.textPh : AppTheme.textPh.withValues(alpha: 0.5),
                     ),
                     border: InputBorder.none,
                     isDense: true,
@@ -114,7 +114,7 @@ class _AppChatInputState extends State<AppChatInput> {
               decoration: BoxDecoration(
                 color: widget.recording 
                     ? AppTheme.error 
-                    : (widget.enabled ? AppTheme.bgAlt : AppTheme.bgAlt.withOpacity(0.5)),
+                    : (widget.enabled ? AppTheme.bgAlt : AppTheme.bgAlt.withValues(alpha: 0.5)),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -122,7 +122,7 @@ class _AppChatInputState extends State<AppChatInput> {
                 size: 20,
                 color: widget.recording 
                     ? Colors.white 
-                    : (widget.enabled ? AppTheme.textSec : AppTheme.textPh.withOpacity(0.5)),
+                    : (widget.enabled ? AppTheme.textSec : AppTheme.textPh.withValues(alpha: 0.5)),
               ),
             ),
           ),
