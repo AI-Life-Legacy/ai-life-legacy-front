@@ -1,4 +1,5 @@
 /// 앱 내 라우트 경로 상수 정의
+library;
 
 abstract class Routes {
   static const main = '/';
@@ -21,6 +22,7 @@ abstract class Routes {
   static const locked = '/locked';
   static const viewerEntry = '/viewer_entry';
   static const viewerRole = '/viewer_role';
+  static const avatarChat = '/avatar_chat';
   static const viewerChat = '/viewer_chat';
   static const viewerAudio = '/viewer_audio';
   static const myPage = '/mypage'; 

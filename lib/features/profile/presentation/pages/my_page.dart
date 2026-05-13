@@ -1,219 +1,335 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:ai_life_legacy/app/core/theme/app_theme.dart';
-import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
 import 'package:ai_life_legacy/features/profile/presentation/controllers/my_page_controller.dart';
 
-class MyPage extends StatefulWidget {
+class MyPage extends GetView<MyPageController> {
   const MyPage({super.key});
-
-  @override
-  State<MyPage> createState() => _MyPageState();
-}
-
-class _MyPageState extends State<MyPage> {
-  bool notify = true;
-
-  Widget _buildRow({required String label, required Widget right, VoidCallback? onTap}) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: const BoxDecoration(
-          color: AppTheme.bg,
-          border: Border(bottom: BorderSide(color: AppTheme.border)),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              label,
-              style: const TextStyle(
-                fontFamily: AppTheme.fontFamily,
-                fontSize: 15,
-                color: AppTheme.text,
-              ),
-            ),
-            right,
-          ],
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.bg,
-      body: SafeArea(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text('마이페이지'),
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: AppTheme.text),
+          onPressed: () => Get.back(),
+        ),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        children: [
+          _buildProfileCard(),
+          const SizedBox(height: 32),
+          _buildSectionTitle('알림'),
+          _buildNotificationSection(),
+          const SizedBox(height: 32),
+          _buildSectionTitle('계정'),
+          _buildAccountSection(context),
+          const SizedBox(height: 40),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProfileCard() {
+    return Obx(() {
+      final name = controller.userName.value;
+      final email = controller.userEmail.value;
+      final initial = name.isNotEmpty ? name[0] : 'U';
+
+      return Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: AppTheme.border),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
-            Container(
-              decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppTheme.border))),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => Get.back(),
-                    child: const Icon(Icons.arrow_back, size: 20, color: AppTheme.text),
-                  ),
-                  const Expanded(
-                    child: Text(
-                      '설정',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 15, fontWeight: FontWeight.w500, color: AppTheme.text),
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 28,
+                  backgroundColor: AppTheme.bgAlt,
+                  child: Text(
+                    initial,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textSec,
                     ),
                   ),
-                  const SizedBox(width: 20),
-                ],
-              ),
-            ),
-
-            // Content
-            Expanded(
-              child: ListView(
-                padding: EdgeInsets.zero,
-                children: [
-                  // Profile Summary
-                  Container(
-                    decoration: const BoxDecoration(
-                      color: AppTheme.bgAlt,
-                      border: Border(bottom: BorderSide(color: AppTheme.border)),
-                    ),
-                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
-                    child: Column(
-                      children: [
-                        Container(
-                          width: 60,
-                          height: 60,
-                          decoration: const BoxDecoration(
-                            color: AppTheme.textPh,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Center(
-                            child: Text(
-                              'MT',
-                              style: TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white),
-                            ),
-                          ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.text,
                         ),
-                        const SizedBox(height: 10),
-                        const Text(
-                          'Margaret Thompson',
-                          style: TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.text),
-                        ),
-                        const SizedBox(height: 2),
-                        const Text(
-                          'margaret.t@example.com',
-                          style: TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 12, color: AppTheme.textSec),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Progress
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-                    child: Text('진행 상황', style: AppTheme.sectionLabel),
-                  ),
-                  Container(
-                    decoration: const BoxDecoration(border: Border(top: BorderSide(color: AppTheme.border))),
-                    child: Column(
-                      children: [
-                        _buildRow(
-                          label: '내 자서전 다운로드',
-                          right: const Icon(Icons.download, size: 16, color: AppTheme.textSec),
-                          onTap: () {},
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          decoration: const BoxDecoration(color: AppTheme.bg, border: Border(bottom: BorderSide(color: AppTheme.border))),
-                          child: const Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text('데이터 공유 허용', style: TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 15, color: AppTheme.text)),
-                              Text('완료 ✓', style: TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 14, color: AppTheme.textSec)),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Notifications
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-                    child: Text('알림', style: AppTheme.sectionLabel),
-                  ),
-                  Container(
-                    decoration: const BoxDecoration(border: Border(top: BorderSide(color: AppTheme.border))),
-                    child: Column(
-                      children: [
-                        _buildRow(
-                          label: '인터뷰 리마인더',
-                          right: Switch(
-                            value: notify,
-                            onChanged: (val) => setState(() => notify = val),
-                            activeColor: Colors.white,
-                            activeTrackColor: AppTheme.success,
-                          ),
-                        ),
-                        _buildRow(
-                          label: '알림 시간',
-                          right: const Row(
-                            children: [
-                              Text('오전 9:00', style: TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 14, color: AppTheme.textSec)),
-                              SizedBox(width: 6),
-                              Icon(Icons.chevron_right, size: 16, color: AppTheme.textPh),
-                            ],
-                          ),
-                          onTap: () {},
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Account
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-                    child: Text('계정', style: AppTheme.sectionLabel),
-                  ),
-                  Container(
-                    decoration: const BoxDecoration(border: Border(top: BorderSide(color: AppTheme.border))),
-                    child: Column(
-                      children: [
-                        _buildRow(
-                          label: '비밀번호 변경',
-                          right: const Icon(Icons.chevron_right, size: 16, color: AppTheme.textPh),
-                          onTap: () {},
-                        ),
-                        _buildRow(
-                          label: '로그아웃',
-                          right: const SizedBox.shrink(),
-                          onTap: () => Get.offAllNamed(Routes.main),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 28),
-                  Center(
-                    child: GestureDetector(
-                      onTap: () {},
-                      child: const Text(
-                        '계정 삭제',
-                        style: TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 15, color: AppTheme.error),
                       ),
-                    ),
+                      if (email.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          email,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: AppTheme.textPh,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
-                  const SizedBox(height: 32),
-                ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                if (controller.chapterCount.value > 0)
+                  _buildBadge('${controller.chapterCount.value}개 챕터'),
+                if (controller.chapterCount.value > 0 && controller.isCompleted.value)
+                  const SizedBox(width: 8),
+                if (controller.isCompleted.value)
+                  _buildBadge('완료', isSuccess: true),
+              ],
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  Widget _buildBadge(String text, {bool isSuccess = false}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: isSuccess ? AppTheme.successBg : AppTheme.bgAlt,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: isSuccess ? AppTheme.success : AppTheme.textSec,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12, left: 4),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w700,
+          color: AppTheme.text,
+          letterSpacing: -0.2,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNotificationSection() {
+    return Column(
+      children: [
+        _buildMenuRow(
+          label: '인터뷰 리마인더',
+          showChevron: false,
+          trailing: Obx(() => SizedBox(
+            height: 24,
+            child: Switch(
+                  value: controller.isReminderEnabled.value,
+                  onChanged: controller.toggleReminder,
+                  activeTrackColor: AppTheme.cta,
+                ),
+          )),
+        ),
+        _buildMenuRow(
+          label: '알림 시간',
+          value: controller.reminderTime.value,
+          onTap: () {
+            // 단순 UI 상태 처리를 위해 현재는 기능 생략
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAccountSection(BuildContext context) {
+    return Column(
+      children: [
+        _buildMenuRow(
+          label: '비밀번호 변경',
+          onTap: () {
+             Get.dialog(
+               AlertDialog(
+                 backgroundColor: Colors.white,
+                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                 title: const Text('비밀번호 변경', style: TextStyle(fontWeight: FontWeight.w700)),
+                 content: const Text('준비 중입니다.'),
+                 actions: [
+                   TextButton(onPressed: () => Get.back(), child: const Text('확인', style: TextStyle(color: AppTheme.cta)))
+                 ],
+               )
+             );
+          },
+        ),
+        _buildMenuRow(
+          label: '로그아웃',
+          showChevron: false,
+          onTap: () => _showLogoutDialog(context),
+        ),
+        if (!controller.isViewerMode)
+          _buildMenuRow(
+            label: '계정 삭제',
+            textColor: AppTheme.error,
+            showChevron: false,
+            onTap: () {
+              controller.errorMessage.value = '';
+              _showResignDialog(context);
+            },
+          ),
+      ],
+    );
+  }
+
+  Widget _buildMenuRow({
+    required String label,
+    String? value,
+    Widget? trailing,
+    Color textColor = AppTheme.text,
+    bool showChevron = true,
+    VoidCallback? onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 4),
+        decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: AppTheme.border, width: 0.5)),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: textColor,
+                ),
               ),
             ),
+            if (value != null)
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: AppTheme.textSec,
+                ),
+              ),
+            if (trailing != null) trailing,
+            if (showChevron && trailing == null) ...[
+              const SizedBox(width: 8),
+              const Icon(Icons.chevron_right, size: 18, color: AppTheme.textPh),
+            ],
           ],
         ),
       ),
     );
   }
+
+  void _showLogoutDialog(BuildContext context) {
+    Get.dialog(
+      AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('로그아웃할까요?', style: TextStyle(fontWeight: FontWeight.w700)),
+        content: const Text('현재 계정에서 로그아웃됩니다.'),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('취소', style: TextStyle(color: AppTheme.textSec)),
+          ),
+          TextButton(
+            onPressed: () {
+              Get.back();
+              controller.logout();
+            },
+            child: const Text('로그아웃', style: TextStyle(color: AppTheme.error, fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showResignDialog(BuildContext context) {
+    Get.dialog(
+      Obx(() => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('정말 탈퇴하시겠어요?', style: TextStyle(fontWeight: FontWeight.w700)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('탈퇴하면 계정과 작성 데이터가 삭제될 수 있습니다.'),
+            if (controller.errorMessage.value.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Text(
+                controller.errorMessage.value,
+                style: const TextStyle(
+                  color: AppTheme.error,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: controller.isLoading.value ? null : () => Get.back(),
+            child: const Text('취소', style: TextStyle(color: AppTheme.textSec)),
+          ),
+          TextButton(
+            onPressed: controller.isLoading.value ? null : () => controller.withdrawAccount(),
+            child: controller.isLoading.value
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppTheme.error,
+                    ),
+                  )
+                : const Text('탈퇴하기', style: TextStyle(color: AppTheme.error, fontWeight: FontWeight.w600)),
+          ),
+        ],
+      )),
+    );
+  }
 }
+

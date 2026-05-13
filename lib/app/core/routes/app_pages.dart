@@ -29,8 +29,10 @@ import 'package:ai_life_legacy/features/profile/presentation/pages/my_page.dart'
 import 'package:ai_life_legacy/features/home/presentation/bindings/home_binding.dart';
 import 'package:ai_life_legacy/features/onboarding/presentation/bindings/onboarding_binding.dart';
 import 'package:ai_life_legacy/features/autobiography/presentation/bindings/autobiography_binding.dart';
+import 'package:ai_life_legacy/features/avatar_chat/presentation/bindings/avatar_chat_binding.dart';
 import 'package:ai_life_legacy/features/profile/presentation/bindings/my_page_binding.dart';
 import 'package:ai_life_legacy/features/auth/presentation/bindings.dart';
+import 'package:ai_life_legacy/features/viewer/presentation/bindings/viewer_binding.dart';
 
 class AppPages {
   static final pages = <GetPage>[
@@ -52,9 +54,10 @@ class AppPages {
     GetPage(name: Routes.chapterGenerating, page: () => const ChapterGeneratingPage()),
     GetPage(name: Routes.generated, page: () => const GeneratedPage()),
     GetPage(name: Routes.locked, page: () => const LockedPage()),
-    GetPage(name: Routes.viewerEntry, page: () => const ViewerEntryPage()),
+    GetPage(name: Routes.viewerEntry, page: () => const ViewerEntryPage(), binding: ViewerBinding()),
     GetPage(name: Routes.viewerRole, page: () => const ViewerRolePage()),
-    GetPage(name: Routes.viewerChat, page: () => const AvatarChatPage()),
+    GetPage(name: Routes.avatarChat, page: () => const AvatarChatPage(), binding: AvatarChatBinding()),
+    GetPage(name: Routes.viewerChat, page: () => const AvatarChatPage(), binding: AvatarChatBinding()),
     GetPage(name: Routes.viewerAudio, page: () => const ViewerAudioPage()),
     GetPage(name: Routes.myPage, page: () => const MyPage(), binding: MyPageBinding()),
   ];
