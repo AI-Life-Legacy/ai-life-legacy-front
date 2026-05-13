@@ -6,9 +6,16 @@ class ViewerApi {
 
   ViewerApi(this._apiProvider);
 
-  /// 뷰어 코드 검증
+  /// 뷰어 코드 검증 및 로그인
+  /// Request: { viewerCode: 'A3F7K2' }
+  /// Response: { accessToken: '...', authorInfo: { name: '...', intro: '...' } }
+  Future<Response> viewerLogin(String viewerCode) async {
+    return await _apiProvider.post('/auth/viewer-login', data: {'viewerCode': viewerCode});
+  }
+
+  /// 뷰어 코드 검증 (레거시 지원 혹은 내부용)
   /// Request: { code: 'A3F7K2' }
-  /// Response: { valid: true, writerName: 'Margaret' }
+  /// Response: { valid: true, writerName: '사용자' }
   Future<Response> verifyCode(String code) async {
     return await _apiProvider.post('/viewer/verify', data: {'code': code});
   }

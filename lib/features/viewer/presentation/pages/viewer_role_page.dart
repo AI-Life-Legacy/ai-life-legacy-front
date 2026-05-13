@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:ai_life_legacy/app/core/theme/app_theme.dart';
+import 'package:ai_life_legacy/app/core/utils/token_storage.dart';
 
 class ViewerRolePage extends StatefulWidget {
   const ViewerRolePage({super.key});
@@ -49,9 +50,9 @@ class _ViewerRolePageState extends State<ViewerRolePage> {
                       ),
                     ),
                     const SizedBox(height: 6),
-                    const Text(
-                      '원활한 대화를 위해 Margaret 님과의 관계를 선택해주세요. 아바타가 당신을 맞춤형으로 부르고 대화할 수 있습니다.',
-                      style: TextStyle(
+                    Text(
+                      '원활한 대화를 위해 ${TokenStorage.getViewerAuthorName() ?? '작성자'} 님과의 관계를 선택해주세요. 아바타가 당신을 맞춤형으로 부르고 대화할 수 있습니다.',
+                      style: const TextStyle(
                         fontFamily: AppTheme.fontFamily,
                         fontSize: 13,
                         color: AppTheme.textSec,

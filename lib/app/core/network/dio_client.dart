@@ -1,6 +1,8 @@
+library;
+
+import 'package:flutter/foundation.dart';
 /// 전역 Dio 클라이언트 인스턴스를 관리합니다.
 /// 공통 헤더, 타임아웃, 인터셉터 설정을 중앙화합니다.
-
 import 'package:dio/dio.dart';
 import 'package:ai_life_legacy/app/core/config/env.dart';
 import 'package:ai_life_legacy/app/core/utils/token_storage.dart';
@@ -42,6 +44,7 @@ class DioClient {
       '/auth/login',
       '/auth/signup',
       '/auth/refresh-token',
+      '/auth/viewer-login',
     ];
 
     _dio.interceptors.add(
@@ -50,20 +53,32 @@ class DioClient {
           final path = options.path;
           final isPublic = publicPaths.any((p) => path.contains(p));
 
-          print('[DioClient] Request: ${options.method} $path');
+          debugPrint('[DioClient] Request: ${options.method} $path');
 
           if (!isPublic) {
-            // 공개 API가 아닌 경우에만 Access Token 주입
-            final accessToken = TokenStorage.getAccessToken();
-            print('[DioClient] AccessToken exists: ${accessToken != null && accessToken.isNotEmpty}');
-            if (accessToken != null && accessToken.isNotEmpty) {
-              options.headers['Authorization'] = 'Bearer $accessToken';
-              print('[DioClient] Authorization header attached');
+            final isViewer = TokenStorage.isViewerMode();
+            if (isViewer) {
+              final viewerToken = TokenStorage.getViewerAccessToken();
+              debugPrint('[DioClient] ViewerMode is True. ViewerToken exists: ${viewerToken != null && viewerToken.isNotEmpty}');
+              if (viewerToken != null && viewerToken.isNotEmpty) {
+                options.headers['Authorization'] = 'Bearer $viewerToken';
+                debugPrint('[DioClient] Viewer Authorization header attached');
+              } else {
+                debugPrint('[DioClient] WARNING: No viewer access token available for request');
+              }
             } else {
-              print('[DioClient] WARNING: No access token available for request');
+              // 공개 API가 아닌 경우에만 Access Token 주입
+              final accessToken = TokenStorage.getAccessToken();
+              debugPrint('[DioClient] AccessToken exists: ${accessToken != null && accessToken.isNotEmpty}');
+              if (accessToken != null && accessToken.isNotEmpty) {
+                options.headers['Authorization'] = 'Bearer $accessToken';
+                debugPrint('[DioClient] Authorization header attached');
+              } else {
+                debugPrint('[DioClient] WARNING: No access token available for request');
+              }
             }
           } else {
-            print('[DioClient] Public path — skipping Authorization');
+            debugPrint('[DioClient] Public path — skipping Authorization');
           }
 
           options.headers['Content-Type'] = 'application/json';
@@ -80,7 +95,7 @@ class DioClient {
               await _refreshTokenAndRetry(error.requestOptions, handler);
             } catch (e) {
               // 토큰 갱신 실패 시 로그아웃 처리 및 에러 전파
-              print('[DioClient] Token refresh failed: $e');
+              debugPrint('[DioClient] Token refresh failed: $e');
               await TokenStorage.clearTokens();
               return handler.reject(error);
             }

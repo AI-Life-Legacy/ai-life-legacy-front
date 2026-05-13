@@ -131,6 +131,38 @@ class LoginPage extends GetView<AuthController> {
                 icon: Container(width: 18, height: 18, color: Colors.yellow), // Simplified Kakao icon
                 onPressed: () {},
               ),
+              const SizedBox(height: 32),
+              const Divider(color: AppTheme.border, height: 1),
+              const SizedBox(height: 24),
+              const Center(
+                child: Text(
+                  '이야기를 공유받으셨나요?',
+                  style: TextStyle(fontSize: 13, color: AppTheme.textSec),
+                ),
+              ),
+              const SizedBox(height: 10),
+              GestureDetector(
+                onTap: () => Get.toNamed(Routes.viewerEntry),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  decoration: BoxDecoration(
+                    color: AppTheme.bgAlt,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppTheme.border),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      '뷰어 코드로 입장',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppTheme.text,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
