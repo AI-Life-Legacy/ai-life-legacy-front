@@ -46,7 +46,7 @@ class HomeTabView extends GetView<HomeController> {
           if (controller.errorMessage.value.isNotEmpty) {
             Get.rawSnackbar(
               message: controller.errorMessage.value,
-              backgroundColor: Colors.redAccent.withOpacity(0.9),
+              backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
               snackPosition: SnackPosition.BOTTOM,
             );
           }
@@ -108,7 +108,7 @@ class HomeTabView extends GetView<HomeController> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 1,
             blurRadius: 10,
             offset: const Offset(0, 2),
@@ -198,7 +198,7 @@ class HomeTabView extends GetView<HomeController> {
     final widthFactor = clamped.isNaN ? 0.0 : clamped.toDouble();
     final progressPercent = (widthFactor * 100).round();
 
-    final questionLabel = toDouble(total) == 0 ? '질문 준비 중' : '답변 $done/${total}개';
+    final questionLabel = toDouble(total) == 0 ? '질문 준비 중' : '답변 $done/$total개';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

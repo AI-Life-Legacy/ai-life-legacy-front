@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ai_life_legacy/app/core/theme/app_theme.dart';
 import 'package:ai_life_legacy/features/home/presentation/controllers/home_controller.dart';
 import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
@@ -21,13 +20,21 @@ class HomePage extends GetView<HomeController> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    '안녕하세요, Margaret 님',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.text),
+                  Text(
+                    '안녕하세요, ${controller.displayName}${controller.displayName == '사용자' || controller.displayName == '작성자' ? '님' : ' 님'}',
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.text),
                   ),
-                  IconButton(
-                    onPressed: () => Get.toNamed(Routes.search),
-                    icon: const Icon(Icons.search, color: AppTheme.textSec),
+                  Row(
+                    children: [
+                      IconButton(
+                        onPressed: () => Get.toNamed(Routes.search),
+                        icon: const Icon(Icons.search, color: AppTheme.textSec),
+                      ),
+                      IconButton(
+                        onPressed: () => Get.toNamed(Routes.myPage),
+                        icon: const Icon(Icons.settings_outlined, color: AppTheme.textSec),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -53,7 +60,7 @@ class HomePage extends GetView<HomeController> {
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
+                              color: Colors.black.withValues(alpha: 0.05),
                               blurRadius: 20,
                               offset: const Offset(0, 10),
                             ),
@@ -248,6 +255,7 @@ class _StatusBadge extends StatelessWidget {
 class _BottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final controller = Get.find<HomeController>();
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
@@ -258,14 +266,27 @@ class _BottomNav extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _navItem(Icons.home, '홈', true, () {}),
-          _navItem(Icons.person_outline, '아바타', false, () async {
-            final prefs = await SharedPreferences.getInstance();
-            final unlocked = prefs.getBool('avatarUnlocked') ?? false;
-            if (unlocked) {
-              Get.toNamed(Routes.viewerChat);
-            } else {
-              Get.toNamed(Routes.locked);
-            }
+          Obx(() {
+            final isViewer = controller.isViewerMode;
+            final isUnlocked = controller.isAvatarUnlocked;
+            
+            // 뷰어 모드면 항상 잠금 해제 상태로 보임
+            final showLocked = !isViewer && !isUnlocked;
+            
+            return _navItem(
+              showLocked ? Icons.lock_outline : Icons.person_outline, 
+              '아바타', 
+              false, 
+              () {
+                if (isViewer) {
+                  Get.toNamed(Routes.viewerChat);
+                } else if (isUnlocked) {
+                  Get.toNamed(Routes.avatarChat);
+                } else {
+                  Get.toNamed(Routes.locked);
+                }
+              }
+            );
           }),
           _navItem(Icons.book_outlined, '자서전', false, () => Get.toNamed(Routes.autobiography)),
         ],

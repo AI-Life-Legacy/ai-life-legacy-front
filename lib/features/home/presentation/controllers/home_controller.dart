@@ -1,9 +1,14 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:ai_life_legacy/features/home/data/home_api.dart';
 import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
 
+import 'package:ai_life_legacy/app/core/utils/token_storage.dart';
+import 'package:ai_life_legacy/features/autobiography/presentation/controllers/autobiography_controller.dart';
+
 class HomeController extends GetxController {
   final HomeApi _homeApi;
+  final _autoBioController = Get.find<AutobiographyController>();
 
   HomeController(this._homeApi);
 
@@ -21,24 +26,41 @@ class HomeController extends GetxController {
   final currentIndex = 0.obs;
   final errorMessage = ''.obs;
 
+  bool get isViewerMode => TokenStorage.isViewerMode();
+  bool get isAvatarUnlocked => _autoBioController.isUnlocked.value;
+
+  String get displayName {
+    if (isViewerMode) {
+      return TokenStorage.getViewerAuthorName() ?? '작성자';
+    }
+    // TODO: If we have user name in storage, return it. For now, fallback to '사용자'.
+    return '사용자';
+  }
+
   // alias for backward compatibility or different naming in UI
   bool get loading => isLoading.value;
 
   @override
   void onInit() {
     super.onInit();
-    fetchToc();
+    if (!isViewerMode) {
+      fetchToc();
+      // Only sync if not already syncing or if needed
+      _autoBioController.syncStatusWithServer();
+    }
   }
 
   Future<void> fetchToc() async {
+    if (isViewerMode) return;
+    
     try {
       isLoading.value = true;
       errorMessage.value = '';
 
       final response = await _homeApi.getToc();
 
-      print('GET /users/me/toc status: ${response.statusCode}');
-      print('GET /users/me/toc data: ${response.data}');
+      debugPrint('GET /users/me/toc status: ${response.statusCode}');
+      debugPrint('GET /users/me/toc data: ${response.data}');
 
       if (response.statusCode == 200) {
         final raw = response.data;
@@ -92,7 +114,7 @@ class HomeController extends GetxController {
         }
       }
     } catch (e) {
-      print('HomeController.fetchToc error: $e');
+      debugPrint('HomeController.fetchToc error: $e');
       errorMessage.value = '목차를 불러오는 데 실패했습니다.';
     } finally {
       isLoading.value = false;
