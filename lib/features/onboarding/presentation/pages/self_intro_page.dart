@@ -1,256 +1,172 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:ai_life_legacy/features/onboarding/presentation/controllers/self_intro_controller.dart';
+import 'package:ai_life_legacy/app/core/theme/app_theme.dart';
+import 'package:ai_life_legacy/features/onboarding/presentation/controllers/onboarding_controller.dart';
 
-class SelfIntroPage extends GetView<SelfIntroController> {
+class SelfIntroPage extends GetView<OnboardingController> {
   const SelfIntroPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.bg,
       appBar: AppBar(
-        backgroundColor: Color(0xFF5B9FED),
+        title: const Text('알아가기',
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+        centerTitle: true,
+        backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            // 작성 미완료 상태에서 뒤로가기 시 홈 화면으로 이동합니다.
-            Get.offAllNamed('/home');
-          },
-        ),
-        title: Text(
-          '자기소개',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-      body: Column(
-        children: [
-          // 메인 컨텐츠 영역
-          Expanded(
-            child: Obx(() {
-              return ListView(
-                controller: controller.scrollController,
-                padding: const EdgeInsets.all(20),
-                children: [
-                  const SizedBox(height: 20),
-                  // 질문 카드
-                  Obx(() => Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF5F5F5),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Text(
-                          controller.currentQuestionText,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            height: 1.5,
-                            color: Colors.black87,
-                          ),
-                        ),
-                      )),
-                  const SizedBox(height: 24),
-                  // 다시 들려줘 버튼 (그대로)
-                  OutlinedButton(
-                    onPressed: controller.replayCurrentQuestion,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF5B9FED),
-                      side:
-                          const BorderSide(color: Color(0xFF5B9FED), width: 2),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 32, vertical: 14),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24)),
-                    ),
-                    child: const Text('다시 들려줘',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w600)),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // 채팅 메시지(말풍선) 리스트 렌더링
-                  ...controller.messages
-                      .map((m) => _Bubble(text: m.text, isUser: m.isUser)),
-
-                  const SizedBox(height: 80), // 하단 입력 영역과 겹치지 않게 여유
-                ],
-              );
-            }),
-          ),
-
-          // 하단 입력 영역
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: Offset(0, -2),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                // 텍스트 입력 필드
-                Padding(
-                  padding: EdgeInsets.fromLTRB(20, 16, 20, 0),
-                  child: Row(
-                    children: [
-                      // X 버튼
-                      IconButton(
-                        icon: Icon(Icons.close, color: Colors.grey),
-                        onPressed: () => controller.clearText(),
-                      ),
-                      SizedBox(width: 8),
-                      // 입력 필드
-                      Expanded(
-                        child: Obx(() => TextField(
-                              controller: controller.textController,
-                              enabled: !controller.loading.value,
-                              decoration: InputDecoration(
-                                hintText: '답변을 입력하세요.',
-                                hintStyle: TextStyle(color: Colors.grey[400]),
-                                border: InputBorder.none,
-                                contentPadding:
-                                    const EdgeInsets.symmetric(vertical: 12),
-                              ),
-                              style: const TextStyle(fontSize: 16),
-                              maxLines: 1,
-                              onSubmitted: (_) => controller.submitAnswer(),
-                            )),
-                      ),
-                      SizedBox(width: 8),
-                      // 전송 버튼
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Color(0xFF5B9FED),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Obx(() {
-                          final isProcessing = controller.loading.value;
-                          return IconButton(
-                            icon: isProcessing
-                                ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                          Colors.white),
-                                    ),
-                                  )
-                                : const Icon(Icons.arrow_upward,
-                                    color: Colors.white),
-                            onPressed: isProcessing
-                                ? null
-                                : () => controller.submitAnswer(),
-                          );
-                        }),
-                      ),
-                    ],
-                  ),
-                ),
-                // 음성인식 영역
-                Container(
-                  padding: EdgeInsets.symmetric(vertical: 20),
-                  child: Column(
-                    children: [
-                      Text(
-                        '음성인식',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.black87,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          // 녹음 시간 표시
-                          Obx(() => Text(
-                                controller.getFormattedTime(),
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.black54,
-                                ),
-                              )),
-                          SizedBox(width: 24),
-                          // 녹음 버튼
-                          Obx(() => GestureDetector(
-                                onTap: () => controller.toggleRecording(),
-                                child: Container(
-                                  width: 64,
-                                  height: 64,
-                                  decoration: BoxDecoration(
-                                    color: controller.isRecording.value
-                                        ? Color(0xFFFF5252)
-                                        : Color(0xFFFF5252),
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color:
-                                            Color(0xFFFF5252).withOpacity(0.3),
-                                        blurRadius: 12,
-                                        spreadRadius: 2,
-                                      ),
-                                    ],
-                                  ),
-                                  child: Icon(
-                                    Icons.mic,
-                                    color: Colors.white,
-                                    size: 32,
-                                  ),
-                                ),
-                              )),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+        actions: [
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: Obx(() => Text(
+                    '${controller.currentStep.value}/${controller.totalSteps.value}',
+                    style: const TextStyle(fontSize: 13, color: AppTheme.textPh),
+                  )),
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// 말풍선 위젯
-class _Bubble extends StatelessWidget {
-  final String text;
-  final bool isUser;
-  const _Bubble({required this.text, required this.isUser});
-
-  @override
-  Widget build(BuildContext context) {
-    final bg = isUser ? const Color(0xFF5B9FED) : const Color(0xFFEDEDED);
-    final fg = isUser ? Colors.white : Colors.black87;
-    final align = isUser ? Alignment.centerRight : Alignment.centerLeft;
-    final margin = isUser
-        ? const EdgeInsets.only(left: 60, bottom: 10)
-        : const EdgeInsets.only(right: 60, bottom: 10);
-
-    return Align(
-      alignment: align,
-      child: Container(
-        margin: margin,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(14),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(height: 1, color: AppTheme.border),
         ),
-        child:
-            Text(text, style: TextStyle(color: fg, fontSize: 16, height: 1.4)),
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '자서전 작성을 위한\n기본 정보를 입력해주세요.',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      '입력하신 내용은 자서전의 기초 자료로 활용됩니다.',
+                      style: TextStyle(fontSize: 14, color: AppTheme.textPh),
+                    ),
+                    const SizedBox(height: 32),
+                    _buildQuestionField(
+                      '1. 이름과 나이',
+                      '예: 저는 이근준이고, 25살입니다.',
+                      controller.q1Controller,
+                    ),
+                    const SizedBox(height: 24),
+                    _buildQuestionField(
+                      '2. 태어난 곳과 성장 배경',
+                      '예: 저는 대전에서 태어나 초등학교까지 그곳에서 살았습니다.',
+                      controller.q2Controller,
+                    ),
+                    const SizedBox(height: 24),
+                    _buildQuestionField(
+                      '3. 학교, 직장, 결혼, 가족 등 주요 경험',
+                      '예: 대학에서는 컴퓨터공학을 전공했고, 이후 개발자로 일했습니다. 결혼과 가족 이야기도 남기고 싶습니다.',
+                      controller.q3Controller,
+                    ),
+                    const SizedBox(height: 24),
+                    _buildQuestionField(
+                      '4. 자서전에 꼭 남기고 싶은 이야기',
+                      '예: 가족과 함께 보낸 시간, 힘들었지만 성장했던 경험을 남기고 싶습니다.',
+                      controller.q4Controller,
+                    ),
+                    const SizedBox(height: 40),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Obx(() => SizedBox(
+                    width: double.infinity,
+                    height: 54,
+                    child: ElevatedButton(
+                      onPressed: controller.isLoading.value
+                          ? null
+                          : () => controller.submitIntro(),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.cta,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: controller.isLoading.value
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text(
+                              '저장하고 계속하기',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                    ),
+                  )),
+            ),
+          ],
+        ),
       ),
     );
   }
+
+  Widget _buildQuestionField(
+      String label, String placeholder, TextEditingController textController) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: AppTheme.text,
+          ),
+        ),
+        const SizedBox(height: 10),
+        TextField(
+          controller: textController,
+          maxLines: 3,
+          minLines: 1,
+          decoration: InputDecoration(
+            hintText: placeholder,
+            hintStyle: const TextStyle(fontSize: 14, color: AppTheme.textPh),
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppTheme.border),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppTheme.border),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppTheme.cta, width: 1.5),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }
+
+
