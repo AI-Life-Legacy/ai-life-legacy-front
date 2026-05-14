@@ -1,4 +1,5 @@
 /// JWT 토큰 파싱 및 유효성 검사 유틸리티
+library;
 
 import 'dart:convert';
 

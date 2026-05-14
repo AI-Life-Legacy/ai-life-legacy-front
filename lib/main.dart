@@ -1,11 +1,13 @@
 /// 앱의 진입점(Entry Point)
 /// Flutter 엔진을 초기화하고 최상위 위젯(LegacyApp)을 실행합니다.
+library;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:ai_life_legacy/bootstrap.dart';
 import 'package:ai_life_legacy/app/core/routes/app_pages.dart';
 import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
 import 'package:ai_life_legacy/app/initial_binding.dart';
+import 'package:ai_life_legacy/app/core/theme/app_theme.dart';
 
 /// Main 함수: 비동기 초기화 수행 후 앱 실행
 /// - WidgetsFlutterBinding 초기화
@@ -29,10 +31,7 @@ class LegacyApp extends StatelessWidget {
       initialRoute: Routes.main, // 첫 진입 라우트 경로
       initialBinding: InitialBinding(), // 전역 바인딩 등록 (Auth 등)
       getPages: AppPages.pages, // 라우트 정의 목록
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF3F8CFF)),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.themeData,
     );
   }
 }

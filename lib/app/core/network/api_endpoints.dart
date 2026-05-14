@@ -1,4 +1,5 @@
 /// API 엔드포인트 URL 상수 관리 클래스
+library;
 
 class ApiEndpoints {
   // 루트 API
@@ -17,6 +18,8 @@ class ApiEndpoints {
   static String userAnswerUpdate(int answerId) =>
       '/users/me/answers/$answerId'; // PATCH
   static const deleteUser = '/users/me'; // DELETE
+  static const profile = '/users/me'; // GET
+  static const viewerCode = '/users/me/viewer-code'; // GET
 
   // Life Legacy (자서전)
   static String lifeLegacyQuestions(int tocId) =>
@@ -25,6 +28,10 @@ class ApiEndpoints {
       '/life-legacy/toc/$tocId/questions/$questionId/answers'; // POST
 
   // AI (인공지능)
-  static const aiQuestion = '/ai/question'; // POST
-  static const aiCombine = '/ai/combine'; // POST
+  static const aiCase = '/api/case'; // POST
+  static const aiSync = '/api/sync'; // POST
+  static const aiQuestion = '/api/question'; // POST
+  static const aiAutobiography = '/api/autobiography'; // POST
+  static const aiChat = '/api/chat'; // POST
+  static const aiSearch = '/api/search'; // POST
 }
