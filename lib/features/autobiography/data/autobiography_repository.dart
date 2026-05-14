@@ -1,5 +1,6 @@
 /// 자서전(In-Depth Questions) 데이터 관리 Repository
 /// AutobiographyApi를 통해 질문 목록을 가져오고 답변을 저장합니다.
+library;
 
 import 'package:ai_life_legacy/features/autobiography/data/autobiography_api.dart';
 import 'package:ai_life_legacy/app/core/models/response.dart';
@@ -17,14 +18,24 @@ class AutobiographyRepositoryImpl implements AutobiographyRepository {
   AutobiographyRepositoryImpl(this.api);
 
   @override
-  Future<SuccessResponse<List<TocQuestionDto>>> getQuestions(int tocId) =>
-      api.getQuestions(tocId);
+  Future<SuccessResponse<List<TocQuestionDto>>> getQuestions(int tocId) async {
+    final response = await api.getQuestions(tocId);
+    return SuccessResponse.fromJson(
+      response.data,
+      (json) => (json as List).map((e) => TocQuestionDto.fromJson(e)).toList(),
+    );
+  }
 
   @override
   Future<SuccessResponse<void>> saveAnswer(
     int tocId,
     int questionId,
     AnswerSaveDto dto,
-  ) =>
-      api.saveAnswer(tocId, questionId, dto);
+  ) async {
+    final response = await api.saveAnswer(tocId, questionId, dto);
+    return SuccessResponse.fromJson(
+      response.data,
+      (json) {},
+    );
+  }
 }
