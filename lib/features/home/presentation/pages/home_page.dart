@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:ai_life_legacy/app/core/theme/app_theme.dart';
 import 'package:ai_life_legacy/features/home/presentation/controllers/home_controller.dart';
 import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
 
@@ -9,267 +10,308 @@ class HomePage extends GetView<HomeController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          '나의 자서전',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_outlined, color: Colors.black),
-            onPressed: () => Get.toNamed(Routes.myPage),
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Obx(() {
-          if (controller.loading.value && controller.chapters.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          // 목차 데이터가 없을 경우 (Case 미생성 상태)
-          // 에러가 있더라도 사용자에게는 "작성 안내" Empty State를 우선 노출하여 경험 유도
-          if (controller.chapters.isEmpty) {
-            return _buildEmptyState();
-          }
-
-          // 이미 목차가 있는 상태에서 갱신 실패 등의 에러 발생 시에만 스낵바 노출
-          if (controller.errorMessage.isNotEmpty) {
-            Get.rawSnackbar(
-              message: controller.errorMessage.value,
-              backgroundColor: Colors.redAccent.withOpacity(0.9),
-              snackPosition: SnackPosition.BOTTOM,
-            );
-          }
-
-          return ListView.builder(
-            itemCount: controller.chapters.length,
-            itemBuilder: (context, index) {
-              final chapter = controller.chapters[index];
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 16.0),
-                child: _buildChapterCard(chapter),
-              );
-            },
-          );
-        }),
-      ),
-      bottomNavigationBar: _buildBottomNavigationBar(),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.edit_note, size: 48, color: Colors.blueAccent),
-          const SizedBox(height: 16),
-          const Text(
-            '아직 자기소개가 작성되지 않아\n목차가 보이지 않습니다.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.black87, fontSize: 16, height: 1.5),
-          ),
-          const SizedBox(height: 12),
-          GestureDetector(
-            onTap: () => Get.toNamed(Routes.selfIntro),
-            child: const Text(
-              '이어서 작성하러 가시겠습니까?',
-              style: TextStyle(
-                color: Colors.blue,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                decoration: TextDecoration.underline,
+      backgroundColor: AppTheme.bg,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Greeting
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '안녕하세요, ${controller.displayName}${controller.displayName == '사용자' || controller.displayName == '작성자' ? '님' : ' 님'}',
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.text),
+                  ),
+                  Row(
+                    children: [
+                      IconButton(
+                        onPressed: () => Get.toNamed(Routes.search),
+                        icon: const Icon(Icons.search, color: AppTheme.textSec),
+                      ),
+                      IconButton(
+                        onPressed: () => Get.toNamed(Routes.myPage),
+                        icon: const Icon(Icons.settings_outlined, color: AppTheme.textSec),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildChapterCard(ChapterModel chapter) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => controller.onChapterTap(chapter),
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Chapter ${chapter.id}',
-                  style: const TextStyle(
-                    color: Color(0xFF4A9EFF),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+            Expanded(
+              child: Obx(() {
+                if (controller.isLoading.value && controller.chapters.isEmpty) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                return RefreshIndicator(
+                  onRefresh: controller.fetchToc,
+                  child: ListView(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    children: [
+                      // Premium Progress card
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 24),
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.05),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${controller.totalChapters.value}개 챕터 중 ${controller.completedChapters.value}개 완료',
+                              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.text),
+                            ),
+                            const SizedBox(height: 4),
+                            const Text(
+                              '잘 하고 계세요. 계속 이어가봐요.',
+                              style: TextStyle(fontSize: 13, color: AppTheme.textSec),
+                            ),
+                            const SizedBox(height: 20),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: LinearProgressIndicator(
+                                value: controller.totalProgress.value,
+                                minHeight: 8,
+                                backgroundColor: const Color(0xFFF0F0F0),
+                                valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.cta),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: Text(
+                                '${controller.progressPercent.value}%',
+                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.cta),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const Padding(
+                        padding: EdgeInsets.only(left: 4, bottom: 12),
+                        child: Text(
+                          '나의 챕터',
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textPh),
+                        ),
+                      ),
+
+                      ...controller.chapters.map((ch) => _ChapterCard(ch: ch)),
+                      const SizedBox(height: 20),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  chapter.title,
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  chapter.subtitle,
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                _buildProgressBar(chapter),
-              ],
+                );
+              }),
             ),
-          ),
+
+            // Bottom Nav
+            _BottomNav(),
+          ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildProgressBar(ChapterModel chapter) {
-    final clamped = chapter.progress.clamp(0.0, 1.0);
-    final widthFactor = clamped.isNaN ? 0.0 : clamped.toDouble();
-    final progressPercent = (widthFactor * 100).round();
-    final questionLabel = chapter.totalQuestions == 0
-        ? '질문 준비 중'
-        : '답변 ${chapter.answeredQuestions}/${chapter.totalQuestions}개';
+class _ChapterCard extends StatelessWidget {
+  final Map<String, dynamic> ch;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Container(
-                height: 8,
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: FractionallySizedBox(
-                  alignment: Alignment.centerLeft,
-                  widthFactor: widthFactor,
-                  child: Container(
+  const _ChapterCard({required this.ch});
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = Get.find<HomeController>();
+    final status = ch['status']?.toString().toLowerCase() ?? 'not-started';
+    final done = (ch['done'] as num?)?.toInt() ?? 0;
+    final total = (ch['total'] as num?)?.toInt() ?? 0;
+    final percent = (ch['percent'] as num?)?.toInt() ?? 0;
+
+    final bool isCompleted = status == 'completed' ||
+        status == 'complete' ||
+        (total > 0 && done >= total) ||
+        percent >= 100;
+
+    final bool isInProgress = done > 0 && !isCompleted;
+
+    final Color progressColor = isCompleted
+        ? Colors.green
+        : isInProgress
+            ? Colors.black87
+            : Colors.grey.shade300;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFFEEEEEE),
+          width: 1,
+        ),
+      ),
+      child: InkWell(
+        onTap: () => controller.onChapterTap(ch),
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFF4FC3F7),
-                          Color(0xFF2196F3),
-                        ],
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                      ),
-                      borderRadius: BorderRadius.circular(4),
+                      color: const Color(0xFFF5F5F5),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      'Ch.${ch['tocId'] ?? ch['id']}',
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.textSec),
                     ),
                   ),
+                  _StatusBadge(status: status),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                ch['title'] ?? '제목 없음',
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.text),
+              ),
+              const SizedBox(height: 16),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: (ch['percent'] ?? 0) / 100.0,
+                  minHeight: 4,
+                  backgroundColor: const Color(0xFFF5F5F5),
+                  valueColor: AlwaysStoppedAnimation<Color>(progressColor),
                 ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              '$progressPercent% 완료',
-              style: const TextStyle(
-                color: Colors.black87,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
+              const SizedBox(height: 8),
+              Text(
+                '${ch['done'] ?? 0} / ${ch['total'] ?? 0} 질문 답변 완료',
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppTheme.textPh),
               ),
-            ),
-            Text(
-              questionLabel,
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 12,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ],
+      ),
+    );
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  final String status;
+  const _StatusBadge({required this.status});
+
+  @override
+  Widget build(BuildContext context) {
+    String text;
+    Color bgColor;
+    Color textColor;
+
+    if (status == 'complete' || status == 'completed') {
+      text = '완료 ✓';
+      bgColor = const Color(0xFFE8F5E9);
+      textColor = const Color(0xFF2E7D32);
+    } else if (status == 'in-progress') {
+      text = '진행 중';
+      bgColor = const Color(0xFFFFF8E1);
+      textColor = const Color(0xFFF57F17);
+    } else {
+      text = '시작 전';
+      bgColor = const Color(0xFFF5F5F5);
+      textColor = AppTheme.textPh;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: textColor),
+      ),
+    );
+  }
+}
+
+class _BottomNav extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final controller = Get.find<HomeController>();
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: AppTheme.border)),
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _navItem(Icons.home, '홈', true, () {}),
+          Obx(() {
+            final isViewer = controller.isViewerMode;
+            final isUnlocked = controller.isAvatarUnlocked;
+            
+            // 뷰어 모드면 항상 잠금 해제 상태로 보임
+            final showLocked = !isViewer && !isUnlocked;
+            
+            return _navItem(
+              showLocked ? Icons.lock_outline : Icons.person_outline, 
+              '아바타', 
+              false, 
+              () {
+                if (isViewer) {
+                  Get.toNamed(Routes.viewerChat);
+                } else if (isUnlocked) {
+                  Get.toNamed(Routes.avatarChat);
+                } else {
+                  Get.toNamed(Routes.locked);
+                }
+              }
+            );
+          }),
+          _navItem(Icons.book_outlined, '자서전', false, () => Get.toNamed(Routes.autobiography)),
+        ],
+      ),
     );
   }
 
-  Widget _buildBottomNavigationBar() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 10,
-            offset: const Offset(0, -2),
+  Widget _navItem(IconData icon, String label, bool isActive, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: isActive ? AppTheme.text : AppTheme.textSec),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
+              color: isActive ? AppTheme.text : AppTheme.textSec,
+            ),
           ),
         ],
       ),
-      child: Obx(() => BottomNavigationBar(
-            currentIndex: controller.selectedTabIndex.value,
-            onTap: controller.changeTab,
-            type: BottomNavigationBarType.fixed,
-            backgroundColor: Colors.white,
-            selectedItemColor: const Color(0xFF4A9EFF),
-            unselectedItemColor: Colors.grey[600],
-            selectedLabelStyle: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-            unselectedLabelStyle: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w400,
-            ),
-            items: const [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.home_outlined, size: 24),
-                activeIcon: Icon(Icons.home, size: 24),
-                label: '홈',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.edit_outlined, size: 24),
-                activeIcon: Icon(Icons.edit, size: 24),
-                label: '자기소개 작성',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.folder_outlined, size: 24),
-                activeIcon: Icon(Icons.folder, size: 24),
-                label: '자서전 확인',
-              ),
-            ],
-          )),
     );
   }
 }

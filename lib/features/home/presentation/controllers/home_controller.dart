@@ -1,156 +1,204 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
-import 'package:dio/dio.dart';
-import 'dart:async';
+import 'package:ai_life_legacy/features/home/data/home_api.dart';
 import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
-import 'package:ai_life_legacy/features/user/data/user_repository.dart';
-import 'package:ai_life_legacy/app/core/utils/toast_utils.dart';
 
-/// Home Feature의 비즈니스 로직을 제어합니다.
-/// 사용자 목차(TOC) 로드, 탭 네비게이션, 챕터 클릭 이벤트 등을 처리합니다.
+import 'package:ai_life_legacy/app/core/utils/token_storage.dart';
+import 'package:ai_life_legacy/features/autobiography/presentation/controllers/autobiography_controller.dart';
+
 class HomeController extends GetxController {
-  final UserRepository userRepo;
-  HomeController(this.userRepo);
+  final HomeApi _homeApi;
+  final _autoBioController = Get.find<AutobiographyController>();
 
-  // Reactive State: UI 업데이트를 위한 상태 변수
-  final RxList<ChapterModel> chapters = <ChapterModel>[].obs;
-  final RxInt selectedTabIndex = 0.obs;
-  final RxBool loading = false.obs;
-  final RxString errorMessage = ''.obs;
+  HomeController(this._homeApi);
+
+  final chapters = <Map<String, dynamic>>[].obs;
+  final isLoading = false.obs;
+  final totalProgress = 0.0.obs;
+  final totalChapters = 0.obs;
+  final completedChapters = 0.obs;
+  final progressPercent = 0.obs;
+  
+  final totalQuestions = 0.obs;
+  final answeredQuestions = 0.obs;
+  final remainingQuestions = 0.obs;
+  
+  final currentIndex = 0.obs;
+  final errorMessage = ''.obs;
+
+  bool get isViewerMode => TokenStorage.isViewerMode();
+  bool get isAvatarUnlocked => _autoBioController.isUnlocked.value;
+
+  String get displayName {
+    if (isViewerMode) {
+      return TokenStorage.getViewerAuthorName() ?? '작성자';
+    }
+    // TODO: If we have user name in storage, return it. For now, fallback to '사용자'.
+    return '사용자';
+  }
+
+  // alias for backward compatibility or different naming in UI
+  bool get loading => isLoading.value;
 
   @override
   void onInit() {
     super.onInit();
-    loadUserContents();
+    if (!isViewerMode) {
+      fetchToc();
+      // Only sync if not already syncing or if needed
+      _autoBioController.syncStatusWithServer();
+    }
   }
 
-  /// 사용자 목차(TOC) 목록을 서버로부터 불러옵니다.
-  Future<void> loadUserContents() async {
-    loading.value = true;
-    errorMessage.value = '';
+  Future<void> fetchToc() async {
+    if (isViewerMode) return;
+    
     try {
-      final tocResult = await userRepo.getUserToc();
-      final initialChapters = tocResult.data
-          .map(
-            (toc) => ChapterModel(
-              id: toc.id,
-              title: toc.title,
-              subtitle: '진행률 ${(toc.percent).toStringAsFixed(1)}%',
-              progress: toc.percent / 100.0,
-            ),
-          )
-          .toList();
+      isLoading.value = true;
+      errorMessage.value = '';
 
-      final ids = <int>{};
-      final uniqueChapters = <ChapterModel>[];
-      for (var chapter in initialChapters) {
-        if (ids.add(chapter.id)) {
-          uniqueChapters.add(chapter);
+      final response = await _homeApi.getToc();
+
+      debugPrint('GET /users/me/toc status: ${response.statusCode}');
+      debugPrint('GET /users/me/toc data: ${response.data}');
+
+      if (response.statusCode == 200) {
+        final raw = response.data;
+
+        // Handle common response structure { success: true, result: ... }
+        final result = raw is Map<String, dynamic> && raw.containsKey('result')
+            ? raw['result']
+            : raw;
+
+        List<dynamic> rawChapters = [];
+
+        if (result is List) {
+          rawChapters = result;
+        } else if (result is Map<String, dynamic>) {
+          totalChapters.value = result['totalChapters'] ?? 0;
+          completedChapters.value = result['completedChapters'] ?? 0;
+          progressPercent.value = result['progressPercent'] ?? 0;
+          totalProgress.value = (result['progressPercent'] ?? 0) / 100.0;
+
+          rawChapters = result['chapters'] ??
+              result['toc'] ??
+              result['items'] ??
+              result['data'] ??
+              [];
+        }
+
+        chapters.assignAll(
+          rawChapters
+              .whereType<Map>()
+              .map((e) => Map<String, dynamic>.from(e))
+              .toList(),
+        );
+
+        final tq = chapters.fold<int>(
+          0,
+          (sum, ch) => sum + ((ch['total'] as num?)?.toInt() ?? 0),
+        );
+
+        final aq = chapters.fold<int>(
+          0,
+          (sum, ch) => sum + ((ch['done'] as num?)?.toInt() ?? 0),
+        );
+
+        totalQuestions.value = tq;
+        answeredQuestions.value = aq;
+        remainingQuestions.value = tq - aq;
+
+        // If backend didn't provide total progress, calculate it locally
+        if (totalProgress.value == 0.0 && chapters.isNotEmpty) {
+          _calculateProgress();
         }
       }
-      chapters.assignAll(uniqueChapters);
     } catch (e) {
-      if (e is DioException) {
-        final status = e.response?.statusCode;
-        final data = e.response?.data;
-        Get.log('GET /users/me/toc 실패 → status:$status body:$data');
-        final serverMessage = _extractServerMessage(data);
-        errorMessage.value = status != null
-            ? '[$status] ${serverMessage ?? e.message ?? '요청에 실패했습니다.'}'
-            : (serverMessage ?? e.message ?? '요청에 실패했습니다.');
-      } else {
-        errorMessage.value = e.toString();
-      }
-      chapters.value = [];
+      debugPrint('HomeController.fetchToc error: $e');
+      errorMessage.value = '목차를 불러오는 데 실패했습니다.';
     } finally {
-      loading.value = false;
+      isLoading.value = false;
     }
   }
 
-  String? _extractServerMessage(dynamic data) {
-    if (data == null) return null;
-    if (data is String) return data;
-    if (data is Map<String, dynamic>) {
-      if (data['message'] is List && data['message'].isNotEmpty) {
-        return data['message'].first.toString();
-      }
-      if (data['message'] != null) return data['message'].toString();
-      if (data['error'] != null) return data['error'].toString();
-    }
-    return data.toString();
-  }
-
-  // _calculateProgress 관련 로직은 loadUserContents 내부에 통합됨
-
-  /// 챕터 카드 클릭 시 이벤트 핸들러
-  void onChapterTap(ChapterModel chapter) {
-    print("챕터 ${chapter.id} 클릭됨: ${chapter.title}");
-    // 클릭한 챕터 ID를 전달하며 자기소개(Onboarding) 페이지로 이동
-    // 복귀 시 목차 목록 새로고침
-    Get.toNamed(Routes.selfIntro, arguments: {'tocId': chapter.id})
-        ?.then((_) => loadUserContents());
-  }
-
-  /// 하단 탭 바 선택 변경 핸들러
   void changeTab(int index) {
-    // 탭 인덱스에 따른 단순 기능 실행 (페이지 이동 X, 기능 수행 O)
-
-    switch (index) {
-      case 0:
-        // 홈: 현재 화면 (새로고침?)
-        loadUserContents();
-        break;
-      case 1:
-        // 자기소개 작성
-        if (chapters.isNotEmpty) {
-          ToastUtils.showInfoToast('이미 자기소개를 완료하셨습니다.');
-        } else {
-          Get.toNamed(Routes.selfIntro);
-        }
-        break;
-      case 2:
-        // 자서전 확인 탭
-        if (chapters.isEmpty) {
-          ToastUtils.showInfoToast('먼저 자기소개를 작성해주세요.');
-        } else {
-          Get.toNamed(Routes.autobiography);
-        }
-        break;
-    }
+    currentIndex.value = index;
   }
 
-  void onBackPressed() => Get.back();
-}
+  Future<void> onChapterTap(dynamic chapter) async {
+    final tocId = chapter['tocId'] ?? chapter['id'] ?? chapter['n'];
+    final chapterNumber = chapter['n'] ?? chapter['chapterNumber'] ?? tocId;
+    final title = chapter['title'] ?? chapter['tocTitle'] ?? chapter['name'] ?? '제목 없음';
 
-class ChapterModel {
-  final int id;
-  final String title;
-  final String subtitle;
-  final double progress;
-  final int answeredQuestions;
-  final int totalQuestions;
+    final navigationFuture = Get.toNamed(Routes.chapterChat, arguments: {
+      'tocId': tocId,
+      'title': title,
+      'chapterNumber': chapterNumber,
+      'done': chapter['done'],
+      'total': chapter['total'],
+      'status': chapter['status'],
+      'percent': chapter['percent'],
+    });
 
-  ChapterModel({
-    required this.id,
-    required this.title,
-    required this.subtitle,
-    required this.progress,
-    this.answeredQuestions = 0,
-    this.totalQuestions = 0,
-  });
-}
+    if (navigationFuture != null) {
+      await navigationFuture;
+    }
+    
+    await fetchToc();
+  }
 
-class ChapterProgressInfo {
-  final int totalQuestions;
-  final int answeredQuestions;
+  void _calculateProgress() {
+    if (chapters.isEmpty) {
+      totalProgress.value = 0.0;
+      return;
+    }
 
-  const ChapterProgressInfo({
-    required this.totalQuestions,
-    required this.answeredQuestions,
-  });
+    double sum = 0.0;
 
-  double get progress =>
-      totalQuestions == 0 ? 0.0 : answeredQuestions / totalQuestions;
+    for (final ch in chapters) {
+      // 1. Try percent field
+      if (ch['percent'] != null) {
+        sum += _normalizePercent(ch['percent']);
+        continue;
+      }
 
-  factory ChapterProgressInfo.zero() =>
-      const ChapterProgressInfo(totalQuestions: 0, answeredQuestions: 0);
+      // 2. Try done/total or answeredCount/totalCount
+      final done = ch['done'] ??
+          ch['answeredCount'] ??
+          ch['completedQuestionCount'] ??
+          ch['completedQuestions'];
+
+      final total = ch['total'] ??
+          ch['totalCount'] ??
+          ch['questionCount'] ??
+          ch['totalQuestions'];
+
+      if (done != null && total != null && _toDouble(total) > 0) {
+        sum += _toDouble(done) / _toDouble(total);
+        continue;
+      }
+
+      // 3. Fallback to status
+      final status = ch['status']?.toString().toLowerCase();
+      if (status == 'complete' || status == 'completed') {
+        sum += 1.0;
+      }
+    }
+
+    totalProgress.value = sum / chapters.length;
+  }
+
+  double _normalizePercent(dynamic value) {
+    final n = _toDouble(value);
+    // If it's 0~1, use as is. If 0~100, normalize.
+    return n <= 1 ? n : n / 100;
+  }
+
+  double _toDouble(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is int) return value.toDouble();
+    if (value is double) return value;
+    if (value is String) return double.tryParse(value) ?? 0.0;
+    return 0.0;
+  }
 }
