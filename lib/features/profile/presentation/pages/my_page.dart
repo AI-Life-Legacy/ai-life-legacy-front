@@ -1,189 +1,335 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:ai_life_legacy/app/core/theme/app_theme.dart';
 import 'package:ai_life_legacy/features/profile/presentation/controllers/my_page_controller.dart';
-import 'package:ai_life_legacy/features/auth/presentation/controllers/auth_controller.dart'; // To get email
 
 class MyPage extends GetView<MyPageController> {
   const MyPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // AuthController is persistent, so we can find it to get user info locally if stored
-    final authController = Get.find<AuthController>();
-    // AuthController에서 사용자 정보를 조회하여 프로필 영역에 표시할 수 있습니다.
-    // 현재는 기본값("사용자")을 표시하도록 구현되어 있습니다.
-
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F3), // Light grey background
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text(
-          '설정',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-        ),
+        title: const Text('마이페이지'),
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: AppTheme.text),
           onPressed: () => Get.back(),
         ),
       ),
-      body: SingleChildScrollView(
+      body: ListView(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        children: [
+          _buildProfileCard(),
+          const SizedBox(height: 32),
+          _buildSectionTitle('알림'),
+          _buildNotificationSection(),
+          const SizedBox(height: 32),
+          _buildSectionTitle('계정'),
+          _buildAccountSection(context),
+          const SizedBox(height: 40),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProfileCard() {
+    return Obx(() {
+      final name = controller.userName.value;
+      final email = controller.userEmail.value;
+      final initial = name.isNotEmpty ? name[0] : 'U';
+
+      return Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: AppTheme.border),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 20),
-            // Profile Header
-            Container(
-              color: Colors.white,
-              padding: const EdgeInsets.all(24),
-              child: Row(
-                children: [
-                  Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      shape: BoxShape.circle,
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 28,
+                  backgroundColor: AppTheme.bgAlt,
+                  child: Text(
+                    initial,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textSec,
                     ),
-                    child:
-                        const Icon(Icons.person, size: 40, color: Colors.grey),
                   ),
-                  const SizedBox(width: 20),
-                  const Column(
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '사용자',
-                        style: TextStyle(
+                        name,
+                        style: const TextStyle(
                           fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.text,
                         ),
                       ),
-                      SizedBox(height: 4),
-                      Text(
-                        'AI Life Legacy 회원',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
+                      if (email.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          email,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: AppTheme.textPh,
+                          ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
-                ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                if (controller.chapterCount.value > 0)
+                  _buildBadge('${controller.chapterCount.value}개 챕터'),
+                if (controller.chapterCount.value > 0 && controller.isCompleted.value)
+                  const SizedBox(width: 8),
+                if (controller.isCompleted.value)
+                  _buildBadge('완료', isSuccess: true),
+              ],
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  Widget _buildBadge(String text, {bool isSuccess = false}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: isSuccess ? AppTheme.successBg : AppTheme.bgAlt,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: isSuccess ? AppTheme.success : AppTheme.textSec,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12, left: 4),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w700,
+          color: AppTheme.text,
+          letterSpacing: -0.2,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNotificationSection() {
+    return Column(
+      children: [
+        _buildMenuRow(
+          label: '인터뷰 리마인더',
+          showChevron: false,
+          trailing: Obx(() => SizedBox(
+            height: 24,
+            child: Switch(
+                  value: controller.isReminderEnabled.value,
+                  onChanged: controller.toggleReminder,
+                  activeTrackColor: AppTheme.cta,
+                ),
+          )),
+        ),
+        _buildMenuRow(
+          label: '알림 시간',
+          value: controller.reminderTime.value,
+          onTap: () {
+            // 단순 UI 상태 처리를 위해 현재는 기능 생략
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAccountSection(BuildContext context) {
+    return Column(
+      children: [
+        _buildMenuRow(
+          label: '비밀번호 변경',
+          onTap: () {
+             Get.dialog(
+               AlertDialog(
+                 backgroundColor: Colors.white,
+                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                 title: const Text('비밀번호 변경', style: TextStyle(fontWeight: FontWeight.w700)),
+                 content: const Text('준비 중입니다.'),
+                 actions: [
+                   TextButton(onPressed: () => Get.back(), child: const Text('확인', style: TextStyle(color: AppTheme.cta)))
+                 ],
+               )
+             );
+          },
+        ),
+        _buildMenuRow(
+          label: '로그아웃',
+          showChevron: false,
+          onTap: () => _showLogoutDialog(context),
+        ),
+        if (!controller.isViewerMode)
+          _buildMenuRow(
+            label: '계정 삭제',
+            textColor: AppTheme.error,
+            showChevron: false,
+            onTap: () {
+              controller.errorMessage.value = '';
+              _showResignDialog(context);
+            },
+          ),
+      ],
+    );
+  }
+
+  Widget _buildMenuRow({
+    required String label,
+    String? value,
+    Widget? trailing,
+    Color textColor = AppTheme.text,
+    bool showChevron = true,
+    VoidCallback? onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 4),
+        decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: AppTheme.border, width: 0.5)),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: textColor,
+                ),
               ),
             ),
-            const SizedBox(height: 12),
-
-            // Settings List
-            Container(
-              color: Colors.white,
-              child: Column(
-                children: [
-                  _buildSettingItem(
-                    icon: Icons.notifications_outlined,
-                    title: '알림 설정',
-                    onTap: () {
-                      // 추후 알림 설정 기능 구현 예정
-                      Get.snackbar('알림', '준비 중인 기능입니다.');
-                    },
-                  ),
-                  const Divider(height: 1, indent: 20, endIndent: 20),
-                  _buildSettingItem(
-                    icon: Icons.info_outline,
-                    title: '앱 정보',
-                    trailing: const Text('v1.0.0',
-                        style: TextStyle(color: Colors.grey)),
-                    onTap: () {},
-                  ),
-                ],
+            if (value != null)
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: AppTheme.textSec,
+                ),
               ),
-            ),
-
-            const SizedBox(height: 12),
-
-            // Account Actions
-            Container(
-              color: Colors.white,
-              child: Column(
-                children: [
-                  _buildSettingItem(
-                    icon: Icons.logout,
-                    title: '로그아웃',
-                    isDestructive: false,
-                    onTap: () => _showLogoutDialog(context),
-                  ),
-                  const Divider(height: 1, indent: 20, endIndent: 20),
-                  _buildSettingItem(
-                    icon: Icons.delete_outline,
-                    title: '회원 탈퇴',
-                    isDestructive: true,
-                    onTap: () => _showWithdrawDialog(context),
-                  ),
-                ],
-              ),
-            ),
+            if (trailing != null) trailing,
+            if (showChevron && trailing == null) ...[
+              const SizedBox(width: 8),
+              const Icon(Icons.chevron_right, size: 18, color: AppTheme.textPh),
+            ],
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSettingItem({
-    required IconData icon,
-    required String title,
-    required VoidCallback onTap,
-    bool isDestructive = false,
-    Widget? trailing,
-  }) {
-    return ListTile(
-      leading:
-          Icon(icon, color: isDestructive ? Colors.redAccent : Colors.black54),
-      title: Text(
-        title,
-        style: TextStyle(
-          color: isDestructive ? Colors.redAccent : Colors.black87,
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      trailing: trailing ?? const Icon(Icons.chevron_right, color: Colors.grey),
-      onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
-    );
-  }
-
   void _showLogoutDialog(BuildContext context) {
-    Get.defaultDialog(
-      title: '로그아웃',
-      middleText: '정말 로그아웃 하시겠습니까?',
-      textConfirm: '확인',
-      textCancel: '취소',
-      confirmTextColor: Colors.white,
-      buttonColor: Colors.black87,
-      cancelTextColor: Colors.black87,
-      onConfirm: () {
-        Get.back(); // close dialog
-        controller.logout();
-      },
+    Get.dialog(
+      AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('로그아웃할까요?', style: TextStyle(fontWeight: FontWeight.w700)),
+        content: const Text('현재 계정에서 로그아웃됩니다.'),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('취소', style: TextStyle(color: AppTheme.textSec)),
+          ),
+          TextButton(
+            onPressed: () {
+              Get.back();
+              controller.logout();
+            },
+            child: const Text('로그아웃', style: TextStyle(color: AppTheme.error, fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
     );
   }
 
-  void _showWithdrawDialog(BuildContext context) {
-    Get.defaultDialog(
-      title: '회원 탈퇴',
-      titleStyle:
-          const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
-      middleText: '탈퇴 시 작성한 자서전과 모든 데이터가\n영구적으로 삭제됩니다.\n\n정말 탈퇴하시겠습니까?',
-      textConfirm: '탈퇴하기',
-      textCancel: '취소',
-      confirmTextColor: Colors.white,
-      buttonColor: Colors.redAccent,
-      cancelTextColor: Colors.black87,
-      onConfirm: () {
-        Get.back(); // close dialog
-        controller.withdrawAccount();
-      },
+  void _showResignDialog(BuildContext context) {
+    Get.dialog(
+      Obx(() => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('정말 탈퇴하시겠어요?', style: TextStyle(fontWeight: FontWeight.w700)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('탈퇴하면 계정과 작성 데이터가 삭제될 수 있습니다.'),
+            if (controller.errorMessage.value.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Text(
+                controller.errorMessage.value,
+                style: const TextStyle(
+                  color: AppTheme.error,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: controller.isLoading.value ? null : () => Get.back(),
+            child: const Text('취소', style: TextStyle(color: AppTheme.textSec)),
+          ),
+          TextButton(
+            onPressed: controller.isLoading.value ? null : () => controller.withdrawAccount(),
+            child: controller.isLoading.value
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppTheme.error,
+                    ),
+                  )
+                : const Text('탈퇴하기', style: TextStyle(color: AppTheme.error, fontWeight: FontWeight.w600)),
+          ),
+        ],
+      )),
     );
   }
 }
+
