@@ -27,7 +27,8 @@ class CompletePage extends StatelessWidget {
                         shape: BoxShape.circle,
                       ),
                       child: const Center(
-                        child: Icon(Icons.check, color: AppTheme.success, size: 24),
+                        child: Icon(Icons.check,
+                            color: AppTheme.success, size: 24),
                       ),
                     ),
                     const Text(
@@ -54,7 +55,7 @@ class CompletePage extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             // Footer CTA
             Padding(
               padding: const EdgeInsets.only(left: 20, right: 20, bottom: 32),

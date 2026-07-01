@@ -25,7 +25,8 @@ class SelfIntroController extends GetxController {
   final RxBool isRecording = false.obs;
   final RxInt recordingSeconds = 0.obs;
   Timer? recordingTimer;
-  final RxBool isVoiceRecorderVisible = false.obs; // UI State: Voice Recorder Toggle
+  final RxBool isVoiceRecorderVisible =
+      false.obs; // UI State: Voice Recorder Toggle
 
   // UI State: 채팅 메시지 리스트 및 스크롤 제어
   final RxList<ChatMessage> messages = <ChatMessage>[].obs;
@@ -68,7 +69,8 @@ class SelfIntroController extends GetxController {
         debugPrint('[SelfIntro] Loading questions for TOC ID: $currentTocId');
         // Chapter Mode: 특정 목차(Chapter)에 대한 질문 목록을 서버에서 가져옵니다.
         final result = await postRepo.getQuestions(currentTocId!);
-        debugPrint('[SelfIntro] Questions fetched: ${result.data.length} items');
+        debugPrint(
+            '[SelfIntro] Questions fetched: ${result.data.length} items');
         // Convert to QuestionDto for compatibility if needed, or update the list type
         questions.assignAll(result.data
             .map((e) => QuestionDto(id: e.id, questionText: e.question)));
@@ -288,7 +290,8 @@ class SelfIntroController extends GetxController {
           '[SelfIntro] Finalizing... User Answers Length: ${fullText.length}');
       // 1. 답변을 분석하여 유저 케이스를 생성
       addMessage('답변을 분석하여 유저 케이스를 생성 중입니다...', isUser: false);
-      final caseResponse = await aiRepo.getCase(AiCaseRequestDto(data: fullText));
+      final caseResponse =
+          await aiRepo.getCase(AiCaseRequestDto(data: fullText));
       final userCase = caseResponse.data.caseName;
       debugPrint('[SelfIntro] Determined User Case: $userCase');
 
