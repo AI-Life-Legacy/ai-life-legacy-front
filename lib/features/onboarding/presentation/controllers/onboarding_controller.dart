@@ -14,7 +14,7 @@ class OnboardingController extends GetxController {
   OnboardingController(this._onboardingApi);
 
   final currentStep = 1.obs;
-  final totalSteps = 4.obs;
+  final totalSteps = 7.obs;
   final isLoading = false.obs;
   final errorMessage = ''.obs;
   final isSpeechAvailable = false.obs;
@@ -22,27 +22,141 @@ class OnboardingController extends GetxController {
   final isListening = false.obs;
   final speechStatusMessage = '마이크로 말하면 답변칸에 바로 적어드릴게요.'.obs;
 
+  final nameController = TextEditingController();
+  final ageController = TextEditingController();
   final q1Controller = TextEditingController();
   final q2Controller = TextEditingController();
   final q3Controller = TextEditingController();
   final q4Controller = TextEditingController();
+  final selectedLifeStage = '학생'.obs;
+  final selectedPurposeIds = <String>[].obs;
+  final selectedStyleId = 'detailed'.obs;
   final SpeechToText _speechToText = SpeechToText();
 
   String _speechBaseText = '';
 
   bool get isFirstStep => currentStep.value == 1;
   bool get isLastStep => currentStep.value == totalSteps.value;
+  bool get isProfileStep => currentStep.value == 1;
+  bool get isPurposeStep => currentStep.value == 2;
+  bool get isStyleStep => currentStep.value == 3;
+  bool get isWritingStep => currentStep.value >= 4;
   double get progress => currentStep.value / totalSteps.value;
+
+  List<OnboardingChoice> get lifeStageOptions => const [
+        OnboardingChoice(
+          id: 'student',
+          label: '학생',
+          subtitle: '학교생활, 진로 고민, 성장 과정을 더 자연스럽게 다뤄요.',
+          icon: Icons.school_outlined,
+        ),
+        OnboardingChoice(
+          id: 'worker',
+          label: '직장인',
+          subtitle: '일, 선택, 관계, 성취와 전환점을 중심으로 묶어요.',
+          icon: Icons.work_outline,
+        ),
+        OnboardingChoice(
+          id: 'retired',
+          label: '은퇴/시니어',
+          subtitle: '가족사, 시대 배경, 후손에게 남길 말을 더 살려요.',
+          icon: Icons.volunteer_activism_outlined,
+        ),
+        OnboardingChoice(
+          id: 'other',
+          label: '기타',
+          subtitle: '현재 상황을 특정하지 않고 폭넓은 질문으로 시작해요.',
+          icon: Icons.person_outline,
+        ),
+      ];
+
+  List<OnboardingChoice> get purposeOptions => const [
+        OnboardingChoice(
+          id: 'self_reflection',
+          label: '나를 돌아보기',
+          subtitle: '내 삶을 정리하고 스스로 이해하는 방향',
+          icon: Icons.psychology_alt_outlined,
+        ),
+        OnboardingChoice(
+          id: 'family',
+          label: '가족에게 남기기',
+          subtitle: '가족, 추억, 고마움, 전하고 싶은 말을 강조',
+          icon: Icons.family_restroom,
+        ),
+        OnboardingChoice(
+          id: 'descendants',
+          label: '자녀/후손에게 전하기',
+          subtitle: '삶의 교훈과 시대 이야기를 남기는 방향',
+          icon: Icons.diversity_1_outlined,
+        ),
+        OnboardingChoice(
+          id: 'career',
+          label: '진로/포트폴리오',
+          subtitle: '경험, 성장, 강점, 앞으로의 목표를 중심으로 구성',
+          icon: Icons.badge_outlined,
+        ),
+        OnboardingChoice(
+          id: 'special_event',
+          label: '특별한 사건 기록',
+          subtitle: '중요한 사건과 그 전후 변화를 깊게 다뤄요.',
+          icon: Icons.bookmark_border,
+        ),
+        OnboardingChoice(
+          id: 'simple_record',
+          label: '간단한 기록',
+          subtitle: '부담 없이 짧고 읽기 쉬운 자서전을 만들어요.',
+          icon: Icons.notes_outlined,
+        ),
+      ];
+
+  List<OnboardingChoice> get styleOptions => const [
+        OnboardingChoice(
+          id: 'simple',
+          label: '짧고 간단하게',
+          subtitle: '핵심 사건과 감정을 부담 없이 읽히게 정리해요.',
+          icon: Icons.short_text_rounded,
+        ),
+        OnboardingChoice(
+          id: 'detailed',
+          label: '자세하고 풍부하게',
+          subtitle: '장면, 배경, 감정을 충분히 풀어 책다운 분량으로 만들어요.',
+          icon: Icons.menu_book_outlined,
+        ),
+        OnboardingChoice(
+          id: 'warm',
+          label: '따뜻하고 감성적으로',
+          subtitle: '가족, 추억, 고마움을 부드러운 문체로 살려요.',
+          icon: Icons.favorite_border,
+        ),
+        OnboardingChoice(
+          id: 'calm',
+          label: '담담하고 객관적으로',
+          subtitle: '과장 없이 사건과 선택을 차분하게 기록해요.',
+          icon: Icons.fact_check_outlined,
+        ),
+        OnboardingChoice(
+          id: 'literary',
+          label: '책처럼 문학적으로',
+          subtitle: '제목, 장면 전환, 문장 리듬을 더 신경 써서 구성해요.',
+          icon: Icons.auto_stories_outlined,
+        ),
+      ];
 
   String get currentTitle {
     switch (currentStep.value) {
       case 1:
-        return '당신을 어떻게 부르면 좋을까요?';
+        return '자서전 기본 정보를 알려주세요';
       case 2:
-        return '어디에서 어떤 시간을 보내며 자라왔나요?';
+        return '어떤 자서전으로 만들까요?';
       case 3:
-        return '삶에서 오래 남아 있는 장면이 있나요?';
+        return '결과물은 어떤 느낌이면 좋을까요?';
       case 4:
+        return '당신을 어떻게 부르면 좋을까요?';
+      case 5:
+        return '어디에서 어떤 시간을 보내며 자라왔나요?';
+      case 6:
+        return '삶에서 오래 남아 있는 장면이 있나요?';
+      case 7:
         return '꼭 남기고 싶은 이야기가 있다면요?';
       default:
         return '';
@@ -52,12 +166,18 @@ class OnboardingController extends GetxController {
   String get currentDescription {
     switch (currentStep.value) {
       case 1:
-        return '이름, 나이, 지금의 나를 짧게 적어주세요.';
+        return '이름과 나이, 현재 상태를 따로 받아서 이후 목차와 질문을 더 잘 맞출게요.';
       case 2:
-        return '태어난 곳, 살았던 동네, 학교나 일터처럼 나를 만든 배경을 들려주세요.';
+        return '직접 쓰지 않아도 괜찮아요. 원하는 목적을 버튼으로 골라주세요. 여러 개 선택할 수 있어요.';
       case 3:
-        return '학창 시절, 가족, 일, 사랑, 도전처럼 기억에 남는 경험이면 충분해요.';
+        return '완성된 PDF의 분량과 문체를 정하는 기준이에요. 하나만 선택해주세요.';
       case 4:
+        return '이름, 성격, 지금의 나를 짧게 적어주세요.';
+      case 5:
+        return '태어난 곳, 살았던 동네, 학교나 일터처럼 나를 만든 배경을 들려주세요.';
+      case 6:
+        return '학창 시절, 가족, 일, 사랑, 도전처럼 기억에 남는 경험이면 충분해요.';
+      case 7:
         return '아직 정리되지 않은 마음이어도 괜찮아요. 떠오르는 만큼만 남겨주세요.';
       default:
         return '';
@@ -66,13 +186,13 @@ class OnboardingController extends GetxController {
 
   String get currentPlaceholder {
     switch (currentStep.value) {
-      case 1:
-        return '예: 저는 김하늘이고, 25살입니다. 조용하지만 좋아하는 일에는 오래 몰입하는 편이에요.';
-      case 2:
-        return '예: 부산에서 태어나 바닷가 근처에서 자랐고, 어린 시절 대부분을 할머니 집에서 보냈어요.';
-      case 3:
-        return '예: 대학 때 처음 혼자 서울에 올라왔던 순간이 아직도 선명해요.';
       case 4:
+        return '예: 저는 김하늘이고, 25살입니다. 조용하지만 좋아하는 일에는 오래 몰입하는 편이에요.';
+      case 5:
+        return '예: 부산에서 태어나 바닷가 근처에서 자랐고, 어린 시절 대부분을 할머니 집에서 보냈어요.';
+      case 6:
+        return '예: 대학 때 처음 혼자 서울에 올라왔던 순간이 아직도 선명해요.';
+      case 7:
         return '예: 가족에게 고맙다고 말하지 못했던 일, 다시 떠올리고 싶은 여행, 가장 힘들었지만 버텼던 시간.';
       default:
         return '';
@@ -84,10 +204,16 @@ class OnboardingController extends GetxController {
       case 1:
         return Icons.badge_outlined;
       case 2:
-        return Icons.place_outlined;
+        return Icons.tune_outlined;
       case 3:
-        return Icons.timeline;
+        return Icons.palette_outlined;
       case 4:
+        return Icons.face_outlined;
+      case 5:
+        return Icons.place_outlined;
+      case 6:
+        return Icons.timeline;
+      case 7:
         return Icons.favorite_border;
       default:
         return Icons.auto_stories_outlined;
@@ -96,13 +222,13 @@ class OnboardingController extends GetxController {
 
   TextEditingController get currentTextController {
     switch (currentStep.value) {
-      case 1:
-        return q1Controller;
-      case 2:
-        return q2Controller;
-      case 3:
-        return q3Controller;
       case 4:
+        return q1Controller;
+      case 5:
+        return q2Controller;
+      case 6:
+        return q3Controller;
+      case 7:
         return q4Controller;
       default:
         return q1Controller;
@@ -121,6 +247,10 @@ class OnboardingController extends GetxController {
     await stopListening();
     errorMessage.value = '';
 
+    if (!_validateCurrentStep()) {
+      return;
+    }
+
     if (!isLastStep) {
       currentStep.value++;
       return;
@@ -132,6 +262,8 @@ class OnboardingController extends GetxController {
   @override
   void onClose() {
     _speechToText.cancel();
+    nameController.dispose();
+    ageController.dispose();
     q1Controller.dispose();
     q2Controller.dispose();
     q3Controller.dispose();
@@ -151,7 +283,7 @@ class OnboardingController extends GetxController {
   }
 
   Future<void> startListening() async {
-    if (isLoading.value) return;
+    if (isLoading.value || !isWritingStep) return;
 
     isSpeechStarting.value = true;
     speechStatusMessage.value = '마이크를 준비하는 중이에요...';
@@ -242,12 +374,31 @@ class OnboardingController extends GetxController {
   }
 
   String _combineAnswers() {
+    final name = nameController.text.trim();
+    final age = ageController.text.trim();
+    final purposes = selectedPurposeLabels.join(', ');
+    final style = selectedStyleLabel;
+    final tocPlan = personalizedTocPlan
+        .asMap()
+        .entries
+        .map((entry) => '${entry.key + 1}. ${entry.value}')
+        .join('\n');
     final a1 = q1Controller.text.trim();
     final a2 = q2Controller.text.trim();
     final a3 = q3Controller.text.trim();
     final a4 = q4Controller.text.trim();
 
-    return '''이름과 현재의 나:
+    return '''기본 정보:
+이름: $name
+나이: $age
+현재 상태: ${selectedLifeStage.value}
+자서전 제작 목적: $purposes
+원하는 결과물 스타일: $style
+
+추천 목차 설계:
+$tocPlan
+
+이름과 현재의 나:
 $a1
 
 태어난 곳과 성장 배경:
@@ -261,10 +412,26 @@ $a4''';
   }
 
   Future<void> submitIntro() async {
+    final name = nameController.text.trim();
+    final age = ageController.text.trim();
     final a1 = q1Controller.text.trim();
     final a2 = q2Controller.text.trim();
     final a3 = q3Controller.text.trim();
     final a4 = q4Controller.text.trim();
+
+    if (name.isEmpty ||
+        age.isEmpty ||
+        selectedPurposeIds.isEmpty ||
+        selectedStyleId.value.isEmpty) {
+      Get.snackbar(
+        '알림',
+        '이름, 나이, 제작 목적을 먼저 선택해주세요.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.black87,
+        colorText: Colors.white,
+      );
+      return;
+    }
 
     if (a1.isEmpty && a2.isEmpty && a3.isEmpty && a4.isEmpty) {
       Get.snackbar(
@@ -312,4 +479,166 @@ $a4''';
       isLoading.value = false;
     }
   }
+
+  List<String> get selectedPurposeLabels {
+    return purposeOptions
+        .where((option) => selectedPurposeIds.contains(option.id))
+        .map((option) => option.label)
+        .toList();
+  }
+
+  String get selectedStyleLabel {
+    return styleOptions
+        .firstWhere(
+          (option) => option.id == selectedStyleId.value,
+          orElse: () => styleOptions[1],
+        )
+        .label;
+  }
+
+  List<String> get personalizedTocPlan {
+    final age = int.tryParse(ageController.text.trim());
+    final isSenior =
+        selectedLifeStage.value == '은퇴/시니어' || (age != null && age >= 60);
+    final isYoung = selectedLifeStage.value == '학생' || (age != null && age < 30);
+    final isCareer = selectedPurposeIds.contains('career');
+    final isFamily = selectedPurposeIds.contains('family') ||
+        selectedPurposeIds.contains('descendants');
+    final isEvent = selectedPurposeIds.contains('special_event');
+    final isSimple = selectedStyleId.value == 'simple';
+
+    final chapters = <String>[];
+
+    if (isYoung) {
+      chapters.addAll(['나를 소개하는 첫 장', '어린 시절과 성장 배경', '학교생활과 관계']);
+      chapters.add(isCareer ? '진로 고민과 나의 강점' : '나를 바꾼 경험들');
+      chapters.add('앞으로 만들고 싶은 삶');
+    } else if (isSenior) {
+      chapters.addAll(['내 삶의 시작과 시대 배경', '가족과 함께한 시간', '일과 생업의 기록']);
+      chapters.add(isFamily ? '후손에게 남기고 싶은 말' : '인생의 전환점');
+      chapters.add('돌아보며 배운 것');
+    } else {
+      chapters.addAll(['지금의 나를 만든 배경', '일과 삶의 균형', '가족과 관계']);
+      chapters.add(isCareer ? '성취와 실패에서 배운 것' : '중요한 선택과 전환점');
+      chapters.add('앞으로의 방향');
+    }
+
+    if (isEvent) {
+      chapters.insert(chapters.length > 2 ? 3 : chapters.length, '특별한 사건과 그 이후의 변화');
+    }
+
+    if (selectedStyleId.value == 'warm' && !chapters.contains('고마운 사람들과 마음의 기록')) {
+      chapters.add('고마운 사람들과 마음의 기록');
+    }
+
+    if (selectedStyleId.value == 'literary') {
+      chapters.add('내 이야기에 붙이고 싶은 제목과 장면');
+    }
+
+    final unique = <String>[];
+    for (final chapter in chapters) {
+      if (!unique.contains(chapter)) {
+        unique.add(chapter);
+      }
+    }
+
+    return isSimple ? unique.take(4).toList() : unique.take(7).toList();
+  }
+
+  String get primaryButtonText {
+    if (isLoading.value) {
+      return '기억을 정리하는 중...';
+    }
+    if (isLastStep) {
+      return '저장하고 계속하기';
+    }
+    if (isProfileStep || isPurposeStep || isStyleStep) {
+      return '다음 단계';
+    }
+    return '다음 질문';
+  }
+
+  String get headerMessage {
+    if (isProfileStep) {
+      return '먼저 이름과 나이를 알려주면 목차를 더 알맞게 준비할 수 있어요.';
+    }
+    if (isPurposeStep) {
+      return '자서전 목적은 직접 쓰지 말고 버튼으로 골라주세요.';
+    }
+    if (isStyleStep) {
+      return '원하는 스타일을 고르면 분량, 문체, 목차 방향을 맞출 수 있어요.';
+    }
+    return '한 번에 하나씩만 답해볼게요. 편하게 떠오르는 만큼만 적어주세요.';
+  }
+
+  void selectLifeStage(String label) {
+    selectedLifeStage.value = label;
+  }
+
+  void togglePurpose(String id) {
+    if (selectedPurposeIds.contains(id)) {
+      selectedPurposeIds.remove(id);
+    } else {
+      selectedPurposeIds.add(id);
+    }
+  }
+
+  void selectStyle(String id) {
+    selectedStyleId.value = id;
+  }
+
+  bool _validateCurrentStep() {
+    if (isProfileStep) {
+      final name = nameController.text.trim();
+      final age = ageController.text.trim();
+      if (name.isEmpty || age.isEmpty) {
+        Get.snackbar(
+          '알림',
+          '이름과 나이를 입력해주세요.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.black87,
+          colorText: Colors.white,
+        );
+        return false;
+      }
+    }
+
+    if (isPurposeStep && selectedPurposeIds.isEmpty) {
+      Get.snackbar(
+        '알림',
+        '자서전 제작 목적을 하나 이상 선택해주세요.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.black87,
+        colorText: Colors.white,
+      );
+      return false;
+    }
+
+    if (isStyleStep && selectedStyleId.value.isEmpty) {
+      Get.snackbar(
+        '알림',
+        '결과물 스타일을 선택해주세요.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.black87,
+        colorText: Colors.white,
+      );
+      return false;
+    }
+
+    return true;
+  }
+}
+
+class OnboardingChoice {
+  final String id;
+  final String label;
+  final String subtitle;
+  final IconData icon;
+
+  const OnboardingChoice({
+    required this.id,
+    required this.label,
+    required this.subtitle,
+    required this.icon,
+  });
 }

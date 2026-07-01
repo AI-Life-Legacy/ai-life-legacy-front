@@ -95,9 +95,11 @@ class _IntroTopBar extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 18),
-        MascotHeader(
-          message: '한 번에 하나씩만 답해볼게요. 편하게 떠오르는 만큼만 적어주세요.',
-          mascotSize: 72,
+        Obx(
+          () => MascotHeader(
+            message: controller.headerMessage,
+            mascotSize: 72,
+          ),
         ),
       ],
     );
@@ -203,52 +205,14 @@ class _QuestionStep extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 22),
-              _SpeechInputBar(controller: controller),
-              const SizedBox(height: 12),
-              TextField(
-                controller: controller.currentTextController,
-                minLines: 7,
-                maxLines: 10,
-                textInputAction: TextInputAction.newline,
-                style: const TextStyle(
-                  color: MascotFlowTheme.text,
-                  fontSize: 16,
-                  height: 1.5,
-                  fontWeight: FontWeight.w700,
-                ),
-                decoration: InputDecoration(
-                  hintText: controller.currentPlaceholder,
-                  hintStyle: const TextStyle(
-                    color: MascotFlowTheme.textMuted,
-                    fontSize: 14,
-                    height: 1.45,
-                  ),
-                  filled: true,
-                  fillColor: MascotFlowTheme.bg,
-                  contentPadding: const EdgeInsets.all(16),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(
-                      color: MascotFlowTheme.border,
-                      width: 2,
-                    ),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(
-                      color: MascotFlowTheme.border,
-                      width: 2,
-                    ),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(
-                      color: MascotFlowTheme.active,
-                      width: 2.4,
-                    ),
-                  ),
-                ),
-              ),
+              if (controller.isProfileStep)
+                _ProfileFields(controller: controller)
+              else if (controller.isPurposeStep)
+                _PurposePicker(controller: controller)
+              else if (controller.isStyleStep)
+                _StylePicker(controller: controller)
+              else
+                _WritingFields(controller: controller),
             ],
           ),
         ),
@@ -271,6 +235,303 @@ class _QuestionStep extends StatelessWidget {
       ],
     );
   }
+}
+
+class _ProfileFields extends StatelessWidget {
+  final OnboardingController controller;
+
+  const _ProfileFields({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _ProfileTextField(
+          controller: controller.nameController,
+          label: '이름',
+          hintText: '예: 김하늘',
+          icon: Icons.person_outline,
+          textInputAction: TextInputAction.next,
+        ),
+        const SizedBox(height: 12),
+        _ProfileTextField(
+          controller: controller.ageController,
+          label: '나이',
+          hintText: '예: 25',
+          icon: Icons.cake_outlined,
+          keyboardType: TextInputType.number,
+          textInputAction: TextInputAction.done,
+        ),
+        const SizedBox(height: 18),
+        const Text(
+          '현재 상태',
+          style: TextStyle(
+            color: MascotFlowTheme.text,
+            fontSize: 15,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Obx(
+          () => Column(
+            children: controller.lifeStageOptions.map((option) {
+              return FlowOptionCard(
+                icon: option.icon,
+                title: option.label,
+                subtitle: option.subtitle,
+                selected: controller.selectedLifeStage.value == option.label,
+                onTap: () => controller.selectLifeStage(option.label),
+              );
+            }).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PurposePicker extends StatelessWidget {
+  final OnboardingController controller;
+
+  const _PurposePicker({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      () => Column(
+        children: controller.purposeOptions.map((option) {
+          return FlowOptionCard(
+            icon: option.icon,
+            title: option.label,
+            subtitle: option.subtitle,
+            selected: controller.selectedPurposeIds.contains(option.id),
+            onTap: () => controller.togglePurpose(option.id),
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
+class _StylePicker extends StatelessWidget {
+  final OnboardingController controller;
+
+  const _StylePicker({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      () => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ...controller.styleOptions.map((option) {
+            return FlowOptionCard(
+              icon: option.icon,
+              title: option.label,
+              subtitle: option.subtitle,
+              selected: controller.selectedStyleId.value == option.id,
+              onTap: () => controller.selectStyle(option.id),
+            );
+          }),
+          const SizedBox(height: 8),
+          _TocPreview(controller: controller),
+        ],
+      ),
+    );
+  }
+}
+
+class _TocPreview extends StatelessWidget {
+  final OnboardingController controller;
+
+  const _TocPreview({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    final chapters = controller.personalizedTocPlan;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0B171C),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: MascotFlowTheme.border, width: 2),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(
+                Icons.account_tree_outlined,
+                color: MascotFlowTheme.active,
+                size: 20,
+              ),
+              SizedBox(width: 8),
+              Text(
+                '추천 목차 미리보기',
+                style: TextStyle(
+                  color: MascotFlowTheme.text,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...chapters.asMap().entries.map((entry) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 24,
+                    height: 24,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: MascotFlowTheme.surface,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: MascotFlowTheme.border,
+                        width: 1.4,
+                      ),
+                    ),
+                    child: Text(
+                      '${entry.key + 1}',
+                      style: const TextStyle(
+                        color: MascotFlowTheme.active,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      entry.value,
+                      style: const TextStyle(
+                        color: MascotFlowTheme.text,
+                        fontSize: 14,
+                        height: 1.35,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+}
+
+class _WritingFields extends StatelessWidget {
+  final OnboardingController controller;
+
+  const _WritingFields({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        _SpeechInputBar(controller: controller),
+        const SizedBox(height: 12),
+        TextField(
+          controller: controller.currentTextController,
+          minLines: 7,
+          maxLines: 10,
+          textInputAction: TextInputAction.newline,
+          style: const TextStyle(
+            color: MascotFlowTheme.text,
+            fontSize: 16,
+            height: 1.5,
+            fontWeight: FontWeight.w700,
+          ),
+          decoration: _inputDecoration(controller.currentPlaceholder),
+        ),
+      ],
+    );
+  }
+}
+
+class _ProfileTextField extends StatelessWidget {
+  final TextEditingController controller;
+  final String label;
+  final String hintText;
+  final IconData icon;
+  final TextInputType? keyboardType;
+  final TextInputAction? textInputAction;
+
+  const _ProfileTextField({
+    required this.controller,
+    required this.label,
+    required this.hintText,
+    required this.icon,
+    this.keyboardType,
+    this.textInputAction,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      textInputAction: textInputAction,
+      style: const TextStyle(
+        color: MascotFlowTheme.text,
+        fontSize: 16,
+        fontWeight: FontWeight.w800,
+      ),
+      decoration: _inputDecoration(hintText).copyWith(
+        labelText: label,
+        labelStyle: const TextStyle(
+          color: MascotFlowTheme.textMuted,
+          fontWeight: FontWeight.w800,
+        ),
+        prefixIcon: Icon(icon, color: MascotFlowTheme.active),
+      ),
+    );
+  }
+}
+
+InputDecoration _inputDecoration(String hintText) {
+  return InputDecoration(
+    hintText: hintText,
+    hintStyle: const TextStyle(
+      color: MascotFlowTheme.textMuted,
+      fontSize: 14,
+      height: 1.45,
+    ),
+    filled: true,
+    fillColor: MascotFlowTheme.bg,
+    contentPadding: const EdgeInsets.all(16),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(14),
+      borderSide: const BorderSide(
+        color: MascotFlowTheme.border,
+        width: 2,
+      ),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(14),
+      borderSide: const BorderSide(
+        color: MascotFlowTheme.border,
+        width: 2,
+      ),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(14),
+      borderSide: const BorderSide(
+        color: MascotFlowTheme.active,
+        width: 2.4,
+      ),
+    ),
+  );
 }
 
 class _SpeechInputBar extends StatelessWidget {
@@ -374,11 +635,7 @@ class _BottomActions extends StatelessWidget {
         ),
         child: Obx(
           () => FlowPrimaryButton(
-            text: controller.isLoading.value
-                ? '기억을 정리하는 중...'
-                : controller.isLastStep
-                    ? '저장하고 계속하기'
-                    : '다음 질문',
+            text: controller.primaryButtonText,
             loading: controller.isLoading.value,
             onPressed: controller.continueFromCurrentStep,
           ),
