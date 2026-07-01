@@ -59,15 +59,16 @@ class AppInput extends StatelessWidget {
       height: 44,
       padding: const EdgeInsets.symmetric(horizontal: 14),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: AppTheme.border),
-        borderRadius: BorderRadius.circular(8),
+        color: AppTheme.surface,
+        border: Border.all(color: AppTheme.border, width: 2),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
         children: [
           Expanded(
             child: TextField(
-              controller: value != null ? TextEditingController(text: value) : null,
+              controller:
+                  value != null ? TextEditingController(text: value) : null,
               obscureText: isPassword,
               keyboardType: type,
               autofocus: autofocus,

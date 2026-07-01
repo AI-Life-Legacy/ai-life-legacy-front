@@ -17,7 +17,7 @@ class StatusBadge extends StatelessWidget {
 
     switch (status) {
       case 'in-progress':
-        color = AppTheme.warning;
+        color = AppTheme.skyDark;
         bg = AppTheme.warnBg;
         text = '진행 중';
         break;
@@ -28,25 +28,24 @@ class StatusBadge extends StatelessWidget {
         break;
       case 'not-started':
       default:
-        color = AppTheme.textPh;
-        bg = Colors.transparent;
+        color = AppTheme.textSec;
+        bg = AppTheme.bgAlt;
         text = '시작 전';
         break;
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
         text,
         style: TextStyle(
           fontSize: 11,
-          fontWeight: FontWeight.w500,
+          fontWeight: FontWeight.w800,
           color: color,
-          letterSpacing: 0.1,
         ),
       ),
     );
@@ -73,7 +72,7 @@ class AppProgressBar extends StatelessWidget {
       width: double.infinity,
       height: height,
       decoration: BoxDecoration(
-        color: bg ?? AppTheme.border,
+        color: bg ?? AppTheme.bgAlt,
         borderRadius: BorderRadius.circular(8),
       ),
       child: FractionallySizedBox(

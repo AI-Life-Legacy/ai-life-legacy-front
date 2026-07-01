@@ -61,7 +61,7 @@ class _AppChatInputState extends State<AppChatInput> {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.surface,
         border: Border(top: BorderSide(color: AppTheme.border)),
       ),
       child: Row(
@@ -77,7 +77,8 @@ class _AppChatInputState extends State<AppChatInput> {
                 padding: const EdgeInsets.symmetric(horizontal: 14),
                 decoration: BoxDecoration(
                   border: Border.all(color: AppTheme.border),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(16),
+                  color: AppTheme.bg,
                 ),
                 child: TextField(
                   enabled: widget.enabled,
@@ -91,7 +92,9 @@ class _AppChatInputState extends State<AppChatInput> {
                     hintText: widget.placeholder,
                     hintStyle: TextStyle(
                       fontSize: 15,
-                      color: widget.enabled ? AppTheme.textPh : AppTheme.textPh.withValues(alpha: 0.5),
+                      color: widget.enabled
+                          ? AppTheme.textPh
+                          : AppTheme.textPh.withValues(alpha: 0.5),
                     ),
                     border: InputBorder.none,
                     isDense: true,
@@ -112,17 +115,21 @@ class _AppChatInputState extends State<AppChatInput> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: widget.recording 
-                    ? AppTheme.error 
-                    : (widget.enabled ? AppTheme.bgAlt : AppTheme.bgAlt.withValues(alpha: 0.5)),
-                shape: BoxShape.circle,
+                color: widget.recording
+                    ? AppTheme.error
+                    : (widget.enabled
+                        ? AppTheme.bgAlt
+                        : AppTheme.bgAlt.withValues(alpha: 0.5)),
+                borderRadius: BorderRadius.circular(14),
               ),
               child: Icon(
                 Icons.mic,
                 size: 20,
-                color: widget.recording 
-                    ? Colors.white 
-                    : (widget.enabled ? AppTheme.textSec : AppTheme.textPh.withValues(alpha: 0.5)),
+                color: widget.recording
+                    ? Colors.white
+                    : (widget.enabled
+                        ? AppTheme.textSec
+                        : AppTheme.textPh.withValues(alpha: 0.5)),
               ),
             ),
           ),
@@ -133,13 +140,25 @@ class _AppChatInputState extends State<AppChatInput> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: (widget.enabled && _hasText) ? AppTheme.cta : AppTheme.bgAlt,
-                shape: BoxShape.circle,
+                color: (widget.enabled && _hasText)
+                    ? AppTheme.cta
+                    : AppTheme.bgAlt,
+                borderRadius: BorderRadius.circular(14),
+                border: Border(
+                  bottom: BorderSide(
+                    color: (widget.enabled && _hasText)
+                        ? AppTheme.ctaDark
+                        : AppTheme.border,
+                    width: 3,
+                  ),
+                ),
               ),
               child: Icon(
                 Icons.send,
                 size: 18,
-                color: (widget.enabled && _hasText) ? Colors.white : AppTheme.textPh,
+                color: (widget.enabled && _hasText)
+                    ? Colors.white
+                    : AppTheme.textPh,
               ),
             ),
           ),
