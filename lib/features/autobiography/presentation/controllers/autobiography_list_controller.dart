@@ -39,10 +39,10 @@ class AutobiographyListController extends GetxController {
       final autoController = Get.find<AutobiographyController>();
       await autoController.syncStatusWithServer();
     } catch (e) {
-      debugPrint('[AutobiographyListController] syncAutobiographyStatus error: $e');
+      debugPrint(
+          '[AutobiographyListController] syncAutobiographyStatus error: $e');
     }
   }
-
 
   Future<void> fetchToc() async {
     try {
@@ -94,9 +94,9 @@ class AutobiographyListController extends GetxController {
         totalQuestions.value = tq;
         answeredQuestions.value = aq;
         remainingQuestions.value = tq - aq;
-        
+
         if (totalProgress.value == 0.0 && chapters.isNotEmpty) {
-           _calculateProgress();
+          _calculateProgress();
         }
       }
     } catch (e) {
@@ -113,7 +113,7 @@ class AutobiographyListController extends GetxController {
       debugPrint('[AutobiographyListController] tocQuestions raw: $raw');
 
       final result = raw is Map<String, dynamic> ? raw['result'] : raw;
-      
+
       final Map<int, List<Map<String, dynamic>>> grouped = {};
 
       if (result is Map && result['chapters'] is List) {
@@ -163,7 +163,7 @@ class AutobiographyListController extends GetxController {
       expandedTocId.value = null;
       return;
     }
-    
+
     expandedTocId.value = tocId;
     if (!tocQuestions.containsKey(tocId) || tocQuestions[tocId]!.isEmpty) {
       await fetchQuestionsForToc(tocId);
@@ -179,7 +179,7 @@ class AutobiographyListController extends GetxController {
         final result = raw is Map<String, dynamic> && raw.containsKey('result')
             ? raw['result']
             : raw;
-            
+
         if (result is List) {
           tocQuestions[tocId] = result
               .whereType<Map>()
@@ -212,7 +212,7 @@ class AutobiographyListController extends GetxController {
       }
     }
   }
-  
+
   void _calculateProgress() {
     if (chapters.isEmpty) {
       totalProgress.value = 0.0;
@@ -223,7 +223,8 @@ class AutobiographyListController extends GetxController {
     for (final ch in chapters) {
       if (ch['percent'] != null) {
         final p = ch['percent'];
-        final n = p is num ? p.toDouble() : (double.tryParse(p.toString()) ?? 0.0);
+        final n =
+            p is num ? p.toDouble() : (double.tryParse(p.toString()) ?? 0.0);
         sum += n <= 1 ? n : n / 100;
         continue;
       }

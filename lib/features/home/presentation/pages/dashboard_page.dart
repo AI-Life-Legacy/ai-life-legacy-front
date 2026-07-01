@@ -53,7 +53,7 @@ class DashboardPage extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             // Content
             Expanded(
               child: ListView(
@@ -95,52 +95,53 @@ class DashboardPage extends StatelessWidget {
                             value: 0.72,
                             minHeight: 8,
                             backgroundColor: AppTheme.border,
-                            valueColor: AlwaysStoppedAnimation<Color>(AppTheme.cta),
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(AppTheme.cta),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  
+
                   const SizedBox(height: 24),
-                  
+
                   // Activity Log Label
                   Text(
                     '활동 로그',
                     style: AppTheme.sectionLabel,
                   ),
                   const SizedBox(height: 12),
-                  
+
                   // Activity Logs
                   ...logs.map((l) => Container(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: AppTheme.border),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          l['txt']!,
-                          style: const TextStyle(
-                            fontFamily: AppTheme.fontFamily,
-                            fontSize: 13,
-                            color: AppTheme.text,
-                          ),
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: AppTheme.border),
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        Text(
-                          l['d']!,
-                          style: const TextStyle(
-                            fontFamily: AppTheme.fontFamily,
-                            fontSize: 12,
-                            color: AppTheme.textPh,
-                          ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              l['txt']!,
+                              style: const TextStyle(
+                                fontFamily: AppTheme.fontFamily,
+                                fontSize: 13,
+                                color: AppTheme.text,
+                              ),
+                            ),
+                            Text(
+                              l['d']!,
+                              style: const TextStyle(
+                                fontFamily: AppTheme.fontFamily,
+                                fontSize: 12,
+                                color: AppTheme.textPh,
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  )),
+                      )),
                 ],
               ),
             ),

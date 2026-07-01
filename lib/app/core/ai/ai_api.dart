@@ -11,7 +11,8 @@ class AiApi {
   final Dio _dio = DioClient.instance;
 
   /// 1. 온보딩 케이스 분류
-  Future<SuccessResponse<AiCaseResponseDto>> getCase(AiCaseRequestDto dto) async {
+  Future<SuccessResponse<AiCaseResponseDto>> getCase(
+      AiCaseRequestDto dto) async {
     final response = await _dio.post(
       ApiEndpoints.aiCase,
       data: dto.toJson(),
@@ -49,18 +50,21 @@ class AiApi {
   }
 
   /// 4. 자서전 및 PDF 생성
-  Future<SuccessResponse<AiAutobiographyResponseDto>> generateAutobiography() async {
+  Future<SuccessResponse<AiAutobiographyResponseDto>>
+      generateAutobiography() async {
     final response = await _dio.post(
       ApiEndpoints.aiAutobiography,
       options: Options(
-        receiveTimeout: const Duration(minutes: 5), // LLM 처리에 시간이 오래 걸리므로 5분으로 연장
+        receiveTimeout:
+            const Duration(minutes: 5), // LLM 처리에 시간이 오래 걸리므로 5분으로 연장
         sendTimeout: const Duration(minutes: 5),
       ),
     );
 
     return SuccessResponse<AiAutobiographyResponseDto>.fromJson(
       response.data,
-      (json) => AiAutobiographyResponseDto.fromJson(json as Map<String, dynamic>),
+      (json) =>
+          AiAutobiographyResponseDto.fromJson(json as Map<String, dynamic>),
     );
   }
 

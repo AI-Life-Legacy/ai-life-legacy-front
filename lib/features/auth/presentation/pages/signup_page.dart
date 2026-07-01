@@ -34,7 +34,7 @@ class SignUpPage extends GetView<AuthController> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Get.back(),
         ),
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppTheme.bg,
         elevation: 0,
       ),
       body: SafeArea(
@@ -43,11 +43,38 @@ class SignUpPage extends GetView<AuthController> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: AppTheme.surface,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppTheme.border, width: 2),
+                  boxShadow: const [
+                    BoxShadow(
+                        color: AppTheme.shadow,
+                        blurRadius: 0,
+                        offset: Offset(0, 5)),
+                  ],
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.flag_circle, color: AppTheme.cta, size: 42),
+                    SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('첫 레슨을 시작해볼까요?', style: AppTextStyles.h1),
+                          SizedBox(height: 4),
+                          Text('1분이면 계정을 만들고 바로 기록할 수 있어요.',
+                              style: AppTextStyles.bodySec),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               const SizedBox(height: 28),
-              const Text('계정을 만들어보세요', style: AppTextStyles.h1),
-              const SizedBox(height: 6),
-              const Text('1분이면 충분합니다.', style: AppTextStyles.bodySec),
-              const SizedBox(height: 32),
               InputField(
                 label: '이메일',
                 child: AppInput(
@@ -82,13 +109,17 @@ class SignUpPage extends GetView<AuthController> {
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Text(
                     controller.errorMessage.value,
-                    style: const TextStyle(color: Colors.red, fontSize: 13),
+                    style: const TextStyle(
+                        color: AppTheme.error,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700),
                   ),
                 );
               }),
               Obx(() => PrimaryButton(
                     text: controller.isLoading.value ? '가입 중...' : '계정 만들기',
-                    onPressed: controller.isLoading.value ? null : controller.signUp,
+                    onPressed:
+                        controller.isLoading.value ? null : controller.signUp,
                   )),
               const SizedBox(height: 12),
               const Text(
@@ -107,8 +138,8 @@ class SignUpPage extends GetView<AuthController> {
                       '로그인',
                       style: TextStyle(
                         fontSize: 14,
-                        color: AppTheme.text,
-                        fontWeight: FontWeight.w500,
+                        color: AppTheme.ctaDark,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                   ),

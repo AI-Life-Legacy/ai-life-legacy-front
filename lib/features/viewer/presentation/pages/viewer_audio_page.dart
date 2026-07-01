@@ -53,7 +53,7 @@ class _ViewerAudioPageState extends State<ViewerAudioPage> {
                 ),
               ),
             ),
-            
+
             // Content
             Expanded(
               child: Padding(
@@ -80,7 +80,7 @@ class _ViewerAudioPageState extends State<ViewerAudioPage> {
                       ),
                     ),
                     const SizedBox(height: 40),
-                    
+
                     // Audio Bars
                     SizedBox(
                       height: 40,
@@ -99,9 +99,9 @@ class _ViewerAudioPageState extends State<ViewerAudioPage> {
                         }).toList(),
                       ),
                     ),
-                    
+
                     const SizedBox(height: 60),
-                    
+
                     // Stop Button
                     GestureDetector(
                       onTap: () => Get.back(),

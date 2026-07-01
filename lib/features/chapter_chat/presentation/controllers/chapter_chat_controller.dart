@@ -55,7 +55,7 @@ class ChapterChatController extends GetxController {
       final result = await postRepo.getQuestions(tocId);
       questions.assignAll(result.data
           .map((e) => QuestionDto(id: e.id, questionText: e.question)));
-      
+
       if (questions.isNotEmpty) {
         addMessage(questions.first.questionText, isUser: false);
       } else {
@@ -161,7 +161,8 @@ class ChapterChatController extends GetxController {
     _moveToNextQuestion();
   }
 
-  Future<void> _handleFollowUpAnswer(QuestionDto question, String answer) async {
+  Future<void> _handleFollowUpAnswer(
+      QuestionDto question, String answer) async {
     final primary = _pendingPrimaryAnswer;
     if (primary == null) {
       await _persistAnswer(question, answer);
@@ -202,7 +203,8 @@ class ChapterChatController extends GetxController {
     _resetPendingState();
     if (currentQuestionIndex.value < questions.length - 1) {
       currentQuestionIndex.value++;
-      addMessage(questions[currentQuestionIndex.value].questionText, isUser: false);
+      addMessage(questions[currentQuestionIndex.value].questionText,
+          isUser: false);
     } else {
       currentQuestionIndex.value = questions.length;
       addMessage('모든 질문에 답변하셨습니다!', isUser: false);

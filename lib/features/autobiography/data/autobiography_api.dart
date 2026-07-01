@@ -29,7 +29,8 @@ class AutobiographyApi {
   /// 각 질문에 대한 최종 완성된 자서전 문구를 저장합니다.
   /// Endpoint: POST /life-legacy/toc/:tocId/questions/:questionId/answers
   /// Request Body: { "answer": "..." }
-  Future<Response> saveAnswer(int tocId, int questionId, AnswerSaveDto dto) async {
+  Future<Response> saveAnswer(
+      int tocId, int questionId, AnswerSaveDto dto) async {
     return await _apiProvider.post(
       '/life-legacy/toc/$tocId/questions/$questionId/answers',
       data: dto.toJson(),
@@ -84,10 +85,10 @@ class AutobiographyApi {
     return await _apiProvider.get('/api/autobiography/status');
   }
 
-
   /// 답변 조회
   /// Query: ?questionId=...&tocId=...
-  Future<Response> getAnswer({required int questionId, required int tocId}) async {
+  Future<Response> getAnswer(
+      {required int questionId, required int tocId}) async {
     return await _apiProvider.get(
       '/users/me/answers',
       queryParameters: {

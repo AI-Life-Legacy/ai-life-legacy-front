@@ -12,7 +12,7 @@ class AuthController extends GetxController {
 
   final emailController = Rx<String>('');
   final passwordController = Rx<String>('');
-  
+
   final isLoading = false.obs;
   final showPassword = false.obs;
   final errorMessage = ''.obs;

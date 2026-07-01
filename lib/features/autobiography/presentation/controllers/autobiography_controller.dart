@@ -34,24 +34,24 @@ class AutobiographyController extends GetxController {
   final isGeneratingFollowUp = false.obs;
   final isSavingAnswer = false.obs;
   final lastGenerationError = ''.obs;
-  
+
   final currentTocId = 0.obs;
-  
+
   // New state variables
   final chatStep = ChatStep.answeringFixedQuestion.obs;
   final lastFixedAnswer = ''.obs;
   final lastFollowUpAnswer = ''.obs;
   final currentFollowUpQuestion = ''.obs;
-  
+
   // Autobiography PDF state variables
   final autobiographyGenerated = false.obs;
   final pdfUrl = RxnString();
   final pageCount = RxnInt();
   final generatedAt = RxnString();
   final isUnlocked = false.obs;
-  
+
   final scrollController = ScrollController();
-  
+
   bool _closed = false;
 
   @override
@@ -63,12 +63,14 @@ class AutobiographyController extends GetxController {
   Future<void> loadAutobiographyState() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      autobiographyGenerated.value = prefs.getBool('autobiographyGenerated') ?? false;
+      autobiographyGenerated.value =
+          prefs.getBool('autobiographyGenerated') ?? false;
       pdfUrl.value = prefs.getString('autobiographyPdfUrl');
       pageCount.value = prefs.getInt('autobiographyPageCount');
       generatedAt.value = prefs.getString('autobiographyGeneratedAt');
       isUnlocked.value = prefs.getBool('avatarUnlocked') ?? false;
-      debugPrint('[AutobiographyController] State loaded: generated=${autobiographyGenerated.value}, pdfUrl=${pdfUrl.value}, isUnlocked=${isUnlocked.value}');
+      debugPrint(
+          '[AutobiographyController] State loaded: generated=${autobiographyGenerated.value}, pdfUrl=${pdfUrl.value}, isUnlocked=${isUnlocked.value}');
     } catch (e) {
       debugPrint('[AutobiographyController] loadAutobiographyState error: $e');
     }
@@ -85,7 +87,8 @@ class AutobiographyController extends GetxController {
 
         Map<String, dynamic> targetMap = {};
         if (dataMap != null) {
-          if (dataMap.containsKey('result') && dataMap['result'] is Map<String, dynamic>) {
+          if (dataMap.containsKey('result') &&
+              dataMap['result'] is Map<String, dynamic>) {
             targetMap = dataMap['result'] as Map<String, dynamic>;
           } else {
             targetMap = dataMap;
@@ -93,20 +96,25 @@ class AutobiographyController extends GetxController {
         }
 
         final status = targetMap['status']?.toString();
-        final pdfUrlVal = (targetMap['pdfUrl'] ?? targetMap['pdf_url'])?.toString();
+        final pdfUrlVal =
+            (targetMap['pdfUrl'] ?? targetMap['pdf_url'])?.toString();
         final hasPdfUrl = pdfUrlVal != null && pdfUrlVal.trim().isNotEmpty;
-        debugPrint('[AutobiographyController] syncStatusWithServer status: $status, pdfUrl: $pdfUrlVal');
+        debugPrint(
+            '[AutobiographyController] syncStatusWithServer status: $status, pdfUrl: $pdfUrlVal');
 
         if (status == 'COMPLETED' || hasPdfUrl) {
           int? pageCountVal;
-          final rawPageCount = targetMap['pageCount'] ?? targetMap['page_count'];
+          final rawPageCount =
+              targetMap['pageCount'] ?? targetMap['page_count'];
           if (rawPageCount is int) {
             pageCountVal = rawPageCount;
           } else if (rawPageCount != null) {
             pageCountVal = int.tryParse(rawPageCount.toString());
           }
 
-          final generatedAtVal = (targetMap['generatedAt'] ?? targetMap['generated_at'])?.toString();
+          final generatedAtVal =
+              (targetMap['generatedAt'] ?? targetMap['generated_at'])
+                  ?.toString();
 
           await saveAutobiographyState(
             generated: true,
@@ -119,7 +127,8 @@ class AutobiographyController extends GetxController {
           isUnlocked.value = true;
           final prefs = await SharedPreferences.getInstance();
           await prefs.setBool('avatarUnlocked', true);
-          debugPrint('[AutobiographyController] State synced with server COMPLETED/hasPdfUrl. pdfUrl=$pdfUrlVal');
+          debugPrint(
+              '[AutobiographyController] State synced with server COMPLETED/hasPdfUrl. pdfUrl=$pdfUrlVal');
         } else {
           // NOT_STARTED, FAILED, PROCESSING 등
           // 기존 로컬 상태와 충돌하지 않게 처리: generated=false로 설정
@@ -132,17 +141,19 @@ class AutobiographyController extends GetxController {
           isUnlocked.value = false;
           final prefs = await SharedPreferences.getInstance();
           await prefs.setBool('avatarUnlocked', false);
-          debugPrint('[AutobiographyController] State synced with server: $status. Reset local generated state.');
+          debugPrint(
+              '[AutobiographyController] State synced with server: $status. Reset local generated state.');
         }
       } else {
-        throw Exception('Server status check returned non-200 status code: ${response.statusCode}');
+        throw Exception(
+            'Server status check returned non-200 status code: ${response.statusCode}');
       }
     } catch (e) {
-      debugPrint('[AutobiographyController] syncStatusWithServer error: $e. Fallback to SharedPreferences.');
+      debugPrint(
+          '[AutobiographyController] syncStatusWithServer error: $e. Fallback to SharedPreferences.');
       await loadAutobiographyState();
     }
   }
-
 
   Future<void> saveAutobiographyState({
     required bool generated,
@@ -175,7 +186,8 @@ class AutobiographyController extends GetxController {
       } else {
         await prefs.remove('autobiographyGeneratedAt');
       }
-      debugPrint('[AutobiographyController] State saved: generated=$generated, pdfUrl=$url, pageCount=$count');
+      debugPrint(
+          '[AutobiographyController] State saved: generated=$generated, pdfUrl=$url, pageCount=$count');
     } catch (e) {
       debugPrint('[AutobiographyController] saveAutobiographyState error: $e');
     }
@@ -202,13 +214,15 @@ class AutobiographyController extends GetxController {
 
   // Getters for current question
   String get currentQuestionText {
-    if (questions.isEmpty || currentQuestionIndex.value >= questions.length) return '';
+    if (questions.isEmpty || currentQuestionIndex.value >= questions.length)
+      return '';
     final q = questions[currentQuestionIndex.value];
     return q['questionText']?.toString() ?? '';
   }
 
   int? get currentQuestionId {
-    if (questions.isEmpty || currentQuestionIndex.value >= questions.length) return null;
+    if (questions.isEmpty || currentQuestionIndex.value >= questions.length)
+      return null;
     final q = questions[currentQuestionIndex.value];
     final id = q['id'];
     if (id is int) return id;
@@ -222,7 +236,7 @@ class AutobiographyController extends GetxController {
       isLoading.value = true;
       final response = await _api.getQuestions(tocId);
       final raw = response.data;
-      
+
       final result = raw is Map<String, dynamic> ? raw['result'] : raw;
 
       if (result is List) {
@@ -272,10 +286,8 @@ class AutobiographyController extends GetxController {
   }
 
   void removeTemporaryMessages() {
-    messages.removeWhere((msg) => 
-      msg['type'] == 'followUpChoice' || 
-      msg['type'] == 'loading'
-    );
+    messages.removeWhere(
+        (msg) => msg['type'] == 'followUpChoice' || msg['type'] == 'loading');
     messages.refresh();
   }
 
@@ -291,18 +303,18 @@ class AutobiographyController extends GetxController {
         'time': _formatTime(DateTime.now()),
       });
       lastFixedAnswer.value = trimmed;
-      
+
       chatStep.value = ChatStep.waitingFollowUpChoice;
-      
+
       removeTemporaryMessages();
-      
+
       messages.add({
         'role': 'system',
         'text': '이 답변에 대해 추가 질문을 해볼까요?',
         'type': 'followUpChoice',
         'time': _formatTime(DateTime.now()),
       });
-      
+
       messages.refresh();
       scrollToBottom();
       return;
@@ -353,7 +365,7 @@ class AutobiographyController extends GetxController {
 
       final raw = response.data;
       final result = raw is Map<String, dynamic> ? raw['result'] : null;
-      
+
       final followUpQuestion = result is Map<String, dynamic>
           ? result['question']?.toString()
           : null;
@@ -362,14 +374,14 @@ class AutobiographyController extends GetxController {
 
       if (followUpQuestion != null && followUpQuestion.trim().isNotEmpty) {
         currentFollowUpQuestion.value = followUpQuestion;
-        
+
         messages.add({
           'role': 'ai',
           'text': followUpQuestion,
           'time': _formatTime(DateTime.now()),
           'type': 'followUp',
         });
-        
+
         chatStep.value = ChatStep.answeringFollowUp;
         scrollToBottom();
       } else {
@@ -383,7 +395,8 @@ class AutobiographyController extends GetxController {
       }
       messages.refresh();
     } catch (e) {
-      debugPrint('[AutobiographyController] generateFollowUpQuestion error: $e');
+      debugPrint(
+          '[AutobiographyController] generateFollowUpQuestion error: $e');
       if (!_closed) {
         messages.removeWhere((msg) => msg['type'] == 'loading');
         messages.add({
@@ -420,20 +433,21 @@ class AutobiographyController extends GetxController {
 
       final questionId = currentQuestionId;
       final tocId = currentTocId.value;
-      
+
       final hasFollowUp = currentFollowUpQuestion.value.trim().isNotEmpty &&
           lastFollowUpAnswer.value.trim().isNotEmpty;
 
       final answer = hasFollowUp
           ? '${lastFixedAnswer.value.trim()}\n\n'
-            '추가 질문: ${currentFollowUpQuestion.value.trim()}\n\n'
-            '추가 답변: ${lastFollowUpAnswer.value.trim()}'
+              '추가 질문: ${currentFollowUpQuestion.value.trim()}\n\n'
+              '추가 답변: ${lastFollowUpAnswer.value.trim()}'
           : lastFixedAnswer.value.trim();
 
       if (questionId != null && tocId != 0) {
         try {
-          await _api.saveAnswer(tocId, questionId, AnswerSaveDto(answer: answer));
-          
+          await _api.saveAnswer(
+              tocId, questionId, AnswerSaveDto(answer: answer));
+
           messages.add({
             'role': 'ai',
             'text': '저장했어요. 다음 질문으로 넘어갈게요.',
@@ -455,7 +469,7 @@ class AutobiographyController extends GetxController {
 
       if (!isLastQuestion) {
         currentQuestionIndex.value++;
-        
+
         lastFixedAnswer.value = '';
         lastFollowUpAnswer.value = '';
         currentFollowUpQuestion.value = '';
@@ -476,13 +490,14 @@ class AutobiographyController extends GetxController {
         return;
       }
 
-      debugPrint('[AutobiographyController] Chapter completed. Moving to chapter complete page.');
-      
+      debugPrint(
+          '[AutobiographyController] Chapter completed. Moving to chapter complete page.');
+
       try {
         final tocResponse = await _api.getToc();
         final raw = tocResponse.data;
         final result = raw is Map<String, dynamic> ? raw['result'] : raw;
-        
+
         String chapterTitle = '';
         final chaptersList = result?['chapters'];
         if (chaptersList is List) {
@@ -508,7 +523,8 @@ class AutobiographyController extends GetxController {
           },
         );
       } catch (e) {
-        debugPrint('[AutobiographyController] Failed to fetch TOC for complete page: $e');
+        debugPrint(
+            '[AutobiographyController] Failed to fetch TOC for complete page: $e');
         Get.offNamed(Routes.home);
       }
     } finally {
@@ -521,7 +537,7 @@ class AutobiographyController extends GetxController {
     try {
       isGenerating.value = true;
       lastGenerationError.value = '';
-      
+
       final response = await _api.generateAutobiography(force: force);
       if (response.statusCode == 200 || response.statusCode == 201) {
         final prefs = await SharedPreferences.getInstance();
@@ -535,7 +551,8 @@ class AutobiographyController extends GetxController {
 
         Map<String, dynamic> targetMap = {};
         if (dataMap != null) {
-          if (dataMap.containsKey('result') && dataMap['result'] is Map<String, dynamic>) {
+          if (dataMap.containsKey('result') &&
+              dataMap['result'] is Map<String, dynamic>) {
             targetMap = dataMap['result'] as Map<String, dynamic>;
           } else {
             targetMap = dataMap;
@@ -543,8 +560,9 @@ class AutobiographyController extends GetxController {
         }
 
         final status = targetMap['status']?.toString();
-        final pdfUrlVal = (targetMap['pdfUrl'] ?? targetMap['pdf_url'])?.toString();
-        
+        final pdfUrlVal =
+            (targetMap['pdfUrl'] ?? targetMap['pdf_url'])?.toString();
+
         int? pageCountVal;
         final rawPageCount = targetMap['pageCount'] ?? targetMap['page_count'];
         if (rawPageCount is int) {
@@ -553,7 +571,10 @@ class AutobiographyController extends GetxController {
           pageCountVal = int.tryParse(rawPageCount.toString());
         }
 
-        final generatedAtVal = (targetMap['generatedAt'] ?? targetMap['generated_at'] ?? DateTime.now().toIso8601String()).toString();
+        final generatedAtVal = (targetMap['generatedAt'] ??
+                targetMap['generated_at'] ??
+                DateTime.now().toIso8601String())
+            .toString();
 
         if (pageCountVal != null) {
           await prefs.setInt('pageCount', pageCountVal);
@@ -586,7 +607,8 @@ class AutobiographyController extends GetxController {
       }
     } on DioException catch (e) {
       String errMsg = '자서전 생성에 실패했습니다.\n잠시 후 다시 시도해주세요.';
-      if (e.type == DioExceptionType.connectionTimeout || e.type == DioExceptionType.receiveTimeout) {
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
         errMsg = '서버 응답 시간이 초과되었습니다.\n잠시 후 다시 시도해주세요.';
       } else if (e.response != null && e.response!.data is Map) {
         final data = e.response!.data;

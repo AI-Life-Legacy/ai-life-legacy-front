@@ -18,17 +18,17 @@ class ViewerController extends GetxController {
       errorMessage.value = '6자리 코드를 정확히 입력해주세요.';
       return;
     }
-    
+
     try {
       isLoading.value = true;
       errorMessage.value = '';
-      
+
       final response = await _api.viewerLogin(code.trim());
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = response.data;
         Map<String, dynamic>? resultData;
-        
+
         if (data is Map<String, dynamic>) {
           if (data.containsKey('result')) {
             resultData = data['result'] as Map<String, dynamic>?;
@@ -36,23 +36,23 @@ class ViewerController extends GetxController {
             resultData = data;
           }
         }
-        
+
         if (resultData != null && resultData.containsKey('accessToken')) {
           final token = resultData['accessToken'] as String;
           final authorInfo = resultData['authorInfo'] as Map<String, dynamic>?;
           final authorName = authorInfo?['name'] as String? ?? '작성자';
           final authorIntro = authorInfo?['intro'] as String? ?? '';
-          
+
           // 기존 작성자 토큰 클리어 후 뷰어 모드로 저장
           await TokenStorage.clearTokens();
           await TokenStorage.saveViewerAccessToken(token);
           await TokenStorage.saveViewerAuthorName(authorName);
           await TokenStorage.saveViewerAuthorIntro(authorIntro);
           await TokenStorage.saveIsViewerMode(true);
-          
+
           viewerCode.value = code.trim();
           writerName.value = authorName;
-          
+
           // 곧바로 뷰어 아바타 채팅(AvatarChatPage) 라우트로 이동!
           Get.offNamed(Routes.viewerChat);
         } else {

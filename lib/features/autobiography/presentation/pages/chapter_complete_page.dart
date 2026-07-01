@@ -6,15 +6,18 @@ import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
 class ChapterCompletePage extends StatelessWidget {
   const ChapterCompletePage({super.key});
 
-  Map<String, dynamic>? findNextChapter(List<Map<String, dynamic>> chapters, int currentTocId) {
-    final normalized = chapters.map((e) => Map<String, dynamic>.from(e)).toList();
+  Map<String, dynamic>? findNextChapter(
+      List<Map<String, dynamic>> chapters, int currentTocId) {
+    final normalized =
+        chapters.map((e) => Map<String, dynamic>.from(e)).toList();
 
     final afterCurrent = normalized.where((ch) {
       final id = (ch['tocId'] as num?)?.toInt() ?? 0;
       final done = (ch['done'] as num?)?.toInt() ?? 0;
       final total = (ch['total'] as num?)?.toInt() ?? 0;
       final status = ch['status']?.toString();
-      final isCompleted = status == 'completed' || status == 'complete' || done >= total;
+      final isCompleted =
+          status == 'completed' || status == 'complete' || done >= total;
       return id > currentTocId && !isCompleted;
     }).toList();
 
@@ -24,7 +27,8 @@ class ChapterCompletePage extends StatelessWidget {
       final done = (ch['done'] as num?)?.toInt() ?? 0;
       final total = (ch['total'] as num?)?.toInt() ?? 0;
       final status = ch['status']?.toString();
-      final isCompleted = status == 'completed' || status == 'complete' || done >= total;
+      final isCompleted =
+          status == 'completed' || status == 'complete' || done >= total;
       return !isCompleted;
     }).toList();
 
@@ -41,12 +45,13 @@ class ChapterCompletePage extends StatelessWidget {
     final answeredCount = args['answeredCount'] as int? ?? questionCount;
     final completedChapters = args['completedChapters'] as int? ?? 0;
     final chaptersList = args['chapters'] as List? ?? [];
-    
-    final chapters = chaptersList.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+
+    final chapters =
+        chaptersList.map((e) => Map<String, dynamic>.from(e as Map)).toList();
     final nextChapter = findNextChapter(chapters, tocId);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.bg,
       body: SafeArea(
         child: Column(
           children: [
@@ -56,7 +61,7 @@ class ChapterCompletePage extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey[300],
+                  color: AppTheme.border,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -71,7 +76,7 @@ class ChapterCompletePage extends StatelessWidget {
                       width: 80,
                       height: 80,
                       decoration: BoxDecoration(
-                        color: AppTheme.cta.withValues(alpha: 0.1),
+                        color: AppTheme.successBg,
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
@@ -86,7 +91,7 @@ class ChapterCompletePage extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        color: AppTheme.text,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -213,7 +218,7 @@ class ChapterCompletePage extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Colors.black87,
+                color: AppTheme.text,
               ),
             ),
           ],

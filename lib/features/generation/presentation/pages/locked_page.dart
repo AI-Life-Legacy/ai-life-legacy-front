@@ -107,7 +107,8 @@ class LockedPage extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.lock_outline, size: 48, color: AppTheme.border),
+                    const Icon(Icons.lock_outline,
+                        size: 48, color: AppTheme.border),
                     const SizedBox(height: 24),
                     const Text(
                       '자서전을 완성하면\n아바타 대화가 열려요.',

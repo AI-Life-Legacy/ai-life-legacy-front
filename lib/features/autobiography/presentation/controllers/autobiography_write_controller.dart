@@ -19,13 +19,13 @@ class AutobiographyWriteController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    
+
     if (Get.arguments != null) {
       tocId.value = Get.arguments['tocId'] ?? 0;
       questionId.value = Get.arguments['questionId'] ?? 0;
       questionText.value = Get.arguments['questionText'] ?? '';
     }
-    
+
     fetchAnswer();
   }
 
@@ -50,9 +50,10 @@ class AutobiographyWriteController extends GetxController {
         final resultMap = Map<String, dynamic>.from(result);
         answerId.value = (resultMap['answerId'] ?? resultMap['id']) as int?;
         answerText.value = (resultMap['answer'] ??
-            resultMap['answerText'] ??
-            resultMap['content'] ??
-            '').toString();
+                resultMap['answerText'] ??
+                resultMap['content'] ??
+                '')
+            .toString();
       } else {
         answerText.value = '';
       }
@@ -116,13 +117,17 @@ ParsedAnswer parseAnswerText(String text) {
   final aIndex = text.indexOf(followAnswerMarker);
 
   final main = text.substring(0, qIndex).trim();
-  final fq = text.substring(
-    qIndex + followQuestionMarker.length,
-    aIndex,
-  ).trim();
-  final fa = text.substring(
-    aIndex + followAnswerMarker.length,
-  ).trim();
+  final fq = text
+      .substring(
+        qIndex + followQuestionMarker.length,
+        aIndex,
+      )
+      .trim();
+  final fa = text
+      .substring(
+        aIndex + followAnswerMarker.length,
+      )
+      .trim();
 
   return ParsedAnswer(
     mainAnswer: main,

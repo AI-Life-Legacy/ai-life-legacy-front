@@ -7,7 +7,7 @@ class InitialBinding extends Bindings {
   void dependencies() {
     // 앱 전역 의존성 주입
     Get.put(ApiProvider(), permanent: true);
-    
+
     // AuthBinding 등 초기 진입 시점부터 필요한 의존성을 등록합니다.
     AuthBinding().dependencies();
   }

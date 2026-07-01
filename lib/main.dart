@@ -1,6 +1,7 @@
 /// 앱의 진입점(Entry Point)
 /// Flutter 엔진을 초기화하고 최상위 위젯(LegacyApp)을 실행합니다.
 library;
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:ai_life_legacy/bootstrap.dart';

@@ -60,10 +60,13 @@ class ViewerEntryPage extends GetView<ViewerController> {
               const SizedBox(height: 8),
               Obx(() {
                 final code = controller.viewerCode.value.trim();
-                final isButtonEnabled = code.length == 6 && !controller.isLoading.value;
+                final isButtonEnabled =
+                    code.length == 6 && !controller.isLoading.value;
                 return PrimaryButton(
                   text: controller.isLoading.value ? '입장 중...' : '입장하기',
-                  onPressed: isButtonEnabled ? () => controller.verifyCode(code) : null,
+                  onPressed: isButtonEnabled
+                      ? () => controller.verifyCode(code)
+                      : null,
                 );
               }),
               const Spacer(),

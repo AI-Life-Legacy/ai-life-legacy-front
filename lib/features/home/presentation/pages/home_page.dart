@@ -1,316 +1,382 @@
+import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
+import 'package:ai_life_legacy/app/core/theme/app_theme.dart';
+import 'package:ai_life_legacy/app/core/theme/widgets/mascot_flow_widgets.dart';
+import 'package:ai_life_legacy/features/home/presentation/controllers/home_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:ai_life_legacy/app/core/theme/app_theme.dart';
-import 'package:ai_life_legacy/features/home/presentation/controllers/home_controller.dart';
-import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
 
 class HomePage extends GetView<HomeController> {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.bg,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Greeting
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '안녕하세요, ${controller.displayName}${controller.displayName == '사용자' || controller.displayName == '작성자' ? '님' : ' 님'}',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.text),
+    return MascotScaffold(
+      padding: EdgeInsets.zero,
+      bottom: _BottomBar(controller: controller),
+      child: RefreshIndicator(
+        color: AppTheme.cta,
+        backgroundColor: MascotFlowTheme.surface,
+        onRefresh: controller.fetchToc,
+        child: Obx(() {
+          if (controller.isLoading.value && controller.chapters.isEmpty) {
+            return const Center(
+              child: CircularProgressIndicator(color: AppTheme.cta),
+            );
+          }
+
+          final suggestedChapter = _suggestedChapter(controller.chapters);
+          final title =
+              suggestedChapter?['title']?.toString() ?? '오늘 떠오르는 목차를 골라보세요';
+
+          return ListView(
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
+            children: [
+              MascotHeader(
+                message: '${controller.displayName}님, 오늘은 어떤 기억이 떠오르나요?',
+                trailing: IconButton(
+                  onPressed: () => Get.toNamed(Routes.myPage),
+                  icon: const Icon(
+                    Icons.settings_outlined,
+                    color: MascotFlowTheme.textMuted,
                   ),
-                  Row(
-                    children: [
-                      IconButton(
-                        onPressed: () => Get.toNamed(Routes.search),
-                        icon: const Icon(Icons.search, color: AppTheme.textSec),
-                      ),
-                      IconButton(
-                        onPressed: () => Get.toNamed(Routes.myPage),
-                        icon: const Icon(Icons.settings_outlined, color: AppTheme.textSec),
-                      ),
-                    ],
-                  ),
-                ],
+                ),
               ),
-            ),
-
-            Expanded(
-              child: Obx(() {
-                if (controller.isLoading.value && controller.chapters.isEmpty) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                return RefreshIndicator(
-                  onRefresh: controller.fetchToc,
-                  child: ListView(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    children: [
-                      // Premium Progress card
-                      Container(
-                        margin: const EdgeInsets.only(bottom: 24),
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${controller.totalChapters.value}개 챕터 중 ${controller.completedChapters.value}개 완료',
-                              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.text),
-                            ),
-                            const SizedBox(height: 4),
-                            const Text(
-                              '잘 하고 계세요. 계속 이어가봐요.',
-                              style: TextStyle(fontSize: 13, color: AppTheme.textSec),
-                            ),
-                            const SizedBox(height: 20),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(10),
-                              child: LinearProgressIndicator(
-                                value: controller.totalProgress.value,
-                                minHeight: 8,
-                                backgroundColor: const Color(0xFFF0F0F0),
-                                valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.cta),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: Text(
-                                '${controller.progressPercent.value}%',
-                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.cta),
-                              ),
-                            ),
-                          ],
-                        ),
+              const SizedBox(height: 26),
+              FlowProgressPill(
+                value: controller.totalProgress.value,
+                label:
+                    '${controller.completedChapters.value}/${controller.totalChapters.value} 챕터 완료',
+              ),
+              const SizedBox(height: 18),
+              _TodayQuestionCard(
+                title: title,
+                remainingQuestions: controller.remainingQuestions.value,
+                onTap: suggestedChapter == null
+                    ? () => Get.toNamed(Routes.generating)
+                    : () => controller.onChapterTap(suggestedChapter),
+              ),
+              const SizedBox(height: 28),
+              const Text(
+                '기억 목차',
+                style: TextStyle(
+                  color: MascotFlowTheme.text,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 14),
+              if (controller.errorMessage.value.isNotEmpty)
+                _InfoPanel(
+                  icon: Icons.wifi_off,
+                  title: controller.errorMessage.value,
+                  subtitle: '잠시 후 아래로 당겨 다시 불러와 주세요.',
+                )
+              else if (controller.chapters.isEmpty)
+                _InfoPanel(
+                  icon: Icons.auto_stories_outlined,
+                  title: '아직 열린 챕터가 없어요',
+                  subtitle: '첫 질문을 시작하면 기억 목차가 만들어집니다.',
+                  onTap: () => Get.toNamed(Routes.selfIntro),
+                )
+              else
+                ...controller.chapters.asMap().entries.map(
+                      (entry) => _ChapterNode(
+                        index: entry.key,
+                        chapter: entry.value,
+                        onTap: () => controller.onChapterTap(entry.value),
                       ),
+                    ),
+              const SizedBox(height: 18),
+              FlowOptionCard(
+                icon: controller.isAvatarUnlocked
+                    ? Icons.face_5_outlined
+                    : Icons.lock_outline,
+                title: controller.isAvatarUnlocked ? '아바타와 대화하기' : '아바타 잠금',
+                subtitle: controller.isAvatarUnlocked
+                    ? '완성된 이야기로 만든 아바타를 만나보세요.'
+                    : '모든 기억을 채우면 열립니다.',
+                onTap: () {
+                  if (controller.isViewerMode) {
+                    Get.toNamed(Routes.viewerChat);
+                  } else if (controller.isAvatarUnlocked) {
+                    Get.toNamed(Routes.avatarChat);
+                  } else {
+                    Get.toNamed(Routes.locked);
+                  }
+                },
+              ),
+            ],
+          );
+        }),
+      ),
+    );
+  }
 
-                      const Padding(
-                        padding: EdgeInsets.only(left: 4, bottom: 12),
-                        child: Text(
-                          '나의 챕터',
-                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textPh),
-                        ),
-                      ),
+  Map<String, dynamic>? _suggestedChapter(
+    List<Map<String, dynamic>> chapters,
+  ) {
+    if (chapters.isEmpty) return null;
 
-                      ...controller.chapters.map((ch) => _ChapterCard(ch: ch)),
-                      const SizedBox(height: 20),
-                    ],
-                  ),
-                );
-              }),
+    for (final chapter in chapters) {
+      if (_isStarted(chapter) && !_isComplete(chapter)) return chapter;
+    }
+
+    for (final chapter in chapters) {
+      if (!_isComplete(chapter)) return chapter;
+    }
+
+    return chapters.first;
+  }
+
+  bool _isStarted(Map<String, dynamic> chapter) {
+    final done = (chapter['done'] as num?)?.toInt() ?? 0;
+    return done > 0;
+  }
+
+  bool _isComplete(Map<String, dynamic> chapter) {
+    final percent = (chapter['percent'] as num?)?.toInt() ?? 0;
+    final done = (chapter['done'] as num?)?.toInt() ?? 0;
+    final total = (chapter['total'] as num?)?.toInt() ?? 0;
+    final status = chapter['status']?.toString().toLowerCase() ?? '';
+    return status == 'complete' ||
+        status == 'completed' ||
+        percent >= 100 ||
+        (total > 0 && done >= total);
+  }
+}
+
+class _TodayQuestionCard extends StatelessWidget {
+  final String title;
+  final int remainingQuestions;
+  final VoidCallback onTap;
+
+  const _TodayQuestionCard({
+    required this.title,
+    required this.remainingQuestions,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: MascotFlowTheme.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: MascotFlowTheme.active, width: 2),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '오늘의 추천 목차',
+            style: TextStyle(
+              color: MascotFlowTheme.active,
+              fontWeight: FontWeight.w900,
+              fontSize: 13,
             ),
-
-            // Bottom Nav
-            _BottomNav(),
-          ],
-        ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            title,
+            style: const TextStyle(
+              color: MascotFlowTheme.text,
+              fontSize: 22,
+              height: 1.25,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            remainingQuestions > 0
+                ? '남은 질문 $remainingQuestions개가 있어요. 다른 목차를 먼저 골라도 괜찮아요.'
+                : '모든 질문을 채웠어요. 책으로 묶어볼까요?',
+            style: const TextStyle(
+              color: MascotFlowTheme.textMuted,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 18),
+          FlowPrimaryButton(
+            text: remainingQuestions > 0 ? '추천 목차 답하기' : '책 만들기',
+            onPressed: onTap,
+          ),
+        ],
       ),
     );
   }
 }
 
-class _ChapterCard extends StatelessWidget {
-  final Map<String, dynamic> ch;
+class _ChapterNode extends StatelessWidget {
+  final int index;
+  final Map<String, dynamic> chapter;
+  final VoidCallback onTap;
 
-  const _ChapterCard({required this.ch});
+  const _ChapterNode({
+    required this.index,
+    required this.chapter,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.find<HomeController>();
-    final status = ch['status']?.toString().toLowerCase() ?? 'not-started';
-    final done = (ch['done'] as num?)?.toInt() ?? 0;
-    final total = (ch['total'] as num?)?.toInt() ?? 0;
-    final percent = (ch['percent'] as num?)?.toInt() ?? 0;
+    final done = (chapter['done'] as num?)?.toInt() ?? 0;
+    final total = (chapter['total'] as num?)?.toInt() ?? 0;
+    final percent = (chapter['percent'] as num?)?.toInt() ?? 0;
+    final status = chapter['status']?.toString().toLowerCase() ?? '';
+    final complete = status == 'complete' ||
+        status == 'completed' ||
+        percent >= 100 ||
+        (total > 0 && done >= total);
+    final started = done > 0 && !complete;
+    final color = complete
+        ? AppTheme.cta
+        : started
+            ? MascotFlowTheme.active
+            : AppTheme.sky;
+    final icon = complete
+        ? Icons.check_rounded
+        : started
+            ? Icons.edit_rounded
+            : Icons.auto_stories_outlined;
 
-    final bool isCompleted = status == 'completed' ||
-        status == 'complete' ||
-        (total > 0 && done >= total) ||
-        percent >= 100;
-
-    final bool isInProgress = done > 0 && !isCompleted;
-
-    final Color progressColor = isCompleted
-        ? Colors.green
-        : isInProgress
-            ? Colors.black87
-            : Colors.grey.shade300;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFFEEEEEE),
-          width: 1,
-        ),
-      ),
-      child: InkWell(
-        onTap: () => controller.onChapterTap(ch),
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Row(
+        children: [
+          Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF5F5F5),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      'Ch.${ch['tocId'] ?? ch['id']}',
-                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.textSec),
-                    ),
-                  ),
-                  _StatusBadge(status: status),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                ch['title'] ?? '제목 없음',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.text),
-              ),
-              const SizedBox(height: 16),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: LinearProgressIndicator(
-                  value: (ch['percent'] ?? 0) / 100.0,
-                  minHeight: 4,
-                  backgroundColor: const Color(0xFFF5F5F5),
-                  valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: color, width: 3),
                 ),
+                child: Icon(icon, color: Colors.white),
               ),
-              const SizedBox(height: 8),
+              Container(
+                width: 3,
+                height: 18,
+                color: index == 0 ? Colors.transparent : MascotFlowTheme.border,
+              ),
+            ],
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: FlowOptionCard(
+              icon: Icons.auto_stories_outlined,
+              title: chapter['title']?.toString() ?? '제목 없음',
+              subtitle: '$done / $total 질문 완료',
+              selected: started || complete,
+              onTap: onTap,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoPanel extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback? onTap;
+
+  const _InfoPanel({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return FlowOptionCard(
+      icon: icon,
+      title: title,
+      subtitle: subtitle,
+      selected: true,
+      onTap: onTap ?? () {},
+    );
+  }
+}
+
+class _BottomBar extends StatelessWidget {
+  final HomeController controller;
+
+  const _BottomBar({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(18, 10, 18, 14),
+      decoration: const BoxDecoration(
+        color: MascotFlowTheme.surface,
+        border: Border(top: BorderSide(color: MascotFlowTheme.border)),
+      ),
+      child: Row(
+        children: [
+          _NavButton(icon: Icons.home_rounded, label: '홈', active: true),
+          _NavButton(
+            icon: Icons.search,
+            label: '찾기',
+            onTap: () => Get.toNamed(Routes.search),
+          ),
+          _NavButton(
+            icon: Icons.auto_stories_outlined,
+            label: '책',
+            onTap: () => Get.toNamed(Routes.autobiography),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NavButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool active;
+  final VoidCallback? onTap;
+
+  const _NavButton({
+    required this.icon,
+    required this.label,
+    this.active = false,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                color: active ? AppTheme.cta : MascotFlowTheme.textMuted,
+              ),
+              const SizedBox(height: 4),
               Text(
-                '${ch['done'] ?? 0} / ${ch['total'] ?? 0} 질문 답변 완료',
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppTheme.textPh),
+                label,
+                style: TextStyle(
+                  color: active ? AppTheme.cta : MascotFlowTheme.textMuted,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                ),
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _StatusBadge extends StatelessWidget {
-  final String status;
-  const _StatusBadge({required this.status});
-
-  @override
-  Widget build(BuildContext context) {
-    String text;
-    Color bgColor;
-    Color textColor;
-
-    if (status == 'complete' || status == 'completed') {
-      text = '완료 ✓';
-      bgColor = const Color(0xFFE8F5E9);
-      textColor = const Color(0xFF2E7D32);
-    } else if (status == 'in-progress') {
-      text = '진행 중';
-      bgColor = const Color(0xFFFFF8E1);
-      textColor = const Color(0xFFF57F17);
-    } else {
-      text = '시작 전';
-      bgColor = const Color(0xFFF5F5F5);
-      textColor = AppTheme.textPh;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: textColor),
-      ),
-    );
-  }
-}
-
-class _BottomNav extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final controller = Get.find<HomeController>();
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: AppTheme.border)),
-      ),
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _navItem(Icons.home, '홈', true, () {}),
-          Obx(() {
-            final isViewer = controller.isViewerMode;
-            final isUnlocked = controller.isAvatarUnlocked;
-            
-            // 뷰어 모드면 항상 잠금 해제 상태로 보임
-            final showLocked = !isViewer && !isUnlocked;
-            
-            return _navItem(
-              showLocked ? Icons.lock_outline : Icons.person_outline, 
-              '아바타', 
-              false, 
-              () {
-                if (isViewer) {
-                  Get.toNamed(Routes.viewerChat);
-                } else if (isUnlocked) {
-                  Get.toNamed(Routes.avatarChat);
-                } else {
-                  Get.toNamed(Routes.locked);
-                }
-              }
-            );
-          }),
-          _navItem(Icons.book_outlined, '자서전', false, () => Get.toNamed(Routes.autobiography)),
-        ],
-      ),
-    );
-  }
-
-  Widget _navItem(IconData icon, String label, bool isActive, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: isActive ? AppTheme.text : AppTheme.textSec),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
-              color: isActive ? AppTheme.text : AppTheme.textSec,
-            ),
-          ),
-        ],
       ),
     );
   }

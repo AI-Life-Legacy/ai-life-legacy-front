@@ -1,7 +1,8 @@
+import 'package:ai_life_legacy/app/core/theme/app_theme.dart';
+import 'package:ai_life_legacy/app/core/theme/widgets/mascot_flow_widgets.dart';
+import 'package:ai_life_legacy/features/autobiography/presentation/controllers/autobiography_write_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:ai_life_legacy/app/core/theme/app_theme.dart';
-import 'package:ai_life_legacy/features/autobiography/presentation/controllers/autobiography_write_controller.dart';
 
 class AutobiographyWritePage extends StatefulWidget {
   const AutobiographyWritePage({super.key});
@@ -18,13 +19,13 @@ class _AutobiographyWritePageState extends State<AutobiographyWritePage> {
   @override
   void initState() {
     super.initState();
-    
+
     _worker = ever(_controller.answerText, (String text) {
       if (_textController.text != text) {
         _textController.text = text;
       }
     });
-    
+
     _textController.addListener(() {
       _controller.answerText.value = _textController.text;
     });
@@ -39,191 +40,170 @@ class _AutobiographyWritePageState extends State<AutobiographyWritePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.bg,
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: const BoxDecoration(
-                border: Border(bottom: BorderSide(color: AppTheme.border)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  TextButton(
-                    onPressed: () => Get.back(),
-                    style: TextButton.styleFrom(
-                      padding: EdgeInsets.zero,
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    child: const Text(
-                      '취소',
-                      style: TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 14, color: AppTheme.textSec),
-                    ),
-                  ),
-                  const Text(
-                    '기억 수정 · 기록하기',
-                    style: TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.text),
-                  ),
-                  Obx(() {
-                    return TextButton(
-                      onPressed: _controller.isSaving.value ? null : () => _controller.save(),
-                      style: TextButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      child: Text(
-                        _controller.isSaving.value ? '저장 중...' : '저장',
-                        style: TextStyle(
-                          fontFamily: AppTheme.fontFamily,
-                          fontSize: 14,
-                          color: _controller.isSaving.value ? AppTheme.textPh : AppTheme.success,
-                        ),
-                      ),
-                    );
-                  }),
-                ],
-              ),
-            ),
-
-            // Question
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('질문', style: AppTheme.sectionLabel),
-                  const SizedBox(height: 6),
-                  Obx(() {
-                    return Text(
-                      _controller.questionText.value,
-                      style: const TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 15, fontWeight: FontWeight.w500, color: AppTheme.text, height: 1.5),
-                    );
-                  }),
-                ],
-              ),
-            ),
-
-            // Text Area
-            Expanded(
-              child: Obx(() {
-                if (_controller.isLoading.value) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if (_controller.errorMessage.value.isNotEmpty) {
-                  return Center(
-                    child: Text(
-                      _controller.errorMessage.value,
-                      style: const TextStyle(color: AppTheme.error),
-                    ),
-                  );
-                }
-
-                final text = _controller.answerText.value;
-                final bool hasQuestionMarker = text.contains('추가 질문:');
-                final bool hasAnswerMarker = text.contains('추가 답변:');
-                
-                Widget? helperWidget;
-                if (hasQuestionMarker && hasAnswerMarker) {
-                  helperWidget = Container(
-                    margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF0F4FF),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(Icons.info_outline, size: 16, color: Color(0xFF3B82F6)),
-                        SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            '아래 내용에는 AI 추가 질문과 추가 답변이 함께 포함되어 있어요.',
-                            style: TextStyle(fontSize: 12, color: Color(0xFF3B82F6)),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                } else if (hasAnswerMarker && !hasQuestionMarker) {
-                  helperWidget = Container(
-                    margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFF7ED),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(Icons.warning_amber_rounded, size: 16, color: Color(0xFFF97316)),
-                        SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            '추가 질문 정보가 저장되지 않은 답변입니다.',
-                            style: TextStyle(fontSize: 12, color: Color(0xFFF97316)),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                return Column(
-                  children: [
-                    if (helperWidget != null) helperWidget,
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: TextField(
-                          controller: _textController,
-                          maxLines: null,
-                          keyboardType: TextInputType.multiline,
-                          style: const TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 16, color: AppTheme.text, height: 1.7),
-                          decoration: const InputDecoration(
-                            hintText: '답변을 여기에 적어보세요...',
-                            hintStyle: TextStyle(color: AppTheme.textPh),
-                            border: InputBorder.none,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              }),
-            ),
-
-            // Footer info
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                border: Border(top: BorderSide(color: AppTheme.border)),
-              ),
-              child: Obx(() {
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '${_controller.answerText.value.length}자',
-                      style: const TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 12, color: AppTheme.textPh),
-                    ),
-                    const Icon(Icons.chevron_left, color: AppTheme.textSec, size: 24),
-                  ],
-                );
-              }),
-            ),
-          ],
+    return MascotScaffold(
+      padding: EdgeInsets.zero,
+      bottom: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+        child: Obx(
+          () => FlowPrimaryButton(
+            text: _controller.isSaving.value ? '저장 중...' : '저장하기',
+            loading: _controller.isSaving.value,
+            onPressed: _controller.save,
+          ),
         ),
+      ),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 8, 16, 8),
+            child: Row(
+              children: [
+                IconButton(
+                  onPressed: () => Get.back(),
+                  icon: const Icon(
+                    Icons.close,
+                    color: MascotFlowTheme.textMuted,
+                  ),
+                ),
+                const Expanded(
+                  child: Text(
+                    '기억 다듬기',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: MascotFlowTheme.text,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+                Obx(
+                  () => Text(
+                    '${_controller.answerText.value.length}자',
+                    style: const TextStyle(
+                      color: MascotFlowTheme.textMuted,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: Obx(() {
+              if (_controller.isLoading.value) {
+                return const Center(
+                  child: CircularProgressIndicator(color: AppTheme.cta),
+                );
+              }
+
+              if (_controller.errorMessage.value.isNotEmpty) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: MascotHeader(
+                      message: _controller.errorMessage.value,
+                    ),
+                  ),
+                );
+              }
+
+              return ListView(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                children: [
+                  MascotHeader(
+                    message: _controller.questionText.value.isEmpty
+                        ? '이 기억을 조금 더 다듬어볼까요?'
+                        : _controller.questionText.value,
+                    mascotSize: 70,
+                  ),
+                  const SizedBox(height: 20),
+                  _AnswerHint(text: _controller.answerText.value),
+                  const SizedBox(height: 14),
+                  TextField(
+                    controller: _textController,
+                    maxLines: null,
+                    minLines: 12,
+                    keyboardType: TextInputType.multiline,
+                    style: const TextStyle(
+                      fontFamily: AppTheme.fontFamily,
+                      fontSize: 16,
+                      color: MascotFlowTheme.text,
+                      height: 1.7,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: '답변을 여기에 적어보세요...',
+                      hintStyle: const TextStyle(
+                        color: MascotFlowTheme.textMuted,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      filled: true,
+                      fillColor: MascotFlowTheme.surface,
+                      contentPadding: const EdgeInsets.all(16),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: const BorderSide(
+                          color: MascotFlowTheme.border,
+                          width: 2,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: const BorderSide(
+                          color: MascotFlowTheme.border,
+                          width: 2,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: const BorderSide(
+                          color: MascotFlowTheme.active,
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            }),
+          ),
+        ],
       ),
     );
   }
+}
+
+class _AnswerHint extends StatelessWidget {
+  final String text;
+
+  const _AnswerHint({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    final hasFollowUp = text.contains('추가 질문:') && text.contains('추가 답변:');
+    final brokenFollowUp = text.contains('추가 답변:') && !text.contains('추가 질문:');
+
+    if (!hasFollowUp && !brokenFollowUp) {
+      return const FlowOptionCard(
+        icon: Icons.edit_note,
+        title: '말하듯이 조금만 정리해도 충분해요',
+        subtitle: '저장하면 기존 답변 수정 API로 반영됩니다.',
+        selected: true,
+        onTap: _noop,
+      );
+    }
+
+    return FlowOptionCard(
+      icon: hasFollowUp ? Icons.forum_outlined : Icons.warning_amber_rounded,
+      title: hasFollowUp ? '추가 질문까지 포함된 답변이에요' : '추가 답변 형식이 불완전해요',
+      subtitle: hasFollowUp
+          ? '본문, 추가 질문, 추가 답변이 함께 저장되어 있습니다.'
+          : '필요하면 문장을 자연스럽게 정리해 주세요.',
+      selected: true,
+      onTap: _noop,
+    );
+  }
+
+  static void _noop() {}
 }

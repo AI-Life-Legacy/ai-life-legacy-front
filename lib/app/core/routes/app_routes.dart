@@ -3,15 +3,15 @@ library;
 
 abstract class Routes {
   static const main = '/';
-  static const login = '/login'; 
-  static const signup = '/signup'; 
+  static const login = '/login';
+  static const signup = '/signup';
   static const chapterChat = '/chapter-chat';
   static const search = '/search';
-  static const home = '/home'; 
+  static const home = '/home';
   static const dashboard = '/dashboard';
-  static const selfIntro = '/self_intro'; 
+  static const selfIntro = '/self_intro';
   static const complete = '/complete';
-  static const autobiography = '/AutobiographyList'; 
+  static const autobiography = '/AutobiographyList';
   static const write = '/write';
   static const chapterComplete = '/chapter-complete';
   static const completion = '/completion';
@@ -25,5 +25,5 @@ abstract class Routes {
   static const avatarChat = '/avatar_chat';
   static const viewerChat = '/viewer_chat';
   static const viewerAudio = '/viewer_audio';
-  static const myPage = '/mypage'; 
+  static const myPage = '/mypage';
 }

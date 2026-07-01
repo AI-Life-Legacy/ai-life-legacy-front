@@ -12,7 +12,8 @@ class ChapterChatPage extends StatefulWidget {
 class _ChapterChatPageState extends State<ChapterChatPage> {
   Widget _buildAIBubble(String text, String time) {
     return Container(
-      constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.76),
+      constraints:
+          BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.76),
       margin: const EdgeInsets.only(bottom: 2),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -25,7 +26,11 @@ class _ChapterChatPageState extends State<ChapterChatPage> {
             ),
             child: Text(
               text,
-              style: const TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 15, color: AppTheme.text, height: 1.5),
+              style: const TextStyle(
+                  fontFamily: AppTheme.fontFamily,
+                  fontSize: 15,
+                  color: AppTheme.text,
+                  height: 1.5),
             ),
           ),
           Padding(
@@ -39,7 +44,8 @@ class _ChapterChatPageState extends State<ChapterChatPage> {
 
   Widget _buildUserBubble(String text, String time) {
     return Container(
-      constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.76),
+      constraints:
+          BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.76),
       margin: const EdgeInsets.only(bottom: 2),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
@@ -52,7 +58,11 @@ class _ChapterChatPageState extends State<ChapterChatPage> {
             ),
             child: Text(
               text,
-              style: const TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 15, color: Colors.white, height: 1.5),
+              style: const TextStyle(
+                  fontFamily: AppTheme.fontFamily,
+                  fontSize: 15,
+                  color: Colors.white,
+                  height: 1.5),
             ),
           ),
           Padding(
@@ -87,14 +97,19 @@ class _ChapterChatPageState extends State<ChapterChatPage> {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(Icons.arrow_back, color: AppTheme.text, size: 20),
+                      child: const Icon(Icons.arrow_back,
+                          color: AppTheme.text, size: 20),
                     ),
                   ),
                   const Expanded(
                     child: Text(
                       'Ch.2 — 청소년기',
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 15, fontWeight: FontWeight.w500, color: AppTheme.text),
+                      style: TextStyle(
+                          fontFamily: AppTheme.fontFamily,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: AppTheme.text),
                     ),
                   ),
                   SizedBox(
@@ -102,7 +117,10 @@ class _ChapterChatPageState extends State<ChapterChatPage> {
                     child: Text(
                       '3/8',
                       textAlign: TextAlign.right,
-                      style: TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 13, color: AppTheme.textPh),
+                      style: TextStyle(
+                          fontFamily: AppTheme.fontFamily,
+                          fontSize: 13,
+                          color: AppTheme.textPh),
                     ),
                   ),
                 ],
@@ -123,12 +141,20 @@ class _ChapterChatPageState extends State<ChapterChatPage> {
                 children: [
                   Text(
                     'AI 질문',
-                    style: TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 11, color: AppTheme.warning, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                        fontFamily: AppTheme.fontFamily,
+                        fontSize: 11,
+                        color: AppTheme.warning,
+                        fontWeight: FontWeight.w600),
                   ),
                   SizedBox(height: 4),
                   Text(
                     '학창 시절 가장 좋아했던 과목은 무엇이었고, 그 이유는 무엇인가요?',
-                    style: TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 14, color: AppTheme.text, height: 1.4),
+                    style: TextStyle(
+                        fontFamily: AppTheme.fontFamily,
+                        fontSize: 14,
+                        color: AppTheme.text,
+                        height: 1.4),
                   ),
                 ],
               ),
@@ -141,17 +167,21 @@ class _ChapterChatPageState extends State<ChapterChatPage> {
                 children: [
                   Align(
                     alignment: Alignment.centerLeft,
-                    child: _buildAIBubble('학창 시절 기억 중에서 가장 남는 장면이나 과목을 들려주세요.', '오전 9:10'),
+                    child: _buildAIBubble(
+                        '학창 시절 기억 중에서 가장 남는 장면이나 과목을 들려주세요.', '오전 9:10'),
                   ),
                   const SizedBox(height: 12),
                   Align(
                     alignment: Alignment.centerRight,
-                    child: _buildUserBubble('Mrs. Harlow 선생님의 영문학 수업이요. 책 속에 삶이 있다는 걸 처음 가르쳐 주신 분이었어요.', '오전 9:15'),
+                    child: _buildUserBubble(
+                        'Mrs. Harlow 선생님의 영문학 수업이요. 책 속에 삶이 있다는 걸 처음 가르쳐 주신 분이었어요.',
+                        '오전 9:15'),
                   ),
                   const SizedBox(height: 12),
                   Align(
                     alignment: Alignment.centerLeft,
-                    child: _buildAIBubble('그 수업이 사용자님의 삶에 어떤 영감을 주었나요?', '오전 9:16'),
+                    child: _buildAIBubble(
+                        '그 수업이 사용자님의 삶에 어떤 영감을 주었나요?', '오전 9:16'),
                   ),
                 ],
               ),
@@ -176,7 +206,8 @@ class _ChapterChatPageState extends State<ChapterChatPage> {
                         border: Border.all(color: AppTheme.border),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(Icons.edit, size: 16, color: AppTheme.text),
+                      child: const Icon(Icons.edit,
+                          size: 16, color: AppTheme.text),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -195,7 +226,8 @@ class _ChapterChatPageState extends State<ChapterChatPage> {
                           isDense: true,
                           contentPadding: EdgeInsets.symmetric(vertical: 10),
                         ),
-                        style: TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 14),
+                        style: TextStyle(
+                            fontFamily: AppTheme.fontFamily, fontSize: 14),
                       ),
                     ),
                   ),
@@ -207,12 +239,15 @@ class _ChapterChatPageState extends State<ChapterChatPage> {
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       minimumSize: const Size(0, 40),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8)),
                       elevation: 0,
                     ),
                     child: const Text(
                       '전송',
-                      style: TextStyle(fontFamily: AppTheme.fontFamily, fontWeight: FontWeight.w500),
+                      style: TextStyle(
+                          fontFamily: AppTheme.fontFamily,
+                          fontWeight: FontWeight.w500),
                     ),
                   ),
                 ],

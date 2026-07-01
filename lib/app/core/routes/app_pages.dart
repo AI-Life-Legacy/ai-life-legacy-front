@@ -37,28 +37,70 @@ import 'package:ai_life_legacy/features/viewer/presentation/bindings/viewer_bind
 class AppPages {
   static final pages = <GetPage>[
     GetPage(name: Routes.main, page: () => const MainPage()),
-    GetPage(name: Routes.login, page: () => const LoginPage(), binding: AuthBinding()),
-    GetPage(name: Routes.signup, page: () => const SignUpPage(), binding: AuthBinding()),
-    GetPage(name: Routes.home, page: () => const HomePage(), binding: HomeBinding()),
+    GetPage(
+        name: Routes.login,
+        page: () => const LoginPage(),
+        binding: AuthBinding()),
+    GetPage(
+        name: Routes.signup,
+        page: () => const SignUpPage(),
+        binding: AuthBinding()),
+    GetPage(
+        name: Routes.home,
+        page: () => const HomePage(),
+        binding: HomeBinding()),
     GetPage(name: Routes.dashboard, page: () => const DashboardPage()),
-    GetPage(name: Routes.search, page: () => const SearchPage(), binding: HomeBinding()),
-    GetPage(name: Routes.selfIntro, page: () => const SelfIntroPage(), binding: OnboardingBinding()),
+    GetPage(
+        name: Routes.search,
+        page: () => const SearchPage(),
+        binding: HomeBinding()),
+    GetPage(
+        name: Routes.selfIntro,
+        page: () => const SelfIntroPage(),
+        binding: OnboardingBinding()),
     GetPage(name: Routes.complete, page: () => const CompletePage()),
-    GetPage(name: Routes.autobiography, page: () => const AutobiographyListPage(), binding: AutobiographyBinding()),
-    GetPage(name: Routes.write, page: () => const AutobiographyWritePage(), binding: AutobiographyBinding()),
+    GetPage(
+        name: Routes.autobiography,
+        page: () => const AutobiographyListPage(),
+        binding: AutobiographyBinding()),
+    GetPage(
+        name: Routes.write,
+        page: () => const AutobiographyWritePage(),
+        binding: AutobiographyBinding()),
     GetPage(name: Routes.completion, page: () => const CompletionPage()),
-    GetPage(name: Routes.chapterComplete, page: () => const ChapterCompletePage()),
-    GetPage(name: Routes.chapterChat, page: () => const ChapterChatPage(), binding: AutobiographyBinding()),
-    GetPage(name: Routes.genConfirm, page: () => const GenConfirmPage(), binding: AutobiographyBinding()),
+    GetPage(
+        name: Routes.chapterComplete, page: () => const ChapterCompletePage()),
+    GetPage(
+        name: Routes.chapterChat,
+        page: () => const ChapterChatPage(),
+        binding: AutobiographyBinding()),
+    GetPage(
+        name: Routes.genConfirm,
+        page: () => const GenConfirmPage(),
+        binding: AutobiographyBinding()),
     GetPage(name: Routes.generating, page: () => const GeneratingPage()),
-    GetPage(name: Routes.chapterGenerating, page: () => const ChapterGeneratingPage()),
+    GetPage(
+        name: Routes.chapterGenerating,
+        page: () => const ChapterGeneratingPage()),
     GetPage(name: Routes.generated, page: () => const GeneratedPage()),
     GetPage(name: Routes.locked, page: () => const LockedPage()),
-    GetPage(name: Routes.viewerEntry, page: () => const ViewerEntryPage(), binding: ViewerBinding()),
+    GetPage(
+        name: Routes.viewerEntry,
+        page: () => const ViewerEntryPage(),
+        binding: ViewerBinding()),
     GetPage(name: Routes.viewerRole, page: () => const ViewerRolePage()),
-    GetPage(name: Routes.avatarChat, page: () => const AvatarChatPage(), binding: AvatarChatBinding()),
-    GetPage(name: Routes.viewerChat, page: () => const AvatarChatPage(), binding: AvatarChatBinding()),
+    GetPage(
+        name: Routes.avatarChat,
+        page: () => const AvatarChatPage(),
+        binding: AvatarChatBinding()),
+    GetPage(
+        name: Routes.viewerChat,
+        page: () => const AvatarChatPage(),
+        binding: AvatarChatBinding()),
     GetPage(name: Routes.viewerAudio, page: () => const ViewerAudioPage()),
-    GetPage(name: Routes.myPage, page: () => const MyPage(), binding: MyPageBinding()),
+    GetPage(
+        name: Routes.myPage,
+        page: () => const MyPage(),
+        binding: MyPageBinding()),
   ];
 }

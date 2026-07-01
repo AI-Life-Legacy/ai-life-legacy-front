@@ -1,11 +1,12 @@
-import 'package:flutter/foundation.dart';
 import 'dart:convert';
+
+import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
+import 'package:ai_life_legacy/app/core/utils/token_storage.dart';
+import 'package:ai_life_legacy/features/autobiography/presentation/controllers/autobiography_controller.dart';
+import 'package:ai_life_legacy/features/avatar_chat/data/avatar_chat_api.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:ai_life_legacy/features/avatar_chat/data/avatar_chat_api.dart';
-import 'package:ai_life_legacy/app/core/utils/token_storage.dart';
-import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
-import 'package:ai_life_legacy/features/autobiography/presentation/controllers/autobiography_controller.dart';
 
 enum AvatarChatStep { roleSelect, intro, chat }
 
@@ -41,79 +42,85 @@ class AvatarChatController extends GetxController {
       id: 'curator',
       name: '큐레이터',
       group: '기본',
-      sub: 'Life Legacy 기본',
-      desc: '3인칭 존댓말. 작성자 님의 이야기를 정리해 차분하게 안내합니다.',
-      greet: '안녕하세요. 저는 작성자 님의 이야기를 안내하는 큐레이터예요. 어떤 이야기가 궁금하신가요?',
-      sample: '작성자 님께서는 아름다운 마을에서 자라셨어요. 어릴 적 가장 선명한 기억은 소중한 추억이라고 말씀하셨답니다.',
-      emoji: '✦',
+      sub: '차분한 안내자',
+      desc: '기억의 흐름을 정리하고, 다음 질문을 부드럽게 이어주는 기본 대화 상대입니다.',
+      greet: '안녕하세요. 당신의 이야기를 함께 정리하는 큐레이터예요. 오늘은 어떤 기억이 궁금하신가요?',
+      sample: '그 장면은 이야기의 시작점처럼 느껴져요. 그때 가장 선명하게 남아 있는 소리나 표정이 있었나요?',
+      emoji: '📝',
     ),
     AvatarRole(
       id: 'father',
       name: '아버지',
       group: '가족',
-      sub: '아빠로 부르는 관계',
-      desc: '1인칭 반말. "아빠가 있지," 같은 다정하고 담백한 말투.',
-      greet: '왔구나. 아빠다. 뭐가 궁금해서 왔어?',
-      sample: '아빠가 네 나이쯤엔 말이야, 열심히 일하면서 살았지. 별거 아닌 것 같아도 그게 다 지금 생각하면 그립더라.',
-      emoji: '◐',
+      sub: '든든한 말투',
+      desc: '짧고 다정한 반말로, 오래 알고 지낸 사람처럼 편안하게 물어봅니다.',
+      greet: '그래, 궁금한 거 있으면 물어봐. 기억나는 만큼 천천히 얘기해줄게.',
+      sample: '그때는 말이야, 별거 아닌 일 같아도 마음에는 오래 남는 법이더라.',
+      emoji: '👨',
     ),
     AvatarRole(
       id: 'mother',
       name: '어머니',
       group: '가족',
-      sub: '엄마로 부르는 관계',
-      desc: '1인칭 반말. "엄마가 있잖니," 다정하고 포근한 말투.',
-      greet: '왔어? 엄마야. 오늘은 무슨 얘기 하고 싶어서 왔니?',
-      sample: '엄마는 네 살쯤, 뒷마당 나무 아래서 놀던 오후가 제일 선명해. 그 냄새, 단내. 엄마가 제일 좋아하는 기억이야.',
-      emoji: '◑',
+      sub: '따뜻한 말투',
+      desc: '세심하고 포근한 말투로 감정과 분위기를 먼저 살펴주는 대화 상대입니다.',
+      greet: '왔구나. 오늘은 어떤 이야기가 듣고 싶니? 천천히 말해도 괜찮아.',
+      sample: '그때 네 표정이 아직도 생각나. 힘들었지만 참 잘 버텼던 시간이었지.',
+      emoji: '👩',
     ),
     AvatarRole(
       id: 'self',
-      name: '나',
+      name: '나 자신',
       group: '가족',
-      sub: '스스로를 돌아보는 나',
-      desc: '1인칭 존댓말. "저는 ~였어요." 회고하듯 담담한 말투.',
-      greet: '안녕. 나야. 내 안의 어느 시간이 궁금한 거야?',
-      sample: '나는 그때, 교실 창밖으로 해 지는 걸 가만히 보곤 했어. 아이들 떠든 소리가 사라진 그 짧은 정적이 참 좋았어.',
-      emoji: '◉',
+      sub: '내면의 목소리',
+      desc: '현재의 내가 과거의 나에게 묻듯, 조용하고 성찰적인 톤으로 답합니다.',
+      greet: '안녕. 나에게 묻고 싶은 시간이 있다면 같이 돌아가 보자.',
+      sample: '나는 그때 조용한 척했지만, 사실은 누군가 알아봐 주길 바랐던 것 같아.',
+      emoji: '🌿',
     ),
     AvatarRole(
       id: 'sister',
       name: '누나 · 언니',
       group: '가족',
-      sub: '손위 자매로 부르는 관계',
-      desc: '1인칭 반말. "있잖아," 조금 장난스럽고 편안한 말투.',
-      greet: '어, 왔어? 누나야. 뭐 물어보게?',
-      sample: '있잖아, 내가 어릴 적 여름에 말이야, 나무 밑에서 책 읽다가 잠들었었거든. 일어나 보니 엄마가 옆에 앉아계셨어. 그 장면이 왜 이렇게 오래 남지.',
-      emoji: '◒',
+      sub: '가까운 장난기',
+      desc: '친근하고 살짝 장난스러운 말투로, 기억의 디테일을 자연스럽게 끌어냅니다.',
+      greet: '왔어? 뭐가 궁금해서 찾아왔어? 내가 기억나는 만큼 말해볼게.',
+      sample: '너 그때 진짜 진지했잖아. 다들 웃었는데 너만 끝까지 몰입했던 거 기억나.',
+      emoji: '👧',
     ),
     AvatarRole(
       id: 'brother',
       name: '형 · 오빠',
       group: '가족',
-      sub: '손위 형제로 부르는 관계',
-      desc: '1인칭 반말. "야, 그게 말이지," 덤덤하지만 따뜻한 말투.',
-      greet: '야, 왔냐. 형이야. 궁금한 거 있어?',
-      sample: '야, 그거 말이지. 내가 일곱 살인가 여덟 살인가, 마당 나무 밑에서 동생이랑 둘이 낮잠 잔 적 있거든. 그 냄새가 아직도 안 잊혀진다.',
-      emoji: '◓',
+      sub: '담백한 말투',
+      desc: '무심한 듯 다정하게, 핵심을 짚으며 기억을 다시 꺼내주는 대화 상대입니다.',
+      greet: '그래, 물어봐. 기억나는 건 최대한 솔직하게 얘기해줄게.',
+      sample: '그건 아직도 기억나. 별말 안 했지만, 그날 분위기는 꽤 오래 남았거든.',
+      emoji: '👦',
     ),
   ];
 
   final step = AvatarChatStep.roleSelect.obs;
   final selectedRoleId = 'curator'.obs;
   final sessionId = ''.obs;
-  
+
   final messages = <Map<String, String>>[].obs;
   final isLoading = false.obs;
   final viewerCode = ''.obs;
   final errorMessage = ''.obs;
 
-  // Real biography statistics loaded from DB/SharedPreferences
   final pageCount = RxnInt();
   final totalChapters = RxnInt();
 
   final authorName = '사용자'.obs;
   final authorIntro = ''.obs;
+
+  AvatarRole get selectedRole {
+    return roles.firstWhere(
+      (role) => role.id == selectedRoleId.value,
+      orElse: () => roles.first,
+    );
+  }
 
   @override
   void onInit() {
@@ -129,23 +136,28 @@ class AvatarChatController extends GetxController {
 
     if (currentRoute == Routes.viewerChat) {
       if (!isViewer) {
-        debugPrint('[AvatarChatController] Access denied to viewer_chat for writer. Redirecting to home.');
+        debugPrint(
+          '[AvatarChatController] Access denied to viewer_chat for writer.',
+        );
         Future.microtask(() => Get.offAllNamed(Routes.home));
-        return;
       }
-    } else if (currentRoute == Routes.avatarChat) {
-      if (isViewer) {
-        debugPrint('[AvatarChatController] Access denied to avatar_chat for viewer. Redirecting to viewer_chat.');
-        Future.microtask(() => Get.offAllNamed(Routes.viewerChat));
-        return;
-      }
-      
-      // For writers, check if unlocked (server status check already done in HomeController/AutobiographyController)
+      return;
+    }
+
+    if (currentRoute == Routes.avatarChat && isViewer) {
+      debugPrint(
+        '[AvatarChatController] Access denied to avatar_chat for viewer.',
+      );
+      Future.microtask(() => Get.offAllNamed(Routes.viewerChat));
+      return;
+    }
+
+    if (currentRoute == Routes.avatarChat &&
+        Get.isRegistered<AutobiographyController>()) {
       final autoBioController = Get.find<AutobiographyController>();
       if (!autoBioController.isUnlocked.value) {
-        debugPrint('[AvatarChatController] Autobiography not completed. Redirecting to locked page.');
+        debugPrint('[AvatarChatController] Autobiography is locked.');
         Future.microtask(() => Get.offNamed(Routes.locked));
-        return;
       }
     }
   }
@@ -154,23 +166,24 @@ class AvatarChatController extends GetxController {
     if (TokenStorage.isViewerMode()) {
       authorName.value = TokenStorage.getViewerAuthorName() ?? '작성자';
       authorIntro.value = TokenStorage.getViewerAuthorIntro() ?? '';
-    } else {
-      authorName.value = '사용자'; // Default author name for writer mode
-      authorIntro.value = '';
+      return;
     }
+
+    authorName.value = '사용자';
+    authorIntro.value = '';
   }
 
   Future<void> _loadSelectedRole() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final savedRoleId = prefs.getString('last_selected_role_id');
-      if (savedRoleId != null && roles.any((r) => r.id == savedRoleId)) {
+      if (savedRoleId != null && roles.any((role) => role.id == savedRoleId)) {
         selectedRoleId.value = savedRoleId;
       }
-    } catch (e) {
-      // SharedPreferences 불러오기 실패 시 기본값 유지
+    } catch (_) {
+      // Keep the default role if local storage is unavailable.
     }
-    // 최초 진입 시 step은 roleSelect로 지정
+
     step.value = AvatarChatStep.roleSelect;
     loadBiographyStats();
   }
@@ -181,6 +194,7 @@ class AvatarChatController extends GetxController {
       pageCount.value = 120;
       return;
     }
+
     try {
       final prefs = await SharedPreferences.getInstance();
       final savedPageCount = prefs.getInt('pageCount');
@@ -189,50 +203,48 @@ class AvatarChatController extends GetxController {
       }
 
       final response = await _api.getToc();
-      if (response.statusCode == 200) {
-        final raw = response.data;
-        final result = raw is Map<String, dynamic> && raw.containsKey('result')
-            ? raw['result']
-            : raw;
-        if (result is Map<String, dynamic>) {
-          final tc = result['totalChapters'];
-          if (tc is int) {
-            totalChapters.value = tc;
-          } else if (tc != null) {
-            totalChapters.value = int.tryParse(tc.toString());
-          }
+      if (response.statusCode != 200) return;
 
-          final pc = result['pageCount'] ?? result['page_count'];
-          if (pc is int) {
-            pageCount.value = pc;
-            await prefs.setInt('pageCount', pc);
-          } else if (pc != null) {
-            final parsed = int.tryParse(pc.toString());
-            if (parsed != null) {
-              pageCount.value = parsed;
-              await prefs.setInt('pageCount', parsed);
-            }
-          }
+      final raw = response.data;
+      final result = raw is Map<String, dynamic> && raw.containsKey('result')
+          ? raw['result']
+          : raw;
+      if (result is! Map<String, dynamic>) return;
+
+      final chapters = result['totalChapters'];
+      if (chapters is int) {
+        totalChapters.value = chapters;
+      } else if (chapters != null) {
+        totalChapters.value = int.tryParse(chapters.toString());
+      }
+
+      final pages = result['pageCount'] ?? result['page_count'];
+      if (pages is int) {
+        pageCount.value = pages;
+        await prefs.setInt('pageCount', pages);
+      } else if (pages != null) {
+        final parsed = int.tryParse(pages.toString());
+        if (parsed != null) {
+          pageCount.value = parsed;
+          await prefs.setInt('pageCount', parsed);
         }
       }
-    } catch (e) {
-      // 무시
+    } catch (_) {
+      // Stats are decorative, so the chat can continue without them.
     }
   }
 
   Future<void> selectRole(String roleId) async {
     if (selectedRoleId.value == roleId) return;
-    
+
     selectedRoleId.value = roleId;
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('last_selected_role_id', roleId);
-    } catch (e) {
-      // SharedPreferences 저장 실패 시 무시
+    } catch (_) {
+      // Ignore persistence failures.
     }
   }
-
-  AvatarRole get selectedRole => roles.firstWhere((r) => r.id == selectedRoleId.value, orElse: () => roles[0]);
 
   void goToIntro() {
     step.value = AvatarChatStep.intro;
@@ -248,17 +260,18 @@ class AvatarChatController extends GetxController {
         Get.offAllNamed(Routes.main);
       } else if (step.value == AvatarChatStep.intro) {
         step.value = AvatarChatStep.roleSelect;
-      } else if (step.value == AvatarChatStep.chat) {
+      } else {
         step.value = AvatarChatStep.intro;
       }
+      return;
+    }
+
+    if (step.value == AvatarChatStep.roleSelect) {
+      Get.back();
+    } else if (step.value == AvatarChatStep.intro) {
+      step.value = AvatarChatStep.roleSelect;
     } else {
-      if (step.value == AvatarChatStep.roleSelect) {
-        Get.back();
-      } else if (step.value == AvatarChatStep.intro) {
-        step.value = AvatarChatStep.roleSelect;
-      } else if (step.value == AvatarChatStep.chat) {
-        step.value = AvatarChatStep.intro;
-      }
+      step.value = AvatarChatStep.intro;
     }
   }
 
@@ -270,219 +283,151 @@ class AvatarChatController extends GetxController {
   void resetSession() {
     sessionId.value = 'avatar_${DateTime.now().millisecondsSinceEpoch}';
     errorMessage.value = '';
+    viewerCode.value = '';
     _initChatWithGreet();
   }
 
   void _initChatWithGreet() {
-    final role = selectedRole;
     messages.assignAll([
-      {'role': 'ai', 'text': role.greet}
+      {'role': 'ai', 'text': selectedRole.greet},
     ]);
   }
 
   Future<void> sendMessage(String text) async {
-    if (text.isEmpty) return;
+    final trimmed = text.trim();
+    if (trimmed.isEmpty || isLoading.value) return;
 
-    messages.add({'role': 'user', 'text': text});
+    messages.add({'role': 'user', 'text': trimmed});
 
     try {
       errorMessage.value = '';
       isLoading.value = true;
+
       final response = await _api.chat(
-        text,
+        trimmed,
         role: selectedRoleId.value,
         roleId: selectedRoleId.value,
         sessionId: sessionId.value,
       );
 
       final httpStatus = response.statusCode ?? 0;
-      final isHttpStatusSuccess = httpStatus >= 200 && httpStatus < 300;
-
-      bool isResponseStatusSuccess = false;
       final data = response.data;
-      if (data is Map<String, dynamic>) {
-        final statusValue = data['status'];
-        final result = data['result'];
-        if ((statusValue == 200 || statusValue == '200') &&
-            result is Map<String, dynamic> &&
-            result['answer'] != null) {
-          isResponseStatusSuccess = true;
-        }
-      } else if (data is String) {
-        try {
-          final decoded = jsonDecode(data);
-          if (decoded is Map<String, dynamic>) {
-            final statusValue = decoded['status'];
-            final result = decoded['result'];
-            if ((statusValue == 200 || statusValue == '200') &&
-                result is Map<String, dynamic> &&
-                result['answer'] != null) {
-              isResponseStatusSuccess = true;
-            }
-          }
-        } catch (_) {}
+      final success = (httpStatus >= 200 && httpStatus < 300) ||
+          _hasSuccessfulEnvelope(data);
+
+      if (!success) {
+        _appendFallbackError();
+        return;
       }
 
-      if (isHttpStatusSuccess || isResponseStatusSuccess) {
-        String? answer;
-        String? parsedSessionId;
-        bool? parsedContextUsed;
+      final parsed = _parseChatResponse(data);
+      final answer = parsed.answer?.trim();
 
-        if (data is Map<String, dynamic>) {
-          final result = data['result'];
-
-          // 파싱 우선순위:
-          // 1. response.data['result']['answer']
-          // 2. response.data['answer']
-          // 3. response.data['result']['message']
-          // response.data['message']는 "Success"일 수 있으므로 AI 답변으로 쓰지 않음
-          if (result is Map<String, dynamic> && result['answer'] != null) {
-            answer = result['answer'].toString();
-          } else if (data['answer'] != null) {
-            answer = data['answer'].toString();
-          } else if (result is Map<String, dynamic> && result['message'] != null) {
-            answer = result['message'].toString();
-          } else if (data['aiReply'] != null) {
-            answer = data['aiReply'].toString();
-          }
-
-          // sessionId 파싱 (Shape A, B, C)
-          if (result is Map<String, dynamic>) {
-            final sid = result['sessionId'] ?? result['session_id'];
-            if (sid != null) {
-              parsedSessionId = sid.toString();
-            }
-          }
-          if (parsedSessionId == null && data['sessionId'] != null) {
-            parsedSessionId = data['sessionId'].toString();
-          }
-          if (parsedSessionId == null && data['session_id'] != null) {
-            parsedSessionId = data['session_id'].toString();
-          }
-
-          // contextUsed 파싱 (Shape A, B, C)
-          if (result is Map<String, dynamic>) {
-            final cu = result['contextUsed'] ?? result['context_used'];
-            if (cu is bool) {
-              parsedContextUsed = cu;
-            } else if (cu != null) {
-              parsedContextUsed = cu.toString().toLowerCase() == 'true';
-            }
-          }
-          if (parsedContextUsed == null) {
-            final cu = data['contextUsed'] ?? data['context_used'];
-            if (cu is bool) {
-              parsedContextUsed = cu;
-            } else if (cu != null) {
-              parsedContextUsed = cu.toString().toLowerCase() == 'true';
-            }
-          }
-        } else if (data is String) {
-          try {
-            final decoded = jsonDecode(data);
-            if (decoded is Map<String, dynamic>) {
-              final result = decoded['result'];
-              if (result is Map<String, dynamic> && result['answer'] != null) {
-                answer = result['answer'].toString();
-              } else if (decoded['answer'] != null) {
-                answer = decoded['answer'].toString();
-              } else if (result is Map<String, dynamic> && result['message'] != null) {
-                answer = result['message'].toString();
-              } else if (decoded['aiReply'] != null) {
-                answer = decoded['aiReply'].toString();
-              }
-
-              if (result is Map<String, dynamic>) {
-                final sid = result['sessionId'] ?? result['session_id'];
-                if (sid != null) parsedSessionId = sid.toString();
-              }
-              if (parsedSessionId == null && decoded['sessionId'] != null) {
-                parsedSessionId = decoded['sessionId'].toString();
-              }
-              if (parsedSessionId == null && decoded['session_id'] != null) {
-                parsedSessionId = decoded['session_id'].toString();
-              }
-
-              if (result is Map<String, dynamic>) {
-                final cu = result['contextUsed'] ?? result['context_used'];
-                if (cu is bool) {
-                  parsedContextUsed = cu;
-                } else if (cu != null) {
-                  parsedContextUsed = cu.toString().toLowerCase() == 'true';
-                }
-              }
-              if (parsedContextUsed == null) {
-                final cu = decoded['contextUsed'] ?? decoded['context_used'];
-                if (cu is bool) {
-                  parsedContextUsed = cu;
-                } else if (cu != null) {
-                  parsedContextUsed = cu.toString().toLowerCase() == 'true';
-                }
-              }
-            }
-          } catch (_) {}
-        }
-
-        // 디버깅 로그 추가
-        debugPrint('[AvatarChat] RAW response.data: $data');
-        debugPrint('[AvatarChat] Parsed answer: $answer');
-        debugPrint('[AvatarChat] Parsed sessionId: $parsedSessionId');
-        debugPrint('[AvatarChat] Parsed contextUsed: $parsedContextUsed');
-
-        // answer.trim().isNotEmpty 이면 성공 처리
-        if (answer != null && answer.trim().isNotEmpty) {
-          // 성공했으므로 기존 에러 메시지(배너) 클리어
-          errorMessage.value = '';
-          // 기존에 혹시 목록에 추가되어 있던 실패 메시지(말풍선)들도 제거
-          messages.removeWhere((m) =>
-              m['role'] == 'ai' &&
-              m['text'] == '아바타 응답을 불러오지 못했습니다. 다시 시도해주세요.');
-
-          if (parsedSessionId != null && parsedSessionId.isNotEmpty) {
-            sessionId.value = parsedSessionId;
-          }
-
-          messages.add({
-            'role': 'ai',
-            'text': answer,
-          });
-        } else {
-          debugPrint('[AvatarChat] Success response but parsed answer is empty/null');
-          errorMessage.value = '아바타 응답을 불러오지 못했습니다. 다시 시도해주세요.';
-          messages.add({
-            'role': 'ai',
-            'text': '아바타 응답을 불러오지 못했습니다. 다시 시도해주세요.',
-          });
-        }
-      } else {
-        debugPrint('[AvatarChat] Response code is not successful: ${response.statusCode}');
-        errorMessage.value = '아바타 응답을 불러오지 못했습니다. 다시 시도해주세요.';
-        messages.add({
-          'role': 'ai',
-          'text': '아바타 응답을 불러오지 못했습니다. 다시 시도해주세요.',
-        });
+      if (answer == null || answer.isEmpty) {
+        debugPrint('[AvatarChat] Success response but answer is empty: $data');
+        _appendFallbackError();
+        return;
       }
-    } catch (e, stack) {
-      debugPrint('[AvatarChat] Exception in sendMessage: $e');
+
+      if (parsed.sessionId != null && parsed.sessionId!.isNotEmpty) {
+        sessionId.value = parsed.sessionId!;
+      }
+
+      messages.removeWhere(
+        (message) =>
+            message['role'] == 'ai' && message['text'] == _fallbackErrorMessage,
+      );
+      messages.add({'role': 'ai', 'text': answer});
+    } catch (error, stack) {
+      debugPrint('[AvatarChat] Exception in sendMessage: $error');
       debugPrint(stack.toString());
-      errorMessage.value = '아바타 응답을 불러오지 못했습니다. 다시 시도해주세요.';
-      messages.add({
-        'role': 'ai',
-        'text': '아바타 응답을 불러오지 못했습니다. 다시 시도해주세요.',
-      });
+      _appendFallbackError();
     } finally {
       isLoading.value = false;
     }
+  }
+
+  bool _hasSuccessfulEnvelope(dynamic data) {
+    final map = _asMap(data);
+    if (map == null) return false;
+
+    final status = map['status'];
+    final result = map['result'];
+    return (status == 200 || status == '200') &&
+        result is Map<String, dynamic> &&
+        result['answer'] != null;
+  }
+
+  _ParsedChatResponse _parseChatResponse(dynamic data) {
+    final map = _asMap(data);
+    if (map == null) return const _ParsedChatResponse();
+
+    final result = map['result'];
+    String? answer;
+    String? parsedSessionId;
+
+    if (result is Map<String, dynamic>) {
+      answer = _stringValue(result['answer'] ?? result['message']);
+      parsedSessionId =
+          _stringValue(result['sessionId'] ?? result['session_id']);
+    }
+
+    answer ??= _stringValue(map['answer'] ?? map['aiReply']);
+    parsedSessionId ??= _stringValue(map['sessionId'] ?? map['session_id']);
+
+    return _ParsedChatResponse(
+      answer: answer,
+      sessionId: parsedSessionId,
+    );
+  }
+
+  Map<String, dynamic>? _asMap(dynamic data) {
+    if (data is Map<String, dynamic>) return data;
+    if (data is String) {
+      try {
+        final decoded = jsonDecode(data);
+        if (decoded is Map<String, dynamic>) return decoded;
+      } catch (_) {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  String? _stringValue(dynamic value) {
+    if (value == null) return null;
+    return value.toString();
+  }
+
+  void _appendFallbackError() {
+    errorMessage.value = _fallbackErrorMessage;
+    messages.add({'role': 'ai', 'text': _fallbackErrorMessage});
   }
 
   Future<void> generateViewerCode() async {
     try {
       final response = await _api.getViewerCode();
       if (response.statusCode == 200) {
-        viewerCode.value = response.data['code'];
+        final data = response.data;
+        if (data is Map<String, dynamic>) {
+          viewerCode.value =
+              (data['code'] ?? data['result']?['code'] ?? '').toString();
+        }
       }
-    } catch (e) {
-      errorMessage.value = '공유 코드를 생성하지 못했습니다.';
+    } catch (_) {
+      errorMessage.value = '공유 코드를 생성하지 못했습니다. 잠시 후 다시 시도해주세요.';
     }
   }
 }
+
+class _ParsedChatResponse {
+  final String? answer;
+  final String? sessionId;
+
+  const _ParsedChatResponse({
+    this.answer,
+    this.sessionId,
+  });
+}
+
+const _fallbackErrorMessage = '아바타 응답을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.';

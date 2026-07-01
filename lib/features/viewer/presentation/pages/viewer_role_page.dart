@@ -27,12 +27,13 @@ class _ViewerRolePageState extends State<ViewerRolePage> {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: IconButton(
-                  icon: const Icon(Icons.arrow_back, color: AppTheme.text, size: 20),
+                  icon: const Icon(Icons.arrow_back,
+                      color: AppTheme.text, size: 20),
                   onPressed: () => Get.back(),
                 ),
               ),
             ),
-            
+
             // Content
             Expanded(
               child: Padding(
@@ -59,11 +60,12 @@ class _ViewerRolePageState extends State<ViewerRolePage> {
                         height: 1.5,
                       ),
                     ),
-                    
+
                     const SizedBox(height: 32),
                     Expanded(
                       child: GridView.builder(
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
@@ -77,8 +79,12 @@ class _ViewerRolePageState extends State<ViewerRolePage> {
                             onTap: () => setState(() => _selectedRole = r),
                             child: Container(
                               decoration: BoxDecoration(
-                                color: isSelected ? AppTheme.bgAlt : AppTheme.bg,
-                                border: Border.all(color: isSelected ? AppTheme.cta : AppTheme.border),
+                                color:
+                                    isSelected ? AppTheme.bgAlt : AppTheme.bg,
+                                border: Border.all(
+                                    color: isSelected
+                                        ? AppTheme.cta
+                                        : AppTheme.border),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               alignment: Alignment.center,
@@ -87,8 +93,12 @@ class _ViewerRolePageState extends State<ViewerRolePage> {
                                 style: TextStyle(
                                   fontFamily: AppTheme.fontFamily,
                                   fontSize: 15,
-                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                                  color: isSelected ? AppTheme.text : AppTheme.textSec,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w600
+                                      : FontWeight.w500,
+                                  color: isSelected
+                                      ? AppTheme.text
+                                      : AppTheme.textSec,
                                 ),
                               ),
                             ),
@@ -96,15 +106,21 @@ class _ViewerRolePageState extends State<ViewerRolePage> {
                         },
                       ),
                     ),
-                    
+
                     // Bottom CTA
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: _selectedRole.isEmpty ? null : () => Get.toNamed('/viewer_chat'),
+                        onPressed: _selectedRole.isEmpty
+                            ? null
+                            : () => Get.toNamed('/viewer_chat'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: _selectedRole.isEmpty ? AppTheme.border : AppTheme.cta,
-                          foregroundColor: _selectedRole.isEmpty ? AppTheme.textPh : Colors.white,
+                          backgroundColor: _selectedRole.isEmpty
+                              ? AppTheme.border
+                              : AppTheme.cta,
+                          foregroundColor: _selectedRole.isEmpty
+                              ? AppTheme.textPh
+                              : Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),

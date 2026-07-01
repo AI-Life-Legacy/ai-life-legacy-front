@@ -1,84 +1,61 @@
+import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
+import 'package:ai_life_legacy/app/core/theme/widgets/animated_mascot.dart';
+import 'package:ai_life_legacy/app/core/theme/widgets/mascot_flow_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:ai_life_legacy/app/core/theme/app_theme.dart';
 
 class CompletionPage extends StatelessWidget {
   const CompletionPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.bg,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 64,
-                height: 64,
-                margin: const EdgeInsets.only(bottom: 24),
-                decoration: const BoxDecoration(
-                  color: AppTheme.successBg,
-                  shape: BoxShape.circle,
-                ),
-                child: const Center(
-                  child: Text(
-                    '✨',
-                    style: TextStyle(fontSize: 24),
-                  ),
-                ),
-              ),
-              const Text(
-                '축하합니다.\n모든 챕터를 완료했어요.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: AppTheme.fontFamily,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.text,
-                ),
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                '사용자님의 소중한 삶의 기록이 전부 모였습니다. 이제 아바타 생성 기능이 열립니다.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: AppTheme.fontFamily,
-                  fontSize: 13,
-                  color: AppTheme.textSec,
-                  height: 1.5,
-                ),
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: 200,
-                child: ElevatedButton(
-                  onPressed: () => Get.toNamed('/generated'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.bgAlt,
-                    foregroundColor: AppTheme.text,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      side: const BorderSide(color: AppTheme.border),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: const Text(
-                    '아바타 확인',
-                    style: TextStyle(
-                      fontFamily: AppTheme.fontFamily,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+    return MascotScaffold(
+      child: Column(
+        children: [
+          const Spacer(),
+          const AnimatedMascot(size: 160),
+          const SizedBox(height: 24),
+          const Text(
+            '모든 기억을\n채웠어요!',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: MascotFlowTheme.text,
+              fontSize: 30,
+              height: 1.15,
+              fontWeight: FontWeight.w900,
+            ),
           ),
-        ),
+          const SizedBox(height: 12),
+          const Text(
+            '이제 답변을 한 권의 이야기로 묶을 수 있어요.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: MascotFlowTheme.textMuted,
+              fontSize: 15,
+              height: 1.5,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 28),
+          FlowOptionCard(
+            icon: Icons.auto_stories_outlined,
+            title: '내 인생책 만들기',
+            subtitle: '완성된 답변을 바탕으로 자서전을 생성합니다.',
+            selected: true,
+            onTap: () => Get.toNamed(Routes.generating),
+          ),
+          FlowOptionCard(
+            icon: Icons.home_rounded,
+            title: '홈으로 돌아가기',
+            subtitle: '조금 더 보고 나중에 생성할 수 있어요.',
+            onTap: () => Get.offAllNamed(Routes.home),
+          ),
+          const Spacer(),
+          FlowPrimaryButton(
+            text: '책 만들기',
+            onPressed: () => Get.toNamed(Routes.generating),
+          ),
+        ],
       ),
     );
   }

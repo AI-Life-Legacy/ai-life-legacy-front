@@ -11,7 +11,7 @@ class MyPageController extends GetxController {
   MyPageController(this._userRepository);
 
   final RxBool isLoading = false.obs;
-  
+
   // Profile state
   final RxString userName = '사용자님'.obs;
   final RxString userEmail = ''.obs;
@@ -51,7 +51,7 @@ class MyPageController extends GetxController {
     try {
       // 모든 토큰 및 세션 정보 삭제 (accessToken, refreshToken, viewer 세션 등 포함)
       await TokenStorage.clearTokens();
-      
+
       // 모든 라우트 스택 제거 후 로그인 페이지로 이동
       Get.offAllNamed(Routes.login);
     } catch (e) {
@@ -74,10 +74,10 @@ class MyPageController extends GetxController {
 
       // 실제 백엔드 DELETE /users/me 호출
       await _userRepository.deleteUser(dto);
-      
+
       // 탈퇴 API 성공 응답을 받은 경우에만 세션 정리 및 이동
       await TokenStorage.clearTokens();
-      
+
       // 화면 이동
       Get.offAllNamed(Routes.login);
     } catch (e) {
@@ -93,5 +93,3 @@ class MyPageController extends GetxController {
     isReminderEnabled.value = value;
   }
 }
-
-

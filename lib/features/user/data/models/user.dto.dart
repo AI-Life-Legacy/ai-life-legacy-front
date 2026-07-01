@@ -116,7 +116,8 @@ class TocQuestionDto {
   factory TocQuestionDto.fromJson(Map<String, dynamic> json) {
     final q = json['question'] ?? json['questionText'];
     if (q == null) {
-      debugPrint('[TocQuestionDto] Warning: Missing question text in json: $json');
+      debugPrint(
+          '[TocQuestionDto] Warning: Missing question text in json: $json');
     }
     return TocQuestionDto(
       id: json['id'] as int? ?? 0,

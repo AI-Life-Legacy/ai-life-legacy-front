@@ -164,7 +164,8 @@ class AiResponseDto {
 
   factory AiResponseDto.fromJson(Map<String, dynamic> json) {
     return AiResponseDto(
-      content: (json['content'] ?? json['message'] ?? json['case'] ?? '') as String,
+      content:
+          (json['content'] ?? json['message'] ?? json['case'] ?? '') as String,
     );
   }
 

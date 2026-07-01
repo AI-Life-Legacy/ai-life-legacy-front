@@ -18,11 +18,11 @@ class HomeController extends GetxController {
   final totalChapters = 0.obs;
   final completedChapters = 0.obs;
   final progressPercent = 0.obs;
-  
+
   final totalQuestions = 0.obs;
   final answeredQuestions = 0.obs;
   final remainingQuestions = 0.obs;
-  
+
   final currentIndex = 0.obs;
   final errorMessage = ''.obs;
 
@@ -52,7 +52,7 @@ class HomeController extends GetxController {
 
   Future<void> fetchToc() async {
     if (isViewerMode) return;
-    
+
     try {
       isLoading.value = true;
       errorMessage.value = '';
@@ -128,7 +128,8 @@ class HomeController extends GetxController {
   Future<void> onChapterTap(dynamic chapter) async {
     final tocId = chapter['tocId'] ?? chapter['id'] ?? chapter['n'];
     final chapterNumber = chapter['n'] ?? chapter['chapterNumber'] ?? tocId;
-    final title = chapter['title'] ?? chapter['tocTitle'] ?? chapter['name'] ?? '제목 없음';
+    final title =
+        chapter['title'] ?? chapter['tocTitle'] ?? chapter['name'] ?? '제목 없음';
 
     final navigationFuture = Get.toNamed(Routes.chapterChat, arguments: {
       'tocId': tocId,
@@ -143,7 +144,7 @@ class HomeController extends GetxController {
     if (navigationFuture != null) {
       await navigationFuture;
     }
-    
+
     await fetchToc();
   }
 

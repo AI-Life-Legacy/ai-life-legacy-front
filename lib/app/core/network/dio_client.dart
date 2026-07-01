@@ -1,6 +1,7 @@
 library;
 
 import 'package:flutter/foundation.dart';
+
 /// 전역 Dio 클라이언트 인스턴스를 관리합니다.
 /// 공통 헤더, 타임아웃, 인터셉터 설정을 중앙화합니다.
 import 'package:dio/dio.dart';
@@ -59,22 +60,26 @@ class DioClient {
             final isViewer = TokenStorage.isViewerMode();
             if (isViewer) {
               final viewerToken = TokenStorage.getViewerAccessToken();
-              debugPrint('[DioClient] ViewerMode is True. ViewerToken exists: ${viewerToken != null && viewerToken.isNotEmpty}');
+              debugPrint(
+                  '[DioClient] ViewerMode is True. ViewerToken exists: ${viewerToken != null && viewerToken.isNotEmpty}');
               if (viewerToken != null && viewerToken.isNotEmpty) {
                 options.headers['Authorization'] = 'Bearer $viewerToken';
                 debugPrint('[DioClient] Viewer Authorization header attached');
               } else {
-                debugPrint('[DioClient] WARNING: No viewer access token available for request');
+                debugPrint(
+                    '[DioClient] WARNING: No viewer access token available for request');
               }
             } else {
               // 공개 API가 아닌 경우에만 Access Token 주입
               final accessToken = TokenStorage.getAccessToken();
-              debugPrint('[DioClient] AccessToken exists: ${accessToken != null && accessToken.isNotEmpty}');
+              debugPrint(
+                  '[DioClient] AccessToken exists: ${accessToken != null && accessToken.isNotEmpty}');
               if (accessToken != null && accessToken.isNotEmpty) {
                 options.headers['Authorization'] = 'Bearer $accessToken';
                 debugPrint('[DioClient] Authorization header attached');
               } else {
-                debugPrint('[DioClient] WARNING: No access token available for request');
+                debugPrint(
+                    '[DioClient] WARNING: No access token available for request');
               }
             }
           } else {

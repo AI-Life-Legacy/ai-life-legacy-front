@@ -10,7 +10,9 @@ class AutobiographyBinding extends Bindings {
   void dependencies() {
     Get.lazyPut(() => AutobiographyApi(Get.find<ApiProvider>()));
     Get.lazyPut(() => AutobiographyController(Get.find<AutobiographyApi>()));
-    Get.lazyPut(() => AutobiographyListController(Get.find<AutobiographyApi>()));
-    Get.lazyPut(() => AutobiographyWriteController(Get.find<AutobiographyApi>()));
+    Get.lazyPut(
+        () => AutobiographyListController(Get.find<AutobiographyApi>()));
+    Get.lazyPut(
+        () => AutobiographyWriteController(Get.find<AutobiographyApi>()));
   }
 }

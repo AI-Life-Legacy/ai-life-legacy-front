@@ -13,7 +13,8 @@ abstract class AiRepository {
   Future<Success204Response> sync(AiSyncRequestDto dto);
 
   /// 3. 맞춤형 꼬리 질문 생성
-  Future<SuccessResponse<AiQuestionResponseDto>> getQuestion(AiQuestionRequestDto dto);
+  Future<SuccessResponse<AiQuestionResponseDto>> getQuestion(
+      AiQuestionRequestDto dto);
 
   /// 4. 자서전 및 PDF 생성
   Future<SuccessResponse<AiAutobiographyResponseDto>> generateAutobiography();

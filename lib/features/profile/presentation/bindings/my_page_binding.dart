@@ -11,7 +11,8 @@ class MyPageBinding extends Bindings {
       Get.lazyPut(() => UserApi());
     }
     if (!Get.isRegistered<UserRepository>()) {
-      Get.lazyPut<UserRepository>(() => UserRepositoryImpl(Get.find<UserApi>()));
+      Get.lazyPut<UserRepository>(
+          () => UserRepositoryImpl(Get.find<UserApi>()));
     }
 
     // MyPageController 등록
@@ -20,4 +21,3 @@ class MyPageBinding extends Bindings {
         ));
   }
 }
-

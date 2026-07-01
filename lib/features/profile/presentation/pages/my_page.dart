@@ -9,14 +9,15 @@ class MyPage extends GetView<MyPageController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.bg,
       appBar: AppBar(
         title: const Text('마이페이지'),
         centerTitle: true,
-        backgroundColor: Colors.white,
+        backgroundColor: AppTheme.bg,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: AppTheme.text),
+          icon: const Icon(Icons.arrow_back_ios_new,
+              size: 20, color: AppTheme.text),
           onPressed: () => Get.back(),
         ),
       ),
@@ -45,14 +46,14 @@ class MyPage extends GetView<MyPageController> {
       return Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppTheme.border),
-          boxShadow: [
+          color: AppTheme.surface,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppTheme.border, width: 2),
+          boxShadow: const [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              color: AppTheme.shadow,
+              blurRadius: 0,
+              offset: Offset(0, 5),
             ),
           ],
         ),
@@ -63,13 +64,13 @@ class MyPage extends GetView<MyPageController> {
               children: [
                 CircleAvatar(
                   radius: 28,
-                  backgroundColor: AppTheme.bgAlt,
+                  backgroundColor: AppTheme.cta,
                   child: Text(
                     initial,
                     style: const TextStyle(
                       fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.textSec,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
                     ),
                   ),
                 ),
@@ -82,7 +83,7 @@ class MyPage extends GetView<MyPageController> {
                         name,
                         style: const TextStyle(
                           fontSize: 18,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w900,
                           color: AppTheme.text,
                         ),
                       ),
@@ -106,7 +107,8 @@ class MyPage extends GetView<MyPageController> {
               children: [
                 if (controller.chapterCount.value > 0)
                   _buildBadge('${controller.chapterCount.value}개 챕터'),
-                if (controller.chapterCount.value > 0 && controller.isCompleted.value)
+                if (controller.chapterCount.value > 0 &&
+                    controller.isCompleted.value)
                   const SizedBox(width: 8),
                 if (controller.isCompleted.value)
                   _buildBadge('완료', isSuccess: true),
@@ -122,15 +124,15 @@ class MyPage extends GetView<MyPageController> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: isSuccess ? AppTheme.successBg : AppTheme.bgAlt,
+        color: isSuccess ? AppTheme.successBg : const Color(0xFFE8F7FF),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
         text,
         style: TextStyle(
           fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: isSuccess ? AppTheme.success : AppTheme.textSec,
+          fontWeight: FontWeight.w900,
+          color: isSuccess ? AppTheme.ctaDark : AppTheme.skyDark,
         ),
       ),
     );
@@ -143,7 +145,7 @@ class MyPage extends GetView<MyPageController> {
         title,
         style: const TextStyle(
           fontSize: 14,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w900,
           color: AppTheme.text,
           letterSpacing: -0.2,
         ),
@@ -158,13 +160,13 @@ class MyPage extends GetView<MyPageController> {
           label: '인터뷰 리마인더',
           showChevron: false,
           trailing: Obx(() => SizedBox(
-            height: 24,
-            child: Switch(
+                height: 24,
+                child: Switch(
                   value: controller.isReminderEnabled.value,
                   onChanged: controller.toggleReminder,
                   activeTrackColor: AppTheme.cta,
                 ),
-          )),
+              )),
         ),
         _buildMenuRow(
           label: '알림 시간',
@@ -183,17 +185,20 @@ class MyPage extends GetView<MyPageController> {
         _buildMenuRow(
           label: '비밀번호 변경',
           onTap: () {
-             Get.dialog(
-               AlertDialog(
-                 backgroundColor: Colors.white,
-                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                 title: const Text('비밀번호 변경', style: TextStyle(fontWeight: FontWeight.w700)),
-                 content: const Text('준비 중입니다.'),
-                 actions: [
-                   TextButton(onPressed: () => Get.back(), child: const Text('확인', style: TextStyle(color: AppTheme.cta)))
-                 ],
-               )
-             );
+            Get.dialog(AlertDialog(
+              backgroundColor: AppTheme.surface,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
+              title: const Text('비밀번호 변경',
+                  style: TextStyle(fontWeight: FontWeight.w700)),
+              content: const Text('준비 중입니다.'),
+              actions: [
+                TextButton(
+                    onPressed: () => Get.back(),
+                    child:
+                        const Text('확인', style: TextStyle(color: AppTheme.cta)))
+              ],
+            ));
           },
         ),
         _buildMenuRow(
@@ -226,9 +231,12 @@ class MyPage extends GetView<MyPageController> {
     return InkWell(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 4),
-        decoration: const BoxDecoration(
-          border: Border(bottom: BorderSide(color: AppTheme.border, width: 0.5)),
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 14),
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppTheme.border, width: 2),
         ),
         child: Row(
           children: [
@@ -237,7 +245,7 @@ class MyPage extends GetView<MyPageController> {
                 label,
                 style: TextStyle(
                   fontSize: 15,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w800,
                   color: textColor,
                 ),
               ),
@@ -264,9 +272,10 @@ class MyPage extends GetView<MyPageController> {
   void _showLogoutDialog(BuildContext context) {
     Get.dialog(
       AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: AppTheme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('로그아웃할까요?', style: TextStyle(fontWeight: FontWeight.w700)),
+        title: const Text('로그아웃할까요?',
+            style: TextStyle(fontWeight: FontWeight.w700)),
         content: const Text('현재 계정에서 로그아웃됩니다.'),
         actions: [
           TextButton(
@@ -278,7 +287,9 @@ class MyPage extends GetView<MyPageController> {
               Get.back();
               controller.logout();
             },
-            child: const Text('로그아웃', style: TextStyle(color: AppTheme.error, fontWeight: FontWeight.w600)),
+            child: const Text('로그아웃',
+                style: TextStyle(
+                    color: AppTheme.error, fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -288,48 +299,55 @@ class MyPage extends GetView<MyPageController> {
   void _showResignDialog(BuildContext context) {
     Get.dialog(
       Obx(() => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('정말 탈퇴하시겠어요?', style: TextStyle(fontWeight: FontWeight.w700)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('탈퇴하면 계정과 작성 데이터가 삭제될 수 있습니다.'),
-            if (controller.errorMessage.value.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Text(
-                controller.errorMessage.value,
-                style: const TextStyle(
-                  color: AppTheme.error,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                ),
+            backgroundColor: AppTheme.surface,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: const Text('정말 탈퇴하시겠어요?',
+                style: TextStyle(fontWeight: FontWeight.w700)),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('탈퇴하면 계정과 작성 데이터가 삭제될 수 있습니다.'),
+                if (controller.errorMessage.value.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    controller.errorMessage.value,
+                    style: const TextStyle(
+                      color: AppTheme.error,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: controller.isLoading.value ? null : () => Get.back(),
+                child:
+                    const Text('취소', style: TextStyle(color: AppTheme.textSec)),
+              ),
+              TextButton(
+                onPressed: controller.isLoading.value
+                    ? null
+                    : () => controller.withdrawAccount(),
+                child: controller.isLoading.value
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppTheme.error,
+                        ),
+                      )
+                    : const Text('탈퇴하기',
+                        style: TextStyle(
+                            color: AppTheme.error,
+                            fontWeight: FontWeight.w600)),
               ),
             ],
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: controller.isLoading.value ? null : () => Get.back(),
-            child: const Text('취소', style: TextStyle(color: AppTheme.textSec)),
-          ),
-          TextButton(
-            onPressed: controller.isLoading.value ? null : () => controller.withdrawAccount(),
-            child: controller.isLoading.value
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppTheme.error,
-                    ),
-                  )
-                : const Text('탈퇴하기', style: TextStyle(color: AppTheme.error, fontWeight: FontWeight.w600)),
-          ),
-        ],
-      )),
+          )),
     );
   }
 }
-

@@ -1,3 +1,4 @@
+import 'package:ai_life_legacy/app/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -27,10 +28,10 @@ class UnifiedChatInputWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: AppTheme.shadow.withValues(alpha: 0.35),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -45,7 +46,7 @@ class UnifiedChatInputWidget extends StatelessWidget {
                 Obx(() => IconButton(
                       icon: Icon(
                         isVoiceRecorderVisible.value ? Icons.close : Icons.add,
-                        color: Colors.grey[600],
+                        color: AppTheme.textSec,
                         size: 28,
                       ),
                       padding: EdgeInsets.zero,
@@ -59,9 +60,10 @@ class UnifiedChatInputWidget extends StatelessWidget {
                         enabled: !isLoading.value,
                         decoration: InputDecoration(
                           hintText: '메시지를 입력하세요...',
-                          hintStyle: TextStyle(color: Colors.grey[500], fontSize: 15),
+                          hintStyle: const TextStyle(
+                              color: AppTheme.textPh, fontSize: 15),
                           filled: true,
-                          fillColor: Colors.grey[100],
+                          fillColor: AppTheme.bgAlt,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(24),
                             borderSide: BorderSide.none,
@@ -69,7 +71,8 @@ class UnifiedChatInputWidget extends StatelessWidget {
                           contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 10),
                         ),
-                        style: const TextStyle(fontSize: 15),
+                        style:
+                            const TextStyle(fontSize: 15, color: AppTheme.text),
                         maxLines: 1,
                         onSubmitted: (_) => onSubmitted(),
                       )),
@@ -85,10 +88,10 @@ class UnifiedChatInputWidget extends StatelessWidget {
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
                               valueColor:
-                                  AlwaysStoppedAnimation<Color>(Color(0xFF4A9EFF)),
+                                  AlwaysStoppedAnimation<Color>(AppTheme.sky),
                             ),
                           )
-                        : const Icon(Icons.send, color: Color(0xFF4A9EFF), size: 28),
+                        : const Icon(Icons.send, color: AppTheme.sky, size: 28),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                     onPressed: isProcessing ? null : onSubmitted,
@@ -109,7 +112,7 @@ class UnifiedChatInputWidget extends StatelessWidget {
                     '음성인식',
                     style: TextStyle(
                       fontSize: 16,
-                      color: Colors.black87,
+                      color: AppTheme.text,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -121,32 +124,33 @@ class UnifiedChatInputWidget extends StatelessWidget {
                         formattedTime,
                         style: const TextStyle(
                           fontSize: 16,
-                          color: Colors.black54,
+                          color: AppTheme.textSec,
                         ),
                       ),
                       const SizedBox(width: 24),
                       GestureDetector(
                         onTap: onToggleRecording,
                         child: Obx(() => Container(
-                          width: 64,
-                          height: 64,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFF5252),
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFFFF5252).withValues(alpha: 0.3),
-                                blurRadius: 12,
-                                spreadRadius: 2,
+                              width: 64,
+                              height: 64,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFF5252),
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFFFF5252)
+                                        .withValues(alpha: 0.3),
+                                    blurRadius: 12,
+                                    spreadRadius: 2,
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                          child: Icon(
-                            isRecording.value ? Icons.stop : Icons.mic,
-                            color: Colors.white,
-                            size: 32,
-                          ),
-                        )),
+                              child: Icon(
+                                isRecording.value ? Icons.stop : Icons.mic,
+                                color: Colors.white,
+                                size: 32,
+                              ),
+                            )),
                       ),
                     ],
                   ),

@@ -45,22 +45,32 @@ class _GenConfirmPageState extends State<GenConfirmPage> {
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     children: [
-                      Container(height: 40, decoration: BoxDecoration(color: AppTheme.bgAlt, borderRadius: BorderRadius.circular(10)), margin: const EdgeInsets.only(bottom: 12)),
-                      ...List.generate(5, (index) => Container(
-                        height: 52,
-                        margin: const EdgeInsets.only(bottom: 8),
-                        decoration: BoxDecoration(border: Border.all(color: AppTheme.border), borderRadius: BorderRadius.circular(10)),
-                      )),
+                      Container(
+                          height: 40,
+                          decoration: BoxDecoration(
+                              color: AppTheme.bgAlt,
+                              borderRadius: BorderRadius.circular(8)),
+                          margin: const EdgeInsets.only(bottom: 12)),
+                      ...List.generate(
+                          5,
+                          (index) => Container(
+                                height: 52,
+                                margin: const EdgeInsets.only(bottom: 8),
+                                decoration: BoxDecoration(
+                                    border: Border.all(
+                                        color: AppTheme.border, width: 2),
+                                    borderRadius: BorderRadius.circular(8)),
+                              )),
                     ],
                   ),
                 ),
               ),
             ),
           ),
-          
+
           // Dark overlay
           Container(color: Colors.black.withValues(alpha: 0.3)),
-          
+
           // Bottom Sheet
           Align(
             alignment: Alignment.bottomCenter,
@@ -69,41 +79,72 @@ class _GenConfirmPageState extends State<GenConfirmPage> {
               padding: const EdgeInsets.all(24),
               decoration: const BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+                borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(18),
+                    topRight: Radius.circular(18)),
               ),
               child: SafeArea(
                 top: false,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(width: 36, height: 4, decoration: BoxDecoration(color: AppTheme.border, borderRadius: BorderRadius.circular(2)), margin: const EdgeInsets.only(bottom: 16)),
-                    const Icon(Icons.menu_book, size: 36, color: AppTheme.text),
+                    Container(
+                        width: 36,
+                        height: 4,
+                        decoration: BoxDecoration(
+                            color: AppTheme.border,
+                            borderRadius: BorderRadius.circular(2)),
+                        margin: const EdgeInsets.only(bottom: 16)),
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color: AppTheme.successBg,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppTheme.cta, width: 2),
+                      ),
+                      child: const Icon(Icons.menu_book,
+                          size: 36, color: AppTheme.ctaDark),
+                    ),
                     const SizedBox(height: 12),
                     const Text(
                       '자서전 만들 준비가 되셨나요?',
-                      style: TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 18, fontWeight: FontWeight.w600, color: AppTheme.text),
+                      style: TextStyle(
+                          fontFamily: AppTheme.fontFamily,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                          color: AppTheme.text),
                     ),
                     const SizedBox(height: 8),
                     const Text(
                       '모든 답변을 모아 자서전을 제작합니다.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 13, color: AppTheme.textSec, height: 1.5),
+                      style: TextStyle(
+                          fontFamily: AppTheme.fontFamily,
+                          fontSize: 13,
+                          color: AppTheme.textSec,
+                          height: 1.5),
                     ),
                     const SizedBox(height: 24),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () {
-                           Get.offNamed(Routes.generating);
+                          Get.offNamed(Routes.generating);
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.cta,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14)),
                           elevation: 0,
                         ),
-                        child: const Text('내 자서전 만들기', style: TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 15, fontWeight: FontWeight.w500)),
+                        child: const Text('내 자서전 만들기',
+                            style: TextStyle(
+                                fontFamily: AppTheme.fontFamily,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w900)),
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -115,10 +156,17 @@ class _GenConfirmPageState extends State<GenConfirmPage> {
                           backgroundColor: AppTheme.bgAlt,
                           foregroundColor: AppTheme.text,
                           padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10), side: const BorderSide(color: AppTheme.border)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                              side: const BorderSide(
+                                  color: AppTheme.border, width: 2)),
                           elevation: 0,
                         ),
-                        child: const Text('취소', style: TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 15, fontWeight: FontWeight.w500)),
+                        child: const Text('취소',
+                            style: TextStyle(
+                                fontFamily: AppTheme.fontFamily,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w900)),
                       ),
                     ),
                   ],

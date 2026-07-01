@@ -7,7 +7,7 @@ class TokenStorage {
   static const _accessKey = 'access_token';
   static const _refreshKey = 'refresh_token';
   static const _uuidKey = 'uuid';
-  
+
   static const _viewerAccessKey = 'viewerAccessToken';
   static const _viewerAuthorNameKey = 'viewerAuthorName';
   static const _viewerAuthorIntroKey = 'viewerAuthorIntro';
@@ -17,7 +17,7 @@ class TokenStorage {
   static String? _accessToken;
   static String? _refreshToken;
   static String? _uuid;
-  
+
   static String? _viewerAccessToken;
   static String? _viewerAuthorName;
   static String? _viewerAuthorIntro;
@@ -29,7 +29,7 @@ class TokenStorage {
     _accessToken = _prefs!.getString(_accessKey);
     _refreshToken = _prefs!.getString(_refreshKey);
     _uuid = _prefs!.getString(_uuidKey);
-    
+
     _viewerAccessToken = _prefs!.getString(_viewerAccessKey);
     _viewerAuthorName = _prefs!.getString(_viewerAuthorNameKey);
     _viewerAuthorIntro = _prefs!.getString(_viewerAuthorIntroKey);

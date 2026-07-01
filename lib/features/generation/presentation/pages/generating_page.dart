@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:ai_life_legacy/app/core/theme/widgets/animated_mascot.dart';
+import 'package:ai_life_legacy/app/core/theme/widgets/mascot_flow_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:ai_life_legacy/app/core/theme/app_theme.dart';
@@ -13,8 +15,9 @@ class GeneratingPage extends StatefulWidget {
 }
 
 class _GeneratingPageState extends State<GeneratingPage> {
-  final AutobiographyController _controller = Get.find<AutobiographyController>();
-  
+  final AutobiographyController _controller =
+      Get.find<AutobiographyController>();
+
   Timer? _progressTimer;
   double _progress = 0.0;
   bool _hasError = false;
@@ -64,7 +67,7 @@ class _GeneratingPageState extends State<GeneratingPage> {
       setState(() {
         _progress = 100.0;
       });
-      
+
       // 성공 후 100% 보여주고 이동
       Future.delayed(const Duration(seconds: 1), () {
         if (mounted) {
@@ -78,7 +81,9 @@ class _GeneratingPageState extends State<GeneratingPage> {
         if (force) {
           _errorMessage = '다시 제작에 실패했습니다. 기존 자서전은 계속 볼 수 있어요.';
         } else {
-          _errorMessage = errorMsg.isNotEmpty ? errorMsg : '자서전 생성에 실패했습니다.\n잠시 후 다시 시도해주세요.';
+          _errorMessage = errorMsg.isNotEmpty
+              ? errorMsg
+              : '자서전 생성에 실패했습니다.\n잠시 후 다시 시도해주세요.';
         }
       });
     }
@@ -108,38 +113,23 @@ class _GeneratingPageState extends State<GeneratingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.bg,
+      backgroundColor: MascotFlowTheme.bg,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
+          padding: const EdgeInsets.symmetric(horizontal: 28),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                width: 72,
-                height: 72,
-                margin: const EdgeInsets.only(bottom: 24),
-                decoration: const BoxDecoration(
-                  color: AppTheme.bgAlt,
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Icon(
-                    _hasError ? Icons.error_outline : Icons.menu_book,
-                    size: 32,
-                    color: _hasError ? AppTheme.error : AppTheme.text,
-                  ),
-                ),
-              ),
-              
               if (_hasError) ...[
+                const AnimatedMascot(size: 132),
+                const SizedBox(height: 22),
                 const Text(
-                  '오류 발생',
+                  '잠깐 멈췄어요',
                   style: TextStyle(
                     fontFamily: AppTheme.fontFamily,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.error,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    color: MascotFlowTheme.text,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -149,24 +139,15 @@ class _GeneratingPageState extends State<GeneratingPage> {
                   style: const TextStyle(
                     fontFamily: AppTheme.fontFamily,
                     fontSize: 14,
-                    color: AppTheme.textSec,
+                    color: MascotFlowTheme.textMuted,
                     height: 1.5,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
                 const SizedBox(height: 32),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _startGeneration,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.cta,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      elevation: 0,
-                    ),
-                    child: const Text('다시 시도', style: TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 15, fontWeight: FontWeight.w500)),
-                  ),
+                FlowPrimaryButton(
+                  text: '다시 시도',
+                  onPressed: _startGeneration,
                 ),
                 const SizedBox(height: 10),
                 SizedBox(
@@ -174,23 +155,36 @@ class _GeneratingPageState extends State<GeneratingPage> {
                   child: ElevatedButton(
                     onPressed: () => Get.back(),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.bgAlt,
-                      foregroundColor: AppTheme.text,
+                      backgroundColor: MascotFlowTheme.surface,
+                      foregroundColor: MascotFlowTheme.text,
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10), side: const BorderSide(color: AppTheme.border)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        side: const BorderSide(color: MascotFlowTheme.border),
+                      ),
                       elevation: 0,
                     ),
-                    child: const Text('취소', style: TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 15, fontWeight: FontWeight.w500)),
+                    child: const Text(
+                      '취소',
+                      style: TextStyle(
+                        fontFamily: AppTheme.fontFamily,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
                   ),
                 ),
               ] else ...[
+                const AnimatedMascot(size: 142),
+                const SizedBox(height: 20),
                 Text(
                   _currentTitle,
+                  textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontFamily: AppTheme.fontFamily,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.text,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    color: MascotFlowTheme.text,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -200,50 +194,15 @@ class _GeneratingPageState extends State<GeneratingPage> {
                   style: const TextStyle(
                     fontFamily: AppTheme.fontFamily,
                     fontSize: 14,
-                    color: AppTheme.textSec,
+                    color: MascotFlowTheme.textMuted,
                     height: 1.5,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(height: 48),
-                
-                // 진행바
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: LinearProgressIndicator(
-                        value: _progress / 100.0,
-                        backgroundColor: AppTheme.border,
-                        color: AppTheme.success,
-                        minHeight: 8,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          '단계 $_currentStep / 4',
-                          style: const TextStyle(
-                            fontFamily: AppTheme.fontFamily,
-                            fontSize: 13,
-                            color: AppTheme.textSec,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        Text(
-                          '${_progress.toInt()}%',
-                          style: const TextStyle(
-                            fontFamily: AppTheme.fontFamily,
-                            fontSize: 13,
-                            color: AppTheme.success,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                const SizedBox(height: 34),
+                FlowProgressPill(
+                  value: _progress / 100.0,
+                  label: '단계 $_currentStep / 4',
                 ),
               ],
             ],
