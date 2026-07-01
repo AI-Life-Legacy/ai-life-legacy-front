@@ -19,6 +19,7 @@ import 'package:ai_life_legacy/features/autobiography/presentation/pages/chapter
 import 'package:ai_life_legacy/features/generation/presentation/pages/gen_confirm_page.dart';
 import 'package:ai_life_legacy/features/generation/presentation/pages/generating_page.dart';
 import 'package:ai_life_legacy/features/generation/presentation/pages/generated_page.dart';
+import 'package:ai_life_legacy/features/generation/presentation/pages/ebook_reader_page.dart';
 import 'package:ai_life_legacy/features/generation/presentation/pages/locked_page.dart';
 import 'package:ai_life_legacy/features/viewer/presentation/pages/viewer_entry_page.dart';
 import 'package:ai_life_legacy/features/viewer/presentation/pages/viewer_role_page.dart';
@@ -83,6 +84,7 @@ class AppPages {
         name: Routes.chapterGenerating,
         page: () => const ChapterGeneratingPage()),
     GetPage(name: Routes.generated, page: () => const GeneratedPage()),
+    GetPage(name: Routes.ebookReader, page: () => const EbookReaderPage()),
     GetPage(name: Routes.locked, page: () => const LockedPage()),
     GetPage(
         name: Routes.viewerEntry,

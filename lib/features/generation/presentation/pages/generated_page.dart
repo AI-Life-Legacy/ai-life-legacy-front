@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart' hide Response;
 import 'package:url_launcher/url_launcher.dart';
+import 'package:ai_life_legacy/features/autobiography/presentation/controllers/autobiography_controller.dart';
 
 class GeneratedPage extends StatefulWidget {
   const GeneratedPage({super.key});
@@ -17,13 +18,34 @@ class GeneratedPage extends StatefulWidget {
 }
 
 class _GeneratedPageState extends State<GeneratedPage> {
+  final TextEditingController _feedbackController = TextEditingController();
+
   String _viewerCode = '';
   bool _isLoadingCode = true;
+  int _rating = 0;
+  bool _isSubmittingFeedback = false;
+  bool _feedbackSubmitted = false;
+  final Set<String> _selectedFeedbackTags = {};
+
+  static const List<String> _feedbackTags = [
+    '내용이 부족해요',
+    '너무 길어요',
+    '더 감성적으로',
+    '더 담백하게',
+    '목차가 안 맞아요',
+    '가족 이야기를 더 넣고 싶어요',
+  ];
 
   @override
   void initState() {
     super.initState();
     _loadViewerCode();
+  }
+
+  @override
+  void dispose() {
+    _feedbackController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadViewerCode() async {
@@ -78,6 +100,8 @@ class _GeneratedPageState extends State<GeneratedPage> {
   Widget build(BuildContext context) {
     final args = Get.arguments as Map<String, dynamic>?;
     final pdfUrl = args?['pdfUrl'] as String?;
+    final markdown = args?['markdown']?.toString() ?? _savedMarkdown();
+    final markdownUrl = args?['markdownUrl']?.toString() ?? _savedMarkdownUrl();
     final pageCount = args?['pageCount'] as int?;
     final cached = args?['cached'] as bool? ?? false;
 
@@ -126,6 +150,29 @@ class _GeneratedPageState extends State<GeneratedPage> {
             isLoading: _isLoadingCode,
           ),
           const SizedBox(height: 14),
+          _FeedbackCard(
+            rating: _rating,
+            tags: _feedbackTags,
+            selectedTags: _selectedFeedbackTags,
+            controller: _feedbackController,
+            isSubmitting: _isSubmittingFeedback,
+            submitted: _feedbackSubmitted,
+            onRatingChanged: (value) {
+              setState(() {
+                _rating = value;
+              });
+            },
+            onTagTapped: _toggleFeedbackTag,
+            onSubmit: () => _submitFeedback(wantsRegeneration: false),
+            onRegenerate: () async {
+              final saved =
+                  await _submitFeedback(wantsRegeneration: true);
+              if (saved && mounted) {
+                Get.offNamed(Routes.generating, arguments: {'force': true});
+              }
+            },
+          ),
+          const SizedBox(height: 14),
           FlowPrimaryButton(
             text: '홈으로 가기',
             onPressed: () => Get.offAllNamed(Routes.home),
@@ -137,6 +184,13 @@ class _GeneratedPageState extends State<GeneratedPage> {
             subtitle: '완성된 이야기로 만든 아바타를 만나보세요.',
             selected: true,
             onTap: () => Get.toNamed(Routes.avatarChat),
+          ),
+          FlowOptionCard(
+            icon: Icons.menu_book_outlined,
+            title: '앱에서 책처럼 읽기',
+            subtitle: '웹소설처럼 옆으로 넘기면서 완성된 자서전을 읽습니다.',
+            selected: true,
+            onTap: () => _openEbook(markdown, markdownUrl, pdfUrl),
           ),
           FlowOptionCard(
             icon: Icons.picture_as_pdf_outlined,
@@ -170,6 +224,77 @@ class _GeneratedPageState extends State<GeneratedPage> {
       }
     } catch (e) {
       _showSnack('안내', 'PDF 링크를 여는 데 실패했습니다.');
+    }
+  }
+
+  String? _savedMarkdown() {
+    if (!Get.isRegistered<AutobiographyController>()) return null;
+    return Get.find<AutobiographyController>().markdown.value;
+  }
+
+  String? _savedMarkdownUrl() {
+    if (!Get.isRegistered<AutobiographyController>()) return null;
+    return Get.find<AutobiographyController>().markdownUrl.value;
+  }
+
+  void _openEbook(String? markdown, String? markdownUrl, String? pdfUrl) {
+    Get.toNamed(
+      Routes.ebookReader,
+      arguments: {
+        'markdown': markdown,
+        'markdownUrl': markdownUrl,
+        'pdfUrl': pdfUrl,
+      },
+    );
+  }
+
+  void _toggleFeedbackTag(String tag) {
+    setState(() {
+      if (_selectedFeedbackTags.contains(tag)) {
+        _selectedFeedbackTags.remove(tag);
+      } else {
+        _selectedFeedbackTags.add(tag);
+      }
+    });
+  }
+
+  Future<bool> _submitFeedback({required bool wantsRegeneration}) async {
+    if (_rating == 0) {
+      _showSnack('안내', '자서전 만족도를 먼저 선택해주세요.');
+      return false;
+    }
+
+    try {
+      setState(() {
+        _isSubmittingFeedback = true;
+      });
+
+      await DioClient.instance.post(
+        '/api/autobiography/feedback',
+        data: {
+          'rating': _rating,
+          'feedbackTags': _selectedFeedbackTags.toList(),
+          'comment': _feedbackController.text.trim(),
+          'wantsRegeneration': wantsRegeneration,
+        },
+      );
+
+      if (mounted) {
+        setState(() {
+          _feedbackSubmitted = true;
+        });
+      }
+      _showSnack('저장 완료', wantsRegeneration ? '피드백을 반영해 다시 제작합니다.' : '소중한 평가가 저장되었습니다.');
+      return true;
+    } catch (e) {
+      _showSnack('저장 실패', '평가를 저장하지 못했습니다. 잠시 후 다시 시도해주세요.');
+      return false;
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmittingFeedback = false;
+        });
+      }
     }
   }
 
@@ -227,6 +352,180 @@ class _GeneratedPageState extends State<GeneratedPage> {
       snackPosition: SnackPosition.BOTTOM,
       backgroundColor: MascotFlowTheme.surface,
       colorText: MascotFlowTheme.text,
+    );
+  }
+}
+
+class _FeedbackCard extends StatelessWidget {
+  final int rating;
+  final List<String> tags;
+  final Set<String> selectedTags;
+  final TextEditingController controller;
+  final bool isSubmitting;
+  final bool submitted;
+  final ValueChanged<int> onRatingChanged;
+  final ValueChanged<String> onTagTapped;
+  final VoidCallback onSubmit;
+  final VoidCallback onRegenerate;
+
+  const _FeedbackCard({
+    required this.rating,
+    required this.tags,
+    required this.selectedTags,
+    required this.controller,
+    required this.isSubmitting,
+    required this.submitted,
+    required this.onRatingChanged,
+    required this.onTagTapped,
+    required this.onSubmit,
+    required this.onRegenerate,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: MascotFlowTheme.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: MascotFlowTheme.border, width: 2),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.rate_review_outlined, color: AppTheme.cta),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  submitted ? '평가가 저장됐어요' : '완성된 자서전은 어땠나요?',
+                  style: const TextStyle(
+                    color: MascotFlowTheme.text,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            '별점과 아쉬운 점을 남기면 다음 제작에 반영할 수 있어요.',
+            style: TextStyle(
+              color: MascotFlowTheme.textMuted,
+              fontSize: 12,
+              height: 1.35,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(5, (index) {
+              final value = index + 1;
+              return IconButton(
+                tooltip: '$value점',
+                onPressed: isSubmitting ? null : () => onRatingChanged(value),
+                icon: Icon(
+                  value <= rating ? Icons.star : Icons.star_border,
+                  color: value <= rating ? const Color(0xFFFFC857) : MascotFlowTheme.border,
+                  size: 32,
+                ),
+              );
+            }),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: tags.map((tag) {
+              final selected = selectedTags.contains(tag);
+              return ChoiceChip(
+                label: Text(tag),
+                selected: selected,
+                onSelected: isSubmitting ? null : (_) => onTagTapped(tag),
+                selectedColor: MascotFlowTheme.active,
+                backgroundColor: MascotFlowTheme.bg,
+                labelStyle: TextStyle(
+                  color: selected ? Colors.white : MascotFlowTheme.text,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w900,
+                ),
+                side: BorderSide(
+                  color: selected ? MascotFlowTheme.active : MascotFlowTheme.border,
+                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: controller,
+            enabled: !isSubmitting,
+            minLines: 2,
+            maxLines: 4,
+            style: const TextStyle(color: MascotFlowTheme.text, fontSize: 13),
+            decoration: InputDecoration(
+              hintText: '예: 가족 이야기를 더 넣고, 전체 톤은 조금 더 따뜻했으면 좋겠어요.',
+              hintStyle: const TextStyle(color: MascotFlowTheme.textMuted, fontSize: 12),
+              filled: true,
+              fillColor: MascotFlowTheme.bg,
+              contentPadding: const EdgeInsets.all(14),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: MascotFlowTheme.border),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: MascotFlowTheme.border),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: MascotFlowTheme.active, width: 2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: isSubmitting ? null : onSubmit,
+                  icon: isSubmitting
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.save_outlined, size: 16),
+                  label: const Text('평가 저장'),
+                  style: _feedbackButtonStyle(),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: isSubmitting ? null : onRegenerate,
+                  icon: const Icon(Icons.auto_fix_high_outlined, size: 16),
+                  label: const Text('반영해서 재제작'),
+                  style: _feedbackButtonStyle(),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  ButtonStyle _feedbackButtonStyle() {
+    return OutlinedButton.styleFrom(
+      foregroundColor: MascotFlowTheme.text,
+      side: const BorderSide(color: MascotFlowTheme.border, width: 2),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900),
     );
   }
 }

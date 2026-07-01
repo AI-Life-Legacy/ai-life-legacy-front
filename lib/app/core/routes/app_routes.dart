@@ -19,6 +19,7 @@ abstract class Routes {
   static const generating = '/generating';
   static const chapterGenerating = '/chapter_generating';
   static const generated = '/generated';
+  static const ebookReader = '/ebook-reader';
   static const locked = '/locked';
   static const viewerEntry = '/viewer_entry';
   static const viewerRole = '/viewer_role';

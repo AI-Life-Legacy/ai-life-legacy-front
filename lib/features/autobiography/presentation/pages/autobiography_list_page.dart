@@ -31,6 +31,7 @@ class AutobiographyListPage extends GetView<AutobiographyListController> {
 
   void _onViewAutobiographyPressed(AutobiographyController autoController) {
     final url = autoController.pdfUrl.value;
+    final markdownUrl = autoController.markdownUrl.value;
     final count = autoController.pageCount.value ?? 0;
 
     if (url == null || url.isEmpty) {
@@ -49,6 +50,7 @@ class AutobiographyListPage extends GetView<AutobiographyListController> {
       Routes.generated,
       arguments: {
         'pdfUrl': url,
+        'markdownUrl': markdownUrl,
         'pageCount': count,
         'cached': true,
       },

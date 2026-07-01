@@ -46,6 +46,8 @@ class AutobiographyController extends GetxController {
   // Autobiography PDF state variables
   final autobiographyGenerated = false.obs;
   final pdfUrl = RxnString();
+  final markdown = RxnString();
+  final markdownUrl = RxnString();
   final pageCount = RxnInt();
   final generatedAt = RxnString();
   final isUnlocked = false.obs;
@@ -66,6 +68,8 @@ class AutobiographyController extends GetxController {
       autobiographyGenerated.value =
           prefs.getBool('autobiographyGenerated') ?? false;
       pdfUrl.value = prefs.getString('autobiographyPdfUrl');
+      markdown.value = prefs.getString('autobiographyMarkdown');
+      markdownUrl.value = prefs.getString('autobiographyMarkdownUrl');
       pageCount.value = prefs.getInt('autobiographyPageCount');
       generatedAt.value = prefs.getString('autobiographyGeneratedAt');
       isUnlocked.value = prefs.getBool('avatarUnlocked') ?? false;
@@ -98,6 +102,10 @@ class AutobiographyController extends GetxController {
         final status = targetMap['status']?.toString();
         final pdfUrlVal =
             (targetMap['pdfUrl'] ?? targetMap['pdf_url'])?.toString();
+        final markdownVal = targetMap['markdown']?.toString();
+        final markdownUrlVal =
+            (targetMap['markdownUrl'] ?? targetMap['markdown_url'])
+                ?.toString();
         final hasPdfUrl = pdfUrlVal != null && pdfUrlVal.trim().isNotEmpty;
         debugPrint(
             '[AutobiographyController] syncStatusWithServer status: $status, pdfUrl: $pdfUrlVal');
@@ -119,6 +127,8 @@ class AutobiographyController extends GetxController {
           await saveAutobiographyState(
             generated: true,
             url: pdfUrlVal,
+            md: markdownVal,
+            mdUrl: markdownUrlVal,
             count: pageCountVal,
             createdAt: generatedAtVal,
           );
@@ -158,6 +168,8 @@ class AutobiographyController extends GetxController {
   Future<void> saveAutobiographyState({
     required bool generated,
     String? url,
+    String? md,
+    String? mdUrl,
     int? count,
     String? createdAt,
   }) async {
@@ -165,6 +177,8 @@ class AutobiographyController extends GetxController {
       final prefs = await SharedPreferences.getInstance();
       autobiographyGenerated.value = generated;
       pdfUrl.value = url;
+      markdown.value = md;
+      markdownUrl.value = mdUrl;
       pageCount.value = count;
       generatedAt.value = createdAt;
       isUnlocked.value = generated;
@@ -175,6 +189,16 @@ class AutobiographyController extends GetxController {
         await prefs.setString('autobiographyPdfUrl', url);
       } else {
         await prefs.remove('autobiographyPdfUrl');
+      }
+      if (md != null && md.trim().isNotEmpty) {
+        await prefs.setString('autobiographyMarkdown', md);
+      } else {
+        await prefs.remove('autobiographyMarkdown');
+      }
+      if (mdUrl != null && mdUrl.trim().isNotEmpty) {
+        await prefs.setString('autobiographyMarkdownUrl', mdUrl);
+      } else {
+        await prefs.remove('autobiographyMarkdownUrl');
       }
       if (count != null) {
         await prefs.setInt('autobiographyPageCount', count);
@@ -214,15 +238,17 @@ class AutobiographyController extends GetxController {
 
   // Getters for current question
   String get currentQuestionText {
-    if (questions.isEmpty || currentQuestionIndex.value >= questions.length)
+    if (questions.isEmpty || currentQuestionIndex.value >= questions.length) {
       return '';
+    }
     final q = questions[currentQuestionIndex.value];
     return q['questionText']?.toString() ?? '';
   }
 
   int? get currentQuestionId {
-    if (questions.isEmpty || currentQuestionIndex.value >= questions.length)
+    if (questions.isEmpty || currentQuestionIndex.value >= questions.length) {
       return null;
+    }
     final q = questions[currentQuestionIndex.value];
     final id = q['id'];
     if (id is int) return id;
@@ -562,6 +588,10 @@ class AutobiographyController extends GetxController {
         final status = targetMap['status']?.toString();
         final pdfUrlVal =
             (targetMap['pdfUrl'] ?? targetMap['pdf_url'])?.toString();
+        final markdownVal = targetMap['markdown']?.toString();
+        final markdownUrlVal =
+            (targetMap['markdownUrl'] ?? targetMap['markdown_url'])
+                ?.toString();
 
         int? pageCountVal;
         final rawPageCount = targetMap['pageCount'] ?? targetMap['page_count'];
@@ -592,6 +622,8 @@ class AutobiographyController extends GetxController {
         await saveAutobiographyState(
           generated: true,
           url: pdfUrlVal,
+          md: markdownVal,
+          mdUrl: markdownUrlVal,
           count: pageCountVal,
           createdAt: generatedAtVal,
         );
@@ -599,6 +631,8 @@ class AutobiographyController extends GetxController {
         return {
           'status': status,
           'pdfUrl': pdfUrlVal,
+          'markdown': markdownVal,
+          'markdownUrl': markdownUrlVal,
           'pageCount': pageCountVal,
           'cached': cached,
         };
