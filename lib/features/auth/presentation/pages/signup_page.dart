@@ -1,13 +1,15 @@
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:ai_life_legacy/app/core/network/api_provider.dart';
+import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
 import 'package:ai_life_legacy/app/core/theme/app_theme.dart';
 import 'package:ai_life_legacy/app/core/theme/app_text_styles.dart';
+import 'package:ai_life_legacy/app/core/theme/widgets/animated_mascot.dart';
 import 'package:ai_life_legacy/app/core/theme/widgets/app_buttons.dart';
 import 'package:ai_life_legacy/app/core/theme/widgets/app_inputs.dart';
-import 'package:ai_life_legacy/app/core/network/api_provider.dart';
+import 'package:ai_life_legacy/app/core/utils/safe_navigation.dart';
 import 'package:ai_life_legacy/features/auth/data/auth_api.dart';
 import 'package:ai_life_legacy/features/auth/presentation/controllers/auth_controller.dart';
-import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class SignUpPage extends GetView<AuthController> {
   const SignUpPage({super.key});
@@ -31,11 +33,9 @@ class SignUpPage extends GetView<AuthController> {
       backgroundColor: AppTheme.bg,
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Get.back(),
+          icon: const Icon(Icons.arrow_back_rounded),
+          onPressed: () => SafeNavigation.back(context, fallbackRoute: Routes.main),
         ),
-        backgroundColor: AppTheme.bg,
-        elevation: 0,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -43,37 +43,7 @@ class SignUpPage extends GetView<AuthController> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: AppTheme.surface,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppTheme.border, width: 2),
-                  boxShadow: const [
-                    BoxShadow(
-                        color: AppTheme.shadow,
-                        blurRadius: 0,
-                        offset: Offset(0, 5)),
-                  ],
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.flag_circle, color: AppTheme.cta, size: 42),
-                    SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('첫 레슨을 시작해볼까요?', style: AppTextStyles.h1),
-                          SizedBox(height: 4),
-                          Text('1분이면 계정을 만들고 바로 기록할 수 있어요.',
-                              style: AppTextStyles.bodySec),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              const _SignUpHeader(),
               const SizedBox(height: 28),
               InputField(
                 label: '이메일',
@@ -93,9 +63,9 @@ class SignUpPage extends GetView<AuthController> {
                 ),
               ),
               const SizedBox(height: 14),
-              InputField(
+              const InputField(
                 label: '비밀번호 확인',
-                child: const AppInput(
+                child: AppInput(
                   placeholder: '다시 입력해주세요',
                   isPassword: true,
                 ),
@@ -110,20 +80,23 @@ class SignUpPage extends GetView<AuthController> {
                   child: Text(
                     controller.errorMessage.value,
                     style: const TextStyle(
-                        color: AppTheme.error,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700),
+                      color: AppTheme.error,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 );
               }),
-              Obx(() => PrimaryButton(
-                    text: controller.isLoading.value ? '가입 중...' : '계정 만들기',
-                    onPressed:
-                        controller.isLoading.value ? null : controller.signUp,
-                  )),
+              Obx(
+                () => PrimaryButton(
+                  text: controller.isLoading.value ? '가입 중...' : '계정 만들기',
+                  onPressed:
+                      controller.isLoading.value ? null : controller.signUp,
+                ),
+              ),
               const SizedBox(height: 12),
               const Text(
-                '가입하면 이용약관과 개인정보처리방침에 동의하게 됩니다.',
+                '가입하면 서비스 이용약관과 개인정보 처리방침에 동의하게 됩니다.',
                 textAlign: TextAlign.center,
                 style: AppTextStyles.caption,
               ),
@@ -131,7 +104,14 @@ class SignUpPage extends GetView<AuthController> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text('이미 계정이 있나요? ', style: AppTextStyles.bodySec),
+                  const Text(
+                    '이미 계정이 있나요? ',
+                    style: TextStyle(
+                      color: AppTheme.textSec,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   GestureDetector(
                     onTap: () => Get.toNamed(Routes.login),
                     child: const Text(
@@ -139,7 +119,7 @@ class SignUpPage extends GetView<AuthController> {
                       style: TextStyle(
                         fontSize: 14,
                         color: AppTheme.ctaDark,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
                   ),
@@ -148,6 +128,62 @@ class SignUpPage extends GetView<AuthController> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _SignUpHeader extends StatelessWidget {
+  const _SignUpHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppTheme.text),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const AnimatedMascot(size: 82, mood: MascotMood.thinking),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  '첫 기록을 시작해볼까요?',
+                  style: TextStyle(
+                    color: AppTheme.text,
+                    fontSize: 24,
+                    height: 1.15,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Container(width: 46, height: 14, color: AppTheme.coral),
+              const SizedBox(width: 8),
+              Container(width: 20, height: 20, color: AppTheme.cta),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            '계정을 만들고 바로 자기소개와 목차 생성으로 이어집니다.',
+            style: TextStyle(
+              color: AppTheme.textSec,
+              fontSize: 14,
+              height: 1.45,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
       ),
     );
   }

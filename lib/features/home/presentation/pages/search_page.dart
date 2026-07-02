@@ -2,6 +2,7 @@ import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
 import 'package:ai_life_legacy/app/core/theme/app_theme.dart';
 import 'package:ai_life_legacy/app/core/theme/widgets/animated_mascot.dart';
 import 'package:ai_life_legacy/app/core/theme/widgets/mascot_flow_widgets.dart';
+import 'package:ai_life_legacy/app/core/utils/safe_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -67,7 +68,7 @@ class _SearchPageState extends State<SearchPage> {
                   mood: hasQuery ? MascotMood.thinking : MascotMood.listening,
                   trailing: IconButton(
                     tooltip: '닫기',
-                    onPressed: Get.back,
+                    onPressed: () => SafeNavigation.back(context),
                     icon: const Icon(
                       Icons.close_rounded,
                       color: MascotFlowTheme.textMuted,
@@ -151,6 +152,8 @@ class _SearchHeader extends StatelessWidget {
                       decoration: const InputDecoration(
                         hintText: '기억을 검색해보세요',
                         hintStyle: TextStyle(color: MascotFlowTheme.textMuted),
+                        filled: false,
+                        fillColor: Colors.transparent,
                         border: InputBorder.none,
                         enabledBorder: InputBorder.none,
                         focusedBorder: InputBorder.none,
@@ -180,7 +183,7 @@ class _SearchHeader extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           TextButton(
-            onPressed: Get.back,
+            onPressed: () => SafeNavigation.back(context),
             child: const Text(
               '취소',
               style: TextStyle(

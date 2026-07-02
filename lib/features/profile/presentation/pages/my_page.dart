@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
 import 'package:ai_life_legacy/app/core/theme/app_theme.dart';
+import 'package:ai_life_legacy/app/core/utils/safe_navigation.dart';
 import 'package:ai_life_legacy/features/profile/presentation/controllers/my_page_controller.dart';
 
 class MyPage extends GetView<MyPageController> {
@@ -18,7 +20,7 @@ class MyPage extends GetView<MyPageController> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new,
               size: 20, color: AppTheme.text),
-          onPressed: () => Get.back(),
+          onPressed: () => SafeNavigation.back(context, fallbackRoute: Routes.home),
         ),
       ),
       body: ListView(
@@ -194,7 +196,7 @@ class MyPage extends GetView<MyPageController> {
               content: const Text('준비 중입니다.'),
               actions: [
                 TextButton(
-                    onPressed: () => Get.back(),
+                    onPressed: () => SafeNavigation.closeDialog(context),
                     child:
                         const Text('확인', style: TextStyle(color: AppTheme.cta)))
               ],
@@ -279,12 +281,12 @@ class MyPage extends GetView<MyPageController> {
         content: const Text('현재 계정에서 로그아웃됩니다.'),
         actions: [
           TextButton(
-            onPressed: () => Get.back(),
+            onPressed: () => SafeNavigation.closeDialog(context),
             child: const Text('취소', style: TextStyle(color: AppTheme.textSec)),
           ),
           TextButton(
             onPressed: () {
-              Get.back();
+              SafeNavigation.closeDialog(context);
               controller.logout();
             },
             child: const Text('로그아웃',
@@ -324,7 +326,9 @@ class MyPage extends GetView<MyPageController> {
             ),
             actions: [
               TextButton(
-                onPressed: controller.isLoading.value ? null : () => Get.back(),
+                onPressed: controller.isLoading.value
+                    ? null
+                    : () => SafeNavigation.closeDialog(context),
                 child:
                     const Text('취소', style: TextStyle(color: AppTheme.textSec)),
               ),

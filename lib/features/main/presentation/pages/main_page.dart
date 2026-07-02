@@ -1,4 +1,5 @@
 import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
+import 'package:ai_life_legacy/app/core/theme/app_theme.dart';
 import 'package:ai_life_legacy/app/core/theme/widgets/animated_mascot.dart';
 import 'package:ai_life_legacy/app/core/theme/widgets/mascot_flow_widgets.dart';
 import 'package:flutter/material.dart';
@@ -10,42 +11,30 @@ class MainPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MascotScaffold(
+      padding: EdgeInsets.zero,
       bottom: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 22),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 22),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             FlowPrimaryButton(
-              text: '오늘의 기억 시작하기',
+              text: '내 기록 시작하기',
               onPressed: () => Get.toNamed(Routes.signup),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
             Row(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                TextButton(
-                  onPressed: () => Get.toNamed(Routes.login),
-                  child: const Text(
-                    '로그인',
-                    style: TextStyle(
-                      color: MascotFlowTheme.textMuted,
-                      fontWeight: FontWeight.w800,
-                    ),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Get.toNamed(Routes.login),
+                    child: const Text('로그인'),
                   ),
                 ),
-                Container(
-                  width: 1,
-                  height: 14,
-                  color: MascotFlowTheme.border,
-                ),
-                TextButton(
-                  onPressed: () => Get.toNamed(Routes.viewerEntry),
-                  child: const Text(
-                    '뷰어 코드 입력',
-                    style: TextStyle(
-                      color: MascotFlowTheme.textMuted,
-                      fontWeight: FontWeight.w800,
-                    ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Get.toNamed(Routes.viewerEntry),
+                    child: const Text('공유 코드 입력'),
                   ),
                 ),
               ],
@@ -53,70 +42,132 @@ class MainPage extends StatelessWidget {
           ],
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
         children: [
-          const SizedBox(height: 10),
           Row(
             children: [
-              const Text(
-                'Life Legacy',
-                style: TextStyle(
-                  color: MascotFlowTheme.text,
-                  fontSize: 19,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
+              Container(width: 32, height: 10, color: AppTheme.coral),
+              const SizedBox(width: 8),
+              Container(width: 18, height: 18, color: AppTheme.sun),
               const Spacer(),
               IconButton(
+                tooltip: '로그인',
                 onPressed: () => Get.toNamed(Routes.login),
-                icon: const Icon(
-                  Icons.person_outline,
-                  color: MascotFlowTheme.textMuted,
-                ),
+                icon: const Icon(Icons.person_outline_rounded),
               ),
             ],
           ),
-          const Spacer(),
-          const Center(child: AnimatedMascot(size: 188)),
-          const SizedBox(height: 30),
+          const SizedBox(height: 36),
           const Text(
-            '질문 하나씩,\n내 인생책이 열려요',
-            textAlign: TextAlign.center,
+            'Life Legacy',
             style: TextStyle(
-              color: MascotFlowTheme.text,
-              fontSize: 30,
-              height: 1.18,
+              color: AppTheme.text,
+              fontSize: 48,
+              height: 0.95,
               fontWeight: FontWeight.w900,
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
           const Text(
-            '길게 쓰지 않아도 괜찮아요.\n오늘의 기억만 짧게 남기면 됩니다.',
-            textAlign: TextAlign.center,
+            '질문을 따라가며 기억을 정리하고, 완성된 기록은 책처럼 보관합니다.',
             style: TextStyle(
-              color: MascotFlowTheme.textMuted,
-              fontSize: 15,
+              color: AppTheme.textSec,
+              fontSize: 16,
               height: 1.5,
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 34),
+          const SizedBox(height: 30),
+          Container(
+            height: 240,
+            decoration: BoxDecoration(
+              color: AppTheme.surface,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppTheme.text, width: 1.4),
+            ),
+            child: Stack(
+              children: const [
+                Positioned(
+                  left: 18,
+                  top: 18,
+                  child: _ColorTile(color: AppTheme.sky, width: 88, height: 88),
+                ),
+                Positioned(
+                  left: 118,
+                  top: 18,
+                  child: _ColorTile(color: AppTheme.cta, width: 128, height: 54),
+                ),
+                Positioned(
+                  right: 18,
+                  top: 18,
+                  child:
+                      _ColorTile(color: AppTheme.coral, width: 68, height: 130),
+                ),
+                Positioned(
+                  left: 30,
+                  bottom: 22,
+                  child: _ColorTile(color: AppTheme.sun, width: 150, height: 74),
+                ),
+                Positioned(
+                  right: 92,
+                  bottom: 22,
+                  child:
+                      _ColorTile(color: AppTheme.lavender, width: 74, height: 74),
+                ),
+                Positioned(
+                  right: 20,
+                  bottom: 20,
+                  child: AnimatedMascot(size: 92, mood: MascotMood.thinking),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 28),
           FlowOptionCard(
-            icon: Icons.chat_bubble_outline,
-            title: '마스코트가 질문을 던져요',
-            subtitle: '대답하면 다음 기억으로 자연스럽게 이어집니다.',
+            icon: Icons.route_rounded,
+            title: '짧은 자기소개로 구조 만들기',
+            subtitle: '앱이 목차를 만들고, 이후 질문 화면으로 자연스럽게 이어집니다.',
             selected: true,
             onTap: () => Get.toNamed(Routes.signup),
           ),
           FlowOptionCard(
-            icon: Icons.auto_stories_outlined,
-            title: '챕터가 하나씩 완성돼요',
-            subtitle: '진행 경로를 따라 내 이야기가 책처럼 쌓입니다.',
+            icon: Icons.forum_outlined,
+            title: '질문 단위로 기록하기',
+            subtitle: '한 번에 긴 글을 쓰지 않고 장면별 답변을 쌓습니다.',
             onTap: () => Get.toNamed(Routes.signup),
           ),
-          const Spacer(),
+          FlowOptionCard(
+            icon: Icons.ios_share_rounded,
+            title: '가족에게 공유하기',
+            subtitle: '완성 후 공유 코드로 읽기와 대화를 이어갈 수 있습니다.',
+            onTap: () => Get.toNamed(Routes.viewerEntry),
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class _ColorTile extends StatelessWidget {
+  final Color color;
+  final double width;
+  final double height;
+
+  const _ColorTile({
+    required this.color,
+    required this.width,
+    required this.height,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(8),
       ),
     );
   }
