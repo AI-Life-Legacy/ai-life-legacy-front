@@ -278,7 +278,12 @@ class SelfIntroController extends GetxController {
     if (currentTocId != null) {
       // Chapter mode finish
       debugPrint('[SelfIntroController] 작성이 완료되었습니다.');
-      Get.back(); // Return to Home
+      final navigator = Get.key.currentState;
+      if (navigator?.canPop() == true) {
+        navigator!.pop();
+      } else {
+        Get.offAllNamed('/home');
+      }
       return;
     }
 

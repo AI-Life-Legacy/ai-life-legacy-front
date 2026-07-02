@@ -254,14 +254,30 @@ class _ProfileFields extends StatelessWidget {
           icon: Icons.person_outline,
           textInputAction: TextInputAction.next,
         ),
-        const SizedBox(height: 12),
-        _ProfileTextField(
-          controller: controller.ageController,
-          label: '나이',
-          hintText: '예: 25',
-          icon: Icons.cake_outlined,
-          keyboardType: TextInputType.number,
-          textInputAction: TextInputAction.done,
+        const SizedBox(height: 18),
+        _AgePicker(controller: controller),
+        const SizedBox(height: 18),
+        const Text(
+          '성별',
+          style: TextStyle(
+            color: MascotFlowTheme.text,
+            fontSize: 15,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Obx(
+          () => Column(
+            children: controller.genderOptions.map((option) {
+              return FlowOptionCard(
+                icon: option.icon,
+                title: option.label,
+                subtitle: option.subtitle,
+                selected: controller.selectedGender.value == option.label,
+                onTap: () => controller.selectGender(option.label),
+              );
+            }).toList(),
+          ),
         ),
         const SizedBox(height: 18),
         const Text(
@@ -287,6 +303,185 @@ class _ProfileFields extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _AgePicker extends StatelessWidget {
+  final OnboardingController controller;
+
+  const _AgePicker({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<TextEditingValue>(
+      valueListenable: controller.ageController,
+      builder: (context, value, _) {
+        final age = int.tryParse(value.text.trim());
+
+        return Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: MascotFlowTheme.bg,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: MascotFlowTheme.border, width: 2),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Row(
+                children: [
+                  Icon(
+                    Icons.cake_outlined,
+                    color: MascotFlowTheme.active,
+                    size: 20,
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    '나이',
+                    style: TextStyle(
+                      color: MascotFlowTheme.text,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  _AgeButton(
+                    icon: Icons.remove_rounded,
+                    onTap: () => controller.adjustAge(-1),
+                  ),
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        age == null ? '선택' : '$age세',
+                        style: const TextStyle(
+                          color: MascotFlowTheme.text,
+                          fontSize: 34,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ),
+                  _AgeButton(
+                    icon: Icons.add_rounded,
+                    onTap: () => controller.adjustAge(1),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _AgeQuickChip(
+                    label: '10대',
+                    selected: age != null && age >= 10 && age < 20,
+                    onTap: () => controller.setAge(18),
+                  ),
+                  _AgeQuickChip(
+                    label: '20대',
+                    selected: age != null && age >= 20 && age < 30,
+                    onTap: () => controller.setAge(25),
+                  ),
+                  _AgeQuickChip(
+                    label: '30대',
+                    selected: age != null && age >= 30 && age < 40,
+                    onTap: () => controller.setAge(35),
+                  ),
+                  _AgeQuickChip(
+                    label: '40대',
+                    selected: age != null && age >= 40 && age < 50,
+                    onTap: () => controller.setAge(45),
+                  ),
+                  _AgeQuickChip(
+                    label: '50대',
+                    selected: age != null && age >= 50 && age < 60,
+                    onTap: () => controller.setAge(55),
+                  ),
+                  _AgeQuickChip(
+                    label: '60대+',
+                    selected: age != null && age >= 60,
+                    onTap: () => controller.setAge(65),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _AgeButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _AgeButton({
+    required this.icon,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: const Color(0xFF0B171C),
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: SizedBox(
+          width: 52,
+          height: 52,
+          child: Icon(icon, color: MascotFlowTheme.active, size: 28),
+        ),
+      ),
+    );
+  }
+}
+
+class _AgeQuickChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _AgeQuickChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected ? MascotFlowTheme.active : MascotFlowTheme.surface,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: selected ? const Color(0xFF0B171C) : MascotFlowTheme.border,
+              width: 2,
+            ),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: selected ? Colors.white : MascotFlowTheme.text,
+              fontSize: 13,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -371,14 +566,24 @@ class _TocPreview extends StatelessWidget {
               ),
               SizedBox(width: 8),
               Text(
-                '추천 목차 미리보기',
+                '예상 목차 미리보기',
                 style: TextStyle(
-                  color: MascotFlowTheme.text,
+                  color: Colors.white,
                   fontSize: 15,
                   fontWeight: FontWeight.w900,
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            '아래 번호는 질문 번호가 아니라 완성될 자서전의 장 순서예요.',
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 12,
+              height: 1.45,
+              fontWeight: FontWeight.w700,
+            ),
           ),
           const SizedBox(height: 12),
           ...chapters.asMap().entries.map((entry) {
@@ -413,7 +618,7 @@ class _TocPreview extends StatelessWidget {
                     child: Text(
                       entry.value,
                       style: const TextStyle(
-                        color: MascotFlowTheme.text,
+                        color: Colors.white,
                         fontSize: 14,
                         height: 1.35,
                         fontWeight: FontWeight.w800,
@@ -464,7 +669,6 @@ class _ProfileTextField extends StatelessWidget {
   final String label;
   final String hintText;
   final IconData icon;
-  final TextInputType? keyboardType;
   final TextInputAction? textInputAction;
 
   const _ProfileTextField({
@@ -472,7 +676,6 @@ class _ProfileTextField extends StatelessWidget {
     required this.label,
     required this.hintText,
     required this.icon,
-    this.keyboardType,
     this.textInputAction,
   });
 
@@ -480,7 +683,6 @@ class _ProfileTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextField(
       controller: controller,
-      keyboardType: keyboardType,
       textInputAction: textInputAction,
       style: const TextStyle(
         color: MascotFlowTheme.text,

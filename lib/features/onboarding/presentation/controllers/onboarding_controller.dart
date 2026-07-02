@@ -4,6 +4,7 @@ import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
 import 'package:ai_life_legacy/features/onboarding/data/onboarding_api.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:speech_to_text/speech_recognition_error.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
@@ -28,6 +29,7 @@ class OnboardingController extends GetxController {
   final q2Controller = TextEditingController();
   final q3Controller = TextEditingController();
   final q4Controller = TextEditingController();
+  final selectedGender = ''.obs;
   final selectedLifeStage = '학생'.obs;
   final selectedPurposeIds = <String>[].obs;
   final selectedStyleId = 'detailed'.obs;
@@ -67,6 +69,27 @@ class OnboardingController extends GetxController {
           label: '기타',
           subtitle: '현재 상황을 특정하지 않고 폭넓은 질문으로 시작해요.',
           icon: Icons.person_outline,
+        ),
+      ];
+
+  List<OnboardingChoice> get genderOptions => const [
+        OnboardingChoice(
+          id: 'male',
+          label: '남성',
+          subtitle: '아바타 호칭을 형, 누나처럼 자연스럽게 맞춰요.',
+          icon: Icons.male_rounded,
+        ),
+        OnboardingChoice(
+          id: 'female',
+          label: '여성',
+          subtitle: '아바타 호칭을 오빠, 언니처럼 자연스럽게 맞춰요.',
+          icon: Icons.female_rounded,
+        ),
+        OnboardingChoice(
+          id: 'unspecified',
+          label: '선택 안 함',
+          subtitle: '성별 호칭이 들어간 아바타 톤은 숨겨둘게요.',
+          icon: Icons.person_outline_rounded,
         ),
       ];
 
@@ -166,7 +189,7 @@ class OnboardingController extends GetxController {
   String get currentDescription {
     switch (currentStep.value) {
       case 1:
-        return '이름과 나이, 현재 상태를 따로 받아서 이후 목차와 질문을 더 잘 맞출게요.';
+        return '이름, 나이, 성별, 현재 상태를 받아서 목차와 아바타 호칭을 더 자연스럽게 맞출게요.';
       case 2:
         return '직접 쓰지 않아도 괜찮아요. 원하는 목적을 버튼으로 골라주세요. 여러 개 선택할 수 있어요.';
       case 3:
@@ -376,6 +399,7 @@ class OnboardingController extends GetxController {
   String _combineAnswers() {
     final name = nameController.text.trim();
     final age = ageController.text.trim();
+    final gender = selectedGender.value;
     final purposes = selectedPurposeLabels.join(', ');
     final style = selectedStyleLabel;
     final tocPlan = personalizedTocPlan
@@ -391,6 +415,7 @@ class OnboardingController extends GetxController {
     return '''기본 정보:
 이름: $name
 나이: $age
+성별: $gender
 현재 상태: ${selectedLifeStage.value}
 자서전 제작 목적: $purposes
 원하는 결과물 스타일: $style
@@ -421,11 +446,12 @@ $a4''';
 
     if (name.isEmpty ||
         age.isEmpty ||
+        selectedGender.value.isEmpty ||
         selectedPurposeIds.isEmpty ||
         selectedStyleId.value.isEmpty) {
       Get.snackbar(
         '알림',
-        '이름, 나이, 제작 목적을 먼저 선택해주세요.',
+        '이름, 나이, 성별, 제작 목적을 먼저 선택해주세요.',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.black87,
         colorText: Colors.white,
@@ -449,6 +475,7 @@ $a4''';
 
     try {
       final combinedText = _combineAnswers();
+      await _saveProfileSelections();
 
       debugPrint('[OnboardingController] Saving intro...');
       final introResponse = await _onboardingApi.saveIntro(combinedText);
@@ -560,7 +587,7 @@ $a4''';
 
   String get headerMessage {
     if (isProfileStep) {
-      return '먼저 이름과 나이를 알려주면 목차를 더 알맞게 준비할 수 있어요.';
+      return '먼저 기본 정보를 터치로 고르면 목차와 아바타 톤을 더 알맞게 준비할 수 있어요.';
     }
     if (isPurposeStep) {
       return '자서전 목적은 직접 쓰지 말고 버튼으로 골라주세요.';
@@ -573,6 +600,35 @@ $a4''';
 
   void selectLifeStage(String label) {
     selectedLifeStage.value = label;
+  }
+
+  void selectGender(String label) {
+    selectedGender.value = label;
+  }
+
+  void setAge(int age) {
+    final safeAge = age.clamp(1, 120);
+    ageController.text = safeAge.toString();
+    ageController.selection = TextSelection.collapsed(
+      offset: ageController.text.length,
+    );
+  }
+
+  void adjustAge(int delta) {
+    final current = int.tryParse(ageController.text.trim()) ?? 30;
+    setAge(current + delta);
+  }
+
+  Future<void> _saveProfileSelections() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('author_gender', selectedGender.value);
+      await prefs.setString('author_age', ageController.text.trim());
+      await prefs.setString('author_name', nameController.text.trim());
+      await prefs.setString('author_life_stage', selectedLifeStage.value);
+    } catch (_) {
+      // Profile hints are only used for local personalization.
+    }
   }
 
   void togglePurpose(String id) {
@@ -591,10 +647,10 @@ $a4''';
     if (isProfileStep) {
       final name = nameController.text.trim();
       final age = ageController.text.trim();
-      if (name.isEmpty || age.isEmpty) {
+      if (name.isEmpty || age.isEmpty || selectedGender.value.isEmpty) {
         Get.snackbar(
           '알림',
-          '이름과 나이를 입력해주세요.',
+          '이름, 나이, 성별을 선택해주세요.',
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: Colors.black87,
           colorText: Colors.white,
