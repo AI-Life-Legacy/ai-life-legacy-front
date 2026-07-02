@@ -25,6 +25,8 @@ class SelfIntroController extends GetxController {
   final RxBool isRecording = false.obs;
   final RxInt recordingSeconds = 0.obs;
   Timer? recordingTimer;
+  final RxBool isVoiceRecorderVisible =
+      false.obs; // UI State: Voice Recorder Toggle
 
   // UI State: 채팅 메시지 리스트 및 스크롤 제어
   final RxList<ChatMessage> messages = <ChatMessage>[].obs;
@@ -38,8 +40,8 @@ class SelfIntroController extends GetxController {
   final Rx<AnswerPhase> answerPhase = AnswerPhase.primary.obs;
   final RxBool loading = false.obs;
   final RxString errorMessage = ''.obs;
+  final RxBool canThinkDeeper = false.obs;
   String? _pendingPrimaryAnswer;
-  String? _pendingFollowUpQuestion;
   final StringBuffer _accumulatedAnswers = StringBuffer();
 
   @override
@@ -64,16 +66,17 @@ class SelfIntroController extends GetxController {
 
     try {
       if (currentTocId != null) {
-        print('[SelfIntro] Loading questions for TOC ID: $currentTocId');
+        debugPrint('[SelfIntro] Loading questions for TOC ID: $currentTocId');
         // Chapter Mode: 특정 목차(Chapter)에 대한 질문 목록을 서버에서 가져옵니다.
         final result = await postRepo.getQuestions(currentTocId!);
-        print('[SelfIntro] Questions fetched: ${result.data.length} items');
+        debugPrint(
+            '[SelfIntro] Questions fetched: ${result.data.length} items');
         // Convert to QuestionDto for compatibility if needed, or update the list type
         questions.assignAll(result.data
             .map((e) => QuestionDto(id: e.id, questionText: e.question)));
-        print('[SelfIntro] Questions assigned: ${questions.length} items');
+        debugPrint('[SelfIntro] Questions assigned: ${questions.length} items');
       } else {
-        print('[SelfIntro] Loading default question (Onboarding Mode)');
+        debugPrint('[SelfIntro] Loading default question (Onboarding Mode)');
         // Onboarding Mode: 신규 사용자를 위한 기본 자기소개 질문을 로드합니다.
         questions.assignAll([
           QuestionDto(
@@ -85,12 +88,12 @@ class SelfIntroController extends GetxController {
       if (questions.isNotEmpty) {
         addMessage(questions.first.questionText, isUser: false);
       } else {
-        print('[SelfIntro] Questions list is empty!');
+        debugPrint('[SelfIntro] Questions list is empty!');
         addMessage('질문을 불러올 수 없습니다.', isUser: false);
       }
     } catch (e, stack) {
-      print('[SelfIntro] Error loading questions: $e');
-      print(stack);
+      debugPrint('[SelfIntro] Error loading questions: $e');
+      debugPrint(stack.toString());
       errorMessage.value = e.toString();
       addMessage('오류 발생: $e', isUser: false);
     } finally {
@@ -105,7 +108,7 @@ class SelfIntroController extends GetxController {
     final text = textController.text.trim();
     if (text.isEmpty) return;
 
-    print('[SelfIntro] User submitting answer: $text');
+    debugPrint('[SelfIntro] User submitting answer: $text');
     addMessage(text);
     clearText();
     await _handleUserAnswer(text);
@@ -114,7 +117,7 @@ class SelfIntroController extends GetxController {
   Future<void> _handleUserAnswer(String answer) async {
     if (questions.isEmpty) return;
     if (currentQuestionIndex.value >= questions.length) {
-      print(
+      debugPrint(
           '[SelfIntro] All questions answered (index ${currentQuestionIndex.value} >= ${questions.length})');
       addMessage('모든 질문에 답변하셨습니다!', isUser: false);
       return;
@@ -123,7 +126,7 @@ class SelfIntroController extends GetxController {
     loading.value = true;
     errorMessage.value = '';
     final currentQuestion = questions[currentQuestionIndex.value];
-    print(
+    debugPrint(
         '[SelfIntro] Handling answer for Q${currentQuestionIndex.value} (Phase: ${answerPhase.value})');
 
     try {
@@ -133,7 +136,7 @@ class SelfIntroController extends GetxController {
         await _handleFollowUpAnswer(currentQuestion, answer);
       }
     } catch (e) {
-      print('[SelfIntro] Error handling answer: $e');
+      debugPrint('[SelfIntro] Error handling answer: $e');
       errorMessage.value = e.toString();
     } finally {
       loading.value = false;
@@ -146,30 +149,62 @@ class SelfIntroController extends GetxController {
   ) async {
     _pendingPrimaryAnswer = answer;
     try {
-      // 1차 답변 후, AI를 통해 2차 질문(꼬리질문)을 생성합니다.
-      final aiResponse = await aiRepo.makeReQuestion(
-        MakeReQuestionDto(
+      // 1. 답변을 AI 서버에 동기화 (실패해도 조용히 진행)
+      await aiRepo.sync(AiSyncRequestDto(content: answer));
+    } catch (e) {
+      debugPrint('[SelfIntro] AI Sync failed: $e');
+    }
+
+    // 2. 무조건 수동 트리거 버튼 노출 (사용자가 더 깊게 생각할지, 다음으로 넘길지 선택)
+    canThinkDeeper.value = true;
+    _scrollToBottom();
+  }
+
+  /// AI 꼬리질문 생성 (수동 트리거)
+  Future<void> generateFollowUpQuestion() async {
+    if (questions.isEmpty || currentQuestionIndex.value >= questions.length) {
+      return;
+    }
+    final question = questions[currentQuestionIndex.value];
+    final answer = _pendingPrimaryAnswer;
+    if (answer == null) return;
+
+    loading.value = true;
+    canThinkDeeper.value = false;
+
+    try {
+      final aiResponse = await aiRepo.getQuestion(
+        AiQuestionRequestDto(
           question: question.questionText,
           data: answer,
         ),
       );
-      final followUp = aiResponse.data.content.trim();
+      final followUp = aiResponse.data.message.trim();
       if (followUp.isEmpty) {
         await _persistAnswer(question, answer);
-        _resetPendingState();
         _moveToNextQuestion();
         return;
       }
-      _pendingFollowUpQuestion = followUp;
       answerPhase.value = AnswerPhase.followUp;
       addMessage(followUp, isUser: false);
     } catch (e) {
       errorMessage.value = e.toString();
-      // 오류 시 그냥 답변 저장하고 다음으로
       await _persistAnswer(question, answer);
-      _resetPendingState();
       _moveToNextQuestion();
+    } finally {
+      loading.value = false;
     }
+  }
+
+  /// 꼬리질문 없이 다음으로 이동
+  Future<void> skipFollowUp() async {
+    final question = questions[currentQuestionIndex.value];
+    final answer = _pendingPrimaryAnswer;
+    if (answer != null) {
+      await _persistAnswer(question, answer);
+    }
+    canThinkDeeper.value = false;
+    _moveToNextQuestion();
   }
 
   Future<void> _handleFollowUpAnswer(
@@ -177,9 +212,7 @@ class SelfIntroController extends GetxController {
     String answer,
   ) async {
     final primary = _pendingPrimaryAnswer;
-    final followUpQuestion = _pendingFollowUpQuestion;
-
-    if (primary == null || followUpQuestion == null) {
+    if (primary == null) {
       await _persistAnswer(question, answer);
       _resetPendingState();
       answerPhase.value = AnswerPhase.primary;
@@ -187,26 +220,17 @@ class SelfIntroController extends GetxController {
       return;
     }
 
-    String finalAnswer = answer;
     try {
-      final combineRes = await aiRepo.combine(
-        CombineDto(
-          question1: question.questionText,
-          data1: primary,
-          question2: followUpQuestion,
-          data2: answer,
-        ),
-      );
-      final combined = combineRes.data.content.trim();
-      if (combined.isNotEmpty) {
-        finalAnswer = combined;
-      }
+      // 2차 답변도 AI 서버에 동기화
+      await aiRepo.sync(AiSyncRequestDto(content: answer));
     } catch (e) {
       errorMessage.value = e.toString();
     }
 
-    await _persistAnswer(question, finalAnswer);
-    addMessage(finalAnswer, isUser: false);
+    // 기존 로컬 저장용으로 답변 병합 (백엔드 combine 대신 프론트에서 단순 결합하여 저장)
+    final combinedAnswer = "$primary\n추가 답변: $answer";
+    await _persistAnswer(question, combinedAnswer);
+    addMessage(combinedAnswer, isUser: false);
     _resetPendingState();
     answerPhase.value = AnswerPhase.primary;
     _moveToNextQuestion();
@@ -214,6 +238,8 @@ class SelfIntroController extends GetxController {
 
   void _moveToNextQuestion() {
     if (questions.isEmpty) return;
+    canThinkDeeper.value = false;
+    _resetPendingState();
 
     if (currentQuestionIndex.value < questions.length - 1) {
       currentQuestionIndex.value++;
@@ -251,8 +277,13 @@ class SelfIntroController extends GetxController {
   Future<void> _finalizeSelfIntro() async {
     if (currentTocId != null) {
       // Chapter mode finish
-      Get.snackbar('완료', '작성이 완료되었습니다.');
-      Get.back(); // Return to Home
+      debugPrint('[SelfIntroController] 작성이 완료되었습니다.');
+      final navigator = Get.key.currentState;
+      if (navigator?.canPop() == true) {
+        navigator!.pop();
+      } else {
+        Get.offAllNamed('/home');
+      }
       return;
     }
 
@@ -260,24 +291,25 @@ class SelfIntroController extends GetxController {
     loading.value = true;
     try {
       final fullText = _accumulatedAnswers.toString().trim();
-      print(
+      debugPrint(
           '[SelfIntro] Finalizing... User Answers Length: ${fullText.length}');
+      // 1. 답변을 분석하여 유저 케이스를 생성
       addMessage('답변을 분석하여 유저 케이스를 생성 중입니다...', isUser: false);
+      final caseResponse =
+          await aiRepo.getCase(AiCaseRequestDto(data: fullText));
+      final userCase = caseResponse.data.caseName;
+      debugPrint('[SelfIntro] Determined User Case: $userCase');
 
-      // 백엔드에 자기소개 저장 및 케이스 생성 요청 (반환값 없음)
-      print('[SelfIntro] Saving User Intro to Backend...');
-      await userRepo.saveSelfIntro(UserIntroDto(userIntroText: fullText));
-      print(
-          '[SelfIntro] User Intro Saved. Backend will determine UserCase internally.');
+      // 2. 백엔드에 자기소개 및 케이스 저장
+      await userRepo.saveSelfIntro(UserIntroDto(
+        userIntroText: fullText,
+      ));
 
       // 3. 홈으로 이동
-      print('[SelfIntro] Redirecting to Home...');
-      Get.offAllNamed(Routes.home);
+      debugPrint('[SelfIntro] Redirecting to Home...');
+      Get.offAllNamed(Routes.home, arguments: {'userCase': userCase});
     } catch (e) {
-      print('[SelfIntro] Error during finalization: $e');
-      if (e is Error) {
-        print('[SelfIntro] StackTrace: ${e.stackTrace}');
-      }
+      debugPrint('[SelfIntro] Error during finalization: $e');
       errorMessage.value = e.toString();
       addMessage('마무리 중 오류가 발생했습니다: $e', isUser: false);
     } finally {
@@ -287,7 +319,6 @@ class SelfIntroController extends GetxController {
 
   void _resetPendingState() {
     _pendingPrimaryAnswer = null;
-    _pendingFollowUpQuestion = null;
   }
 
   String get currentQuestionText {
@@ -369,6 +400,10 @@ class SelfIntroController extends GetxController {
 
   void clearText() {
     textController.clear();
+  }
+
+  void toggleVoiceRecorderVisible() {
+    isVoiceRecorderVisible.value = !isVoiceRecorderVisible.value;
   }
 }
 

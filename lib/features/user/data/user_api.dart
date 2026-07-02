@@ -1,6 +1,6 @@
-/// 사용자(User) 관련 API 호출을 담당하는 클래스
-/// - 자기소개 저장, 목차 조회, 답변 조회/수정, 회원탈퇴 등
+library;
 
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:ai_life_legacy/app/core/network/dio_client.dart';
 import 'package:ai_life_legacy/app/core/network/api_endpoints.dart';
@@ -60,7 +60,20 @@ class UserApi {
     );
     return SuccessResponse<UserAnswerDto>.fromJson(
       response.data,
-      (json) => UserAnswerDto.fromJson(json as Map<String, dynamic>),
+      (json) {
+        if (json == null || json is String) {
+          throw DioException(
+            requestOptions: RequestOptions(path: ApiEndpoints.userAnswers),
+            response: Response(
+              requestOptions: RequestOptions(path: ApiEndpoints.userAnswers),
+              statusCode: 404,
+              statusMessage: 'Not Found',
+            ),
+            type: DioExceptionType.badResponse,
+          );
+        }
+        return UserAnswerDto.fromJson(json as Map<String, dynamic>);
+      },
     );
   }
 
@@ -69,12 +82,12 @@ class UserApi {
     int answerId,
     AnswerUpdateDto dto,
   ) async {
-    print('[UserApi] updateAnswer payload: ${dto.toJson()}');
+    debugPrint('[UserApi] updateAnswer payload: ${dto.toJson()}');
     final response = await _dio.patch(
       ApiEndpoints.userAnswerUpdate(answerId),
       data: dto.toJson(),
     );
-    print('[UserApi] updateAnswer response: ${response.statusCode}');
+    debugPrint('[UserApi] updateAnswer response: ${response.statusCode}');
     return SuccessResponse<void>.fromJson(
       response.data,
       (_) {},

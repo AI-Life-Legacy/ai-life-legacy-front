@@ -1,4 +1,5 @@
 /// 인증 관련 요청/응답 DTO 정의
+library;
 
 /// 회원가입/로그인 요청 DTO
 class AuthCredentialsDto {

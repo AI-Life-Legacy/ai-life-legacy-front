@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 // 사용자 관련 DTO 모델
 
 /// 사용자 목차(TOC) 정보를 담는 DTO
@@ -115,7 +116,8 @@ class TocQuestionDto {
   factory TocQuestionDto.fromJson(Map<String, dynamic> json) {
     final q = json['question'] ?? json['questionText'];
     if (q == null) {
-      print('[TocQuestionDto] Warning: Missing question text in json: $json');
+      debugPrint(
+          '[TocQuestionDto] Warning: Missing question text in json: $json');
     }
     return TocQuestionDto(
       id: json['id'] as int? ?? 0,
