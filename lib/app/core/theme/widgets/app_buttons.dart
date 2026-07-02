@@ -22,27 +22,23 @@ class PrimaryButton extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       height: height,
-      child: GestureDetector(
-        onTap: (disabled || onPressed == null) ? null : onPressed,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 120),
-          decoration: BoxDecoration(
-            color: disabled ? AppTheme.border : AppTheme.cta,
-            borderRadius: BorderRadius.circular(14),
-            border: Border(
-              bottom: BorderSide(
-                color: disabled ? AppTheme.textPh : AppTheme.ctaDark,
-                width: 4,
-              ),
-            ),
+      child: ElevatedButton(
+        onPressed: (disabled || onPressed == null) ? null : onPressed,
+        style: ElevatedButton.styleFrom(
+          elevation: 0,
+          shadowColor: Colors.transparent,
+          backgroundColor: AppTheme.cta,
+          disabledBackgroundColor: AppTheme.border,
+          foregroundColor: const Color(0xFF05110D),
+          disabledForegroundColor: AppTheme.textPh,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
           ),
-          padding: const EdgeInsets.only(bottom: 3),
-          alignment: Alignment.center,
-          child: _ButtonContent(
-            text: text,
-            icon: icon,
-            color: Colors.white,
-          ),
+        ),
+        child: _ButtonContent(
+          text: text,
+          icon: icon,
+          color: disabled ? AppTheme.textPh : const Color(0xFF05110D),
         ),
       ),
     );
@@ -68,26 +64,19 @@ class SecondaryButton extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       height: height,
-      child: GestureDetector(
-        onTap: onPressed,
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppTheme.surface,
-            borderRadius: BorderRadius.circular(14),
-            border: const Border(
-              top: BorderSide(color: AppTheme.border, width: 2),
-              left: BorderSide(color: AppTheme.border, width: 2),
-              right: BorderSide(color: AppTheme.border, width: 2),
-              bottom: BorderSide(color: AppTheme.border, width: 4),
-            ),
+      child: OutlinedButton(
+        onPressed: onPressed,
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppTheme.text,
+          side: const BorderSide(color: AppTheme.border, width: 1),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
           ),
-          padding: const EdgeInsets.only(bottom: 2),
-          alignment: Alignment.center,
-          child: _ButtonContent(
-            text: text,
-            icon: icon,
-            color: AppTheme.text,
-          ),
+        ),
+        child: _ButtonContent(
+          text: text,
+          icon: icon,
+          color: AppTheme.text,
         ),
       ),
     );
@@ -120,7 +109,7 @@ class _ButtonContent extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 15,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w700,
               color: color,
             ),
           ),

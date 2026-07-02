@@ -23,7 +23,7 @@ class AIQuestionCard extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        border: Border.all(color: AppTheme.border, width: 2),
+        border: Border.all(color: AppTheme.border, width: 1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -31,22 +31,14 @@ class AIQuestionCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Container(
-                width: 4,
-                height: 4,
-                decoration: const BoxDecoration(
-                  color: AppTheme.cta,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 6),
+              Container(width: 18, height: 4, color: AppTheme.cta),
+              const SizedBox(width: 8),
               Text(
                 label,
                 style: const TextStyle(
                   fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                  color: AppTheme.cta,
-                  letterSpacing: 0.1,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.ctaDark,
                 ),
               ),
             ],
@@ -59,7 +51,7 @@ class AIQuestionCard extends StatelessWidget {
                 text,
                 style: const TextStyle(
                   fontSize: 17,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
                   color: AppTheme.text,
                   height: 1.5,
                 ),
@@ -75,10 +67,7 @@ class AIQuestionCard extends StatelessWidget {
                 children: [
                   const Icon(Icons.volume_up, size: 14, color: AppTheme.textPh),
                   const SizedBox(width: 4),
-                  Text(
-                    '다시 듣기',
-                    style: AppTextStyles.caption,
-                  ),
+                  Text('다시 듣기', style: AppTextStyles.caption),
                 ],
               ),
             ),
@@ -107,23 +96,19 @@ class AIBubble extends StatelessWidget {
         Flexible(
           child: Container(
             constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.78),
-            margin: const EdgeInsets.only(bottom: 2),
+              maxWidth: MediaQuery.of(context).size.width * 0.78,
+            ),
+            margin: const EdgeInsets.only(bottom: 8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
                   decoration: BoxDecoration(
-                    color: AppTheme.bgAlt,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(8),
-                      topRight: Radius.circular(8),
-                      bottomRight: Radius.circular(8),
-                      bottomLeft: Radius.circular(2),
-                    ),
-                    border: Border.all(color: AppTheme.border, width: 1.5),
+                    color: AppTheme.surface,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppTheme.border, width: 1),
                   ),
                   child: Text(
                     text,
@@ -167,22 +152,18 @@ class UserBubble extends StatelessWidget {
         Flexible(
           child: Container(
             constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.78),
-            margin: const EdgeInsets.only(bottom: 2),
+              maxWidth: MediaQuery.of(context).size.width * 0.78,
+            ),
+            margin: const EdgeInsets.only(bottom: 8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
                   decoration: BoxDecoration(
-                    color: AppTheme.cta,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(8),
-                      topRight: Radius.circular(8),
-                      bottomLeft: Radius.circular(8),
-                      bottomRight: Radius.circular(2),
-                    ),
+                    color: AppTheme.text,
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     text,
@@ -242,12 +223,19 @@ class AvatarAIBubble extends StatelessWidget {
             height: 34,
             margin: const EdgeInsets.only(top: 2),
             decoration: BoxDecoration(
-              color: AppTheme.bgAlt,
-              shape: BoxShape.circle,
-              border: Border.all(color: AppTheme.border, width: 1.5),
+              color: AppTheme.sun,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppTheme.text, width: 1),
             ),
             alignment: Alignment.center,
-            child: Text(emoji, style: const TextStyle(fontSize: 16)),
+            child: Text(
+              emoji,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+                color: AppTheme.text,
+              ),
+            ),
           ),
           const SizedBox(width: 9),
           Flexible(
@@ -274,13 +262,8 @@ class AvatarAIBubble extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: muted ? AppTheme.bgAlt : AppTheme.surface,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(3),
-                        topRight: Radius.circular(14),
-                        bottomLeft: Radius.circular(14),
-                        bottomRight: Radius.circular(14),
-                      ),
-                      border: Border.all(color: AppTheme.border, width: 1.5),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppTheme.border, width: 1),
                     ),
                     child: muted
                         ? Row(

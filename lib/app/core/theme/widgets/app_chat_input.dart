@@ -11,7 +11,7 @@ class AppChatInput extends StatefulWidget {
 
   const AppChatInput({
     super.key,
-    this.placeholder = '답변을 입력하세요...',
+    this.placeholder = '답변을 입력하세요',
     this.value = '',
     this.onSend,
     this.recording = false,
@@ -61,24 +61,21 @@ class _AppChatInputState extends State<AppChatInput> {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
       decoration: const BoxDecoration(
-        color: AppTheme.surface,
-        border: Border(top: BorderSide(color: AppTheme.border)),
+        color: AppTheme.sun,
+        border: Border(top: BorderSide(color: AppTheme.text)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Expanded(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(
-                minHeight: 48,
-                maxHeight: 140,
-              ),
+              constraints: const BoxConstraints(minHeight: 48, maxHeight: 140),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14),
                 decoration: BoxDecoration(
-                  border: Border.all(color: AppTheme.border),
-                  borderRadius: BorderRadius.circular(16),
-                  color: AppTheme.bg,
+                  border: Border.all(color: AppTheme.text, width: 1.2),
+                  borderRadius: BorderRadius.circular(8),
+                  color: AppTheme.surfaceElevated,
                 ),
                 child: TextField(
                   enabled: widget.enabled,
@@ -89,14 +86,21 @@ class _AppChatInputState extends State<AppChatInput> {
                   textInputAction: TextInputAction.newline,
                   scrollPhysics: const BouncingScrollPhysics(),
                   decoration: InputDecoration(
+                    filled: false,
                     hintText: widget.placeholder,
                     hintStyle: TextStyle(
                       fontSize: 15,
+                      fontWeight: FontWeight.w700,
                       color: widget.enabled
-                          ? AppTheme.textPh
+                          ? AppTheme.textSec
                           : AppTheme.textPh.withValues(alpha: 0.5),
                     ),
                     border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    disabledBorder: InputBorder.none,
+                    errorBorder: InputBorder.none,
+                    focusedErrorBorder: InputBorder.none,
                     isDense: true,
                     contentPadding: const EdgeInsets.symmetric(vertical: 10),
                   ),
@@ -117,18 +121,17 @@ class _AppChatInputState extends State<AppChatInput> {
               decoration: BoxDecoration(
                 color: widget.recording
                     ? AppTheme.error
-                    : (widget.enabled
-                        ? AppTheme.bgAlt
-                        : AppTheme.bgAlt.withValues(alpha: 0.5)),
-                borderRadius: BorderRadius.circular(14),
+                    : (widget.enabled ? AppTheme.sky : AppTheme.bgAlt),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppTheme.text, width: 1),
               ),
               child: Icon(
-                Icons.mic,
+                Icons.mic_rounded,
                 size: 20,
                 color: widget.recording
                     ? Colors.white
                     : (widget.enabled
-                        ? AppTheme.textSec
+                        ? AppTheme.text
                         : AppTheme.textPh.withValues(alpha: 0.5)),
               ),
             ),
@@ -141,20 +144,13 @@ class _AppChatInputState extends State<AppChatInput> {
               height: 40,
               decoration: BoxDecoration(
                 color: (widget.enabled && _hasText)
-                    ? AppTheme.cta
+                    ? AppTheme.text
                     : AppTheme.bgAlt,
-                borderRadius: BorderRadius.circular(14),
-                border: Border(
-                  bottom: BorderSide(
-                    color: (widget.enabled && _hasText)
-                        ? AppTheme.ctaDark
-                        : AppTheme.border,
-                    width: 3,
-                  ),
-                ),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppTheme.text, width: 1),
               ),
               child: Icon(
-                Icons.send,
+                Icons.send_rounded,
                 size: 18,
                 color: (widget.enabled && _hasText)
                     ? Colors.white

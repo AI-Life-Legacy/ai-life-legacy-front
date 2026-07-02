@@ -5,13 +5,13 @@ import 'package:ai_life_legacy/app/core/theme/widgets/animated_mascot.dart';
 import 'package:flutter/material.dart';
 
 class MascotFlowTheme {
-  static const Color bg = Color(0xFF0F2026);
-  static const Color surface = Color(0xFF142A31);
-  static const Color surfaceAlt = Color(0xFF193640);
-  static const Color border = Color(0xFF35505A);
-  static const Color active = Color(0xFF1CB0F6);
-  static const Color text = Color(0xFFF5FAFC);
-  static const Color textMuted = Color(0xFF87A4AF);
+  static const Color bg = AppTheme.bg;
+  static const Color surface = AppTheme.surface;
+  static const Color surfaceAlt = AppTheme.surfaceElevated;
+  static const Color border = AppTheme.border;
+  static const Color active = AppTheme.cta;
+  static const Color text = AppTheme.text;
+  static const Color textMuted = AppTheme.textSec;
 }
 
 class MascotScaffold extends StatelessWidget {
@@ -33,7 +33,7 @@ class MascotScaffold extends StatelessWidget {
     final body = Padding(padding: padding, child: child);
 
     return Scaffold(
-      backgroundColor: MascotFlowTheme.bg,
+      backgroundColor: AppTheme.bg,
       body: SafeArea(
         child: Column(
           children: [
@@ -57,7 +57,7 @@ class MascotHeader extends StatelessWidget {
   const MascotHeader({
     super.key,
     required this.message,
-    this.mascotSize = 78,
+    this.mascotSize = 64,
     this.mood = MascotMood.idle,
     this.trailing,
   });
@@ -70,7 +70,16 @@ class MascotHeader extends StatelessWidget {
         AnimatedMascot(size: mascotSize, mood: mood),
         const SizedBox(width: 14),
         Expanded(
-            child: SpeechBubble(text: message, tail: SpeechBubbleTail.left)),
+          child: Text(
+            message,
+            style: const TextStyle(
+              color: AppTheme.text,
+              fontSize: 22,
+              height: 1.15,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
         if (trailing != null) ...[
           const SizedBox(width: 10),
           trailing!,
@@ -97,112 +106,31 @@ class SpeechBubble extends StatelessWidget {
   const SpeechBubble({
     super.key,
     required this.text,
-    this.tail = SpeechBubbleTail.left,
-    this.backgroundColor = MascotFlowTheme.surface,
-    this.borderColor = MascotFlowTheme.border,
-    this.textColor = MascotFlowTheme.text,
+    this.tail = SpeechBubbleTail.none,
+    this.backgroundColor = AppTheme.surface,
+    this.borderColor = AppTheme.border,
+    this.textColor = AppTheme.text,
   });
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: _SpeechBubblePainter(
-        tail: tail,
-        backgroundColor: backgroundColor,
-        borderColor: borderColor,
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: borderColor),
       ),
-      child: Container(
-        padding: EdgeInsets.fromLTRB(
-          tail == SpeechBubbleTail.left ? 18 : 16,
-          13,
-          tail == SpeechBubbleTail.right ? 18 : 16,
-          tail == SpeechBubbleTail.bottomLeft ? 18 : 13,
-        ),
-        child: Text(
-          text,
-          style: TextStyle(
-            fontSize: 16,
-            height: 1.35,
-            fontWeight: FontWeight.w900,
-            color: textColor,
-          ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 14,
+          height: 1.45,
+          fontWeight: FontWeight.w700,
+          color: textColor,
         ),
       ),
     );
-  }
-}
-
-class _SpeechBubblePainter extends CustomPainter {
-  final SpeechBubbleTail tail;
-  final Color backgroundColor;
-  final Color borderColor;
-
-  const _SpeechBubblePainter({
-    required this.tail,
-    required this.backgroundColor,
-    required this.borderColor,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    const radius = Radius.circular(12);
-    final fill = Paint()
-      ..color = backgroundColor
-      ..style = PaintingStyle.fill;
-    final stroke = Paint()
-      ..color = borderColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
-    final leftInset = tail == SpeechBubbleTail.left ? 10.0 : 0.0;
-    final rightInset = tail == SpeechBubbleTail.right ? 10.0 : 0.0;
-    final bottomInset = tail == SpeechBubbleTail.bottomLeft ? 10.0 : 0.0;
-    final bubble = RRect.fromRectAndRadius(
-      Rect.fromLTWH(
-        leftInset,
-        0,
-        size.width - leftInset - rightInset,
-        size.height - bottomInset,
-      ),
-      radius,
-    );
-
-    final tailPath = _tailPath(size);
-    if (tailPath != null) canvas.drawPath(tailPath, fill);
-    canvas.drawRRect(bubble, fill);
-    if (tailPath != null) canvas.drawPath(tailPath, stroke);
-    canvas.drawRRect(bubble, stroke);
-  }
-
-  Path? _tailPath(Size size) {
-    switch (tail) {
-      case SpeechBubbleTail.left:
-        return Path()
-          ..moveTo(10, size.height * 0.55)
-          ..lineTo(0, size.height * 0.72)
-          ..lineTo(13, size.height * 0.72)
-          ..close();
-      case SpeechBubbleTail.right:
-        return Path()
-          ..moveTo(size.width - 10, size.height * 0.55)
-          ..lineTo(size.width, size.height * 0.72)
-          ..lineTo(size.width - 13, size.height * 0.72)
-          ..close();
-      case SpeechBubbleTail.bottomLeft:
-        return Path()
-          ..moveTo(40, size.height - 10)
-          ..lineTo(56, size.height)
-          ..lineTo(67, size.height - 10)
-          ..close();
-      case SpeechBubbleTail.none:
-        return null;
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _SpeechBubblePainter oldDelegate) {
-    return oldDelegate.tail != tail ||
-        oldDelegate.backgroundColor != backgroundColor ||
-        oldDelegate.borderColor != borderColor;
   }
 }
 
@@ -216,32 +144,21 @@ class MascotCoachBubble extends StatelessWidget {
     super.key,
     required this.message,
     this.mood = MascotMood.idle,
-    this.mascotSize = 156,
-    this.maxBubbleWidth = 280,
+    this.mascotSize = 132,
+    this.maxBubbleWidth = 320,
   });
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: math.max(mascotSize, maxBubbleWidth),
-      height: mascotSize + 96,
-      child: Stack(
-        alignment: Alignment.bottomCenter,
-        clipBehavior: Clip.none,
+      child: Column(
         children: [
-          Positioned(
-            bottom: 0,
-            child: AnimatedMascot(size: mascotSize, mood: mood),
-          ),
-          Positioned(
-            top: 0,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: maxBubbleWidth),
-              child: SpeechBubble(
-                text: message,
-                tail: SpeechBubbleTail.bottomLeft,
-              ),
-            ),
+          AnimatedMascot(size: mascotSize, mood: mood),
+          const SizedBox(height: 12),
+          ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: maxBubbleWidth),
+            child: SpeechBubble(text: message),
           ),
         ],
       ),
@@ -267,28 +184,36 @@ class FlowOptionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = selected ? MascotFlowTheme.active : MascotFlowTheme.border;
+    final accent = selected ? AppTheme.text : AppTheme.border;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 10),
       child: Material(
-        color: selected ? MascotFlowTheme.surfaceAlt : MascotFlowTheme.bg,
-        borderRadius: BorderRadius.circular(10),
+        color: selected ? AppTheme.surfaceElevated : AppTheme.surface,
+        borderRadius: BorderRadius.circular(8),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(8),
           child: Container(
             width: double.infinity,
-            constraints: const BoxConstraints(minHeight: 62),
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+            constraints: const BoxConstraints(minHeight: 68),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: color, width: selected ? 2.4 : 2),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: accent, width: selected ? 1.5 : 1),
             ),
             child: Row(
               children: [
-                Icon(icon, color: selected ? MascotFlowTheme.active : color),
-                const SizedBox(width: 16),
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: selected ? AppTheme.sun : AppTheme.bgAlt,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(icon, color: AppTheme.text, size: 22),
+                ),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -296,28 +221,29 @@ class FlowOptionCard extends StatelessWidget {
                     children: [
                       Text(
                         title,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w900,
-                          color: selected
-                              ? MascotFlowTheme.active
-                              : MascotFlowTheme.text,
+                          color: AppTheme.text,
                         ),
                       ),
                       if (subtitle != null) ...[
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 5),
                         Text(
                           subtitle!,
                           style: const TextStyle(
                             fontSize: 12,
                             height: 1.35,
-                            color: MascotFlowTheme.textMuted,
+                            color: AppTheme.textSec,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],
                     ],
                   ),
                 ),
+                const SizedBox(width: 10),
+                const Icon(Icons.chevron_right_rounded, color: AppTheme.textPh),
               ],
             ),
           ),
@@ -347,12 +273,11 @@ class FlowPrimaryButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: loading ? null : onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppTheme.cta,
-          disabledBackgroundColor: MascotFlowTheme.border,
+          backgroundColor: AppTheme.text,
+          disabledBackgroundColor: AppTheme.border,
           foregroundColor: Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           elevation: 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         child: loading
             ? const SizedBox(
@@ -387,12 +312,14 @@ class FlowProgressPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final percent = (value * 100).clamp(0, 100).round();
+
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: MascotFlowTheme.surface,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: MascotFlowTheme.border, width: 2),
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppTheme.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -403,16 +330,16 @@ class FlowProgressPill extends StatelessWidget {
                 child: Text(
                   label,
                   style: const TextStyle(
-                    color: MascotFlowTheme.text,
+                    color: AppTheme.text,
                     fontWeight: FontWeight.w900,
                     fontSize: 14,
                   ),
                 ),
               ),
               Text(
-                '${(value * 100).clamp(0, 100).round()}%',
+                '$percent%',
                 style: const TextStyle(
-                  color: MascotFlowTheme.active,
+                  color: AppTheme.ctaDark,
                   fontWeight: FontWeight.w900,
                   fontSize: 14,
                 ),
@@ -424,8 +351,8 @@ class FlowProgressPill extends StatelessWidget {
             borderRadius: BorderRadius.circular(99),
             child: LinearProgressIndicator(
               value: value.clamp(0, 1),
-              minHeight: 10,
-              backgroundColor: const Color(0xFF0B171C),
+              minHeight: 9,
+              backgroundColor: AppTheme.bgAlt,
               valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.cta),
             ),
           ),

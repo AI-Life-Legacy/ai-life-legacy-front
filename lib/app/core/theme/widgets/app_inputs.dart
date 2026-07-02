@@ -56,12 +56,12 @@ class AppInput extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 44,
+      height: 48,
       padding: const EdgeInsets.symmetric(horizontal: 14),
       decoration: BoxDecoration(
-        color: AppTheme.surface,
-        border: Border.all(color: AppTheme.border, width: 2),
-        borderRadius: BorderRadius.circular(14),
+        color: AppTheme.surfaceElevated,
+        border: Border.all(color: AppTheme.text, width: 1.2),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         children: [
@@ -75,12 +75,22 @@ class AppInput extends StatelessWidget {
               onChanged: onChanged,
               style: const TextStyle(
                 fontSize: 15,
+                fontWeight: FontWeight.w500,
                 color: AppTheme.text,
               ),
               decoration: InputDecoration(
+                filled: false,
                 hintText: placeholder,
-                hintStyle: const TextStyle(color: AppTheme.textPh),
+                hintStyle: const TextStyle(
+                  color: AppTheme.textSec,
+                  fontWeight: FontWeight.w700,
+                ),
                 border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                disabledBorder: InputBorder.none,
+                errorBorder: InputBorder.none,
+                focusedErrorBorder: InputBorder.none,
                 isDense: true,
                 contentPadding: EdgeInsets.zero,
               ),

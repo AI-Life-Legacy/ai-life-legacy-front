@@ -36,24 +36,16 @@ class _AnimatedMascotState extends State<AnimatedMascot>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2000),
+      duration: const Duration(seconds: 12),
     );
-    if (widget.animate) {
-      _controller.repeat();
-    }
+    if (widget.animate) _controller.repeat();
   }
 
   @override
   void didUpdateWidget(covariant AnimatedMascot oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.animate == oldWidget.animate) return;
-
-    if (widget.animate) {
-      _controller.repeat();
-    } else {
-      _controller.stop();
-      _controller.value = 0;
-    }
+    widget.animate ? _controller.repeat() : _controller.stop();
   }
 
   @override
@@ -65,48 +57,39 @@ class _AnimatedMascotState extends State<AnimatedMascot>
   @override
   Widget build(BuildContext context) {
     final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
-    final shouldAnimate = widget.animate && !reduceMotion;
-
-    if (!shouldAnimate) {
+    if (!widget.animate || reduceMotion) {
       return SizedBox(
         width: widget.size,
         height: widget.size,
-        child: CustomPaint(painter: _OrbMascotPainter(mood: widget.mood)),
+        child: CustomPaint(painter: _NpcPainter(mood: widget.mood)),
       );
     }
 
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
-        final cycle = _controller.value * math.pi * 2;
-        final wave = math.sin(cycle);
-        final settle = math.cos(cycle);
-        final breath = (wave + 1) / 2;
-        final blink = _blinkAmount(_controller.value);
-        final state = _MascotMotion.fromMood(
+        final pose = _MascotPose.fromMood(
           mood: widget.mood,
-          value: _controller.value,
-          wave: wave,
-          settle: settle,
+          phase: _controller.value,
         );
-
         return Transform.translate(
-          offset: Offset(0, widget.size * state.yOffset),
-          child: Transform.scale(
-            scaleX: state.scaleX,
-            scaleY: state.scaleY,
-            child: SizedBox(
-              width: widget.size,
-              height: widget.size,
-              child: CustomPaint(
-                painter: _OrbMascotPainter(
-                  mood: widget.mood,
-                  breath: breath,
-                  blink: blink,
-                  armWave: state.armWave,
-                  eyeShift: state.eyeShift,
-                  mouthOpen: state.mouthOpen,
-                  lean: state.lean,
+          offset: Offset(0, widget.size * pose.yOffset),
+          child: Transform.rotate(
+            angle: pose.rotation,
+            child: Transform.scale(
+              scaleX: pose.scaleX,
+              scaleY: pose.scaleY,
+              child: SizedBox(
+                width: widget.size,
+                height: widget.size,
+                child: CustomPaint(
+                  painter: _NpcPainter(
+                    mood: widget.mood,
+                    phase: _controller.value,
+                    blink: pose.blink,
+                    eyeShift: pose.eyeShift,
+                    mouthOpen: pose.mouthOpen,
+                  ),
                 ),
               ),
             ),
@@ -115,367 +98,393 @@ class _AnimatedMascotState extends State<AnimatedMascot>
       },
     );
   }
+}
 
-  double _blinkAmount(double value) {
-    if (widget.mood == MascotMood.success) return 0;
-    if (value < 0.78 || value > 0.88) return 0;
-    final local = (value - 0.78) / 0.10;
+class _MascotPose {
+  final double yOffset;
+  final double rotation;
+  final double scaleX;
+  final double scaleY;
+  final double blink;
+  final double eyeShift;
+  final double mouthOpen;
+
+  const _MascotPose({
+    required this.yOffset,
+    required this.rotation,
+    required this.scaleX,
+    required this.scaleY,
+    required this.blink,
+    required this.eyeShift,
+    required this.mouthOpen,
+  });
+
+  factory _MascotPose.fromMood({
+    required MascotMood mood,
+    required double phase,
+  }) {
+    final breath = math.sin(phase * math.pi * 8);
+    final action = _windowPulse(phase, 0.64, 0.82);
+    final actionProgress = _windowProgress(phase, 0.64, 0.82);
+    final blink = math.max(
+      _windowPulse(phase, 0.18, 0.205),
+      _windowPulse(phase, 0.47, 0.495),
+    );
+
+    switch (mood) {
+      case MascotMood.success:
+        final hop = math.sin(actionProgress * math.pi * 4).clamp(0.0, 1.0);
+        return _MascotPose(
+          yOffset: -0.014 * breath - 0.075 * hop,
+          rotation: math.sin(actionProgress * math.pi * 6) * 0.08,
+          scaleX: 1 + hop * 0.045,
+          scaleY: 1 - hop * 0.035,
+          blink: 0,
+          eyeShift: 0,
+          mouthOpen: 1,
+        );
+      case MascotMood.sad:
+        final sigh = math.sin(action * math.pi).clamp(0.0, 1.0);
+        return _MascotPose(
+          yOffset: 0.016 + 0.006 * breath + 0.028 * sigh,
+          rotation: -0.045 + math.sin(action * math.pi * 5) * 0.018,
+          scaleX: 0.99,
+          scaleY: 1.01 + sigh * 0.025,
+          blink: blink * 0.8,
+          eyeShift: 0,
+          mouthOpen: 0,
+        );
+      case MascotMood.thinking:
+        final lookAround = math.sin(actionProgress * math.pi * 2);
+        return _MascotPose(
+          yOffset: -0.012 * breath,
+          rotation: 0.035 + lookAround * 0.035,
+          scaleX: 1 + breath * 0.006,
+          scaleY: 1 - breath * 0.008,
+          blink: blink,
+          eyeShift: lookAround * 7,
+          mouthOpen: 0.15,
+        );
+      case MascotMood.listening:
+        final pulse = math.sin(actionProgress * math.pi * 5).clamp(0.0, 1.0);
+        return _MascotPose(
+          yOffset: -0.012 * breath,
+          rotation: -0.035 - pulse * 0.035,
+          scaleX: 1 + pulse * 0.035,
+          scaleY: 1 - pulse * 0.018,
+          blink: blink,
+          eyeShift: -pulse * 3,
+          mouthOpen: 0.25,
+        );
+      case MascotMood.idle:
+        final spin = Curves.easeInOut.transform(actionProgress);
+        return _MascotPose(
+          yOffset: -0.016 * breath,
+          rotation: spin * math.pi * 2 + breath * 0.018,
+          scaleX: 1 + breath * 0.008,
+          scaleY: 1 - breath * 0.01,
+          blink: blink,
+          eyeShift: 0,
+          mouthOpen: 0.45,
+        );
+    }
+  }
+
+  static double _windowProgress(double value, double start, double end) {
+    if (value <= start || value >= end) return 0;
+    return ((value - start) / (end - start)).clamp(0.0, 1.0);
+  }
+
+  static double _windowPulse(double value, double start, double end) {
+    final local = _windowProgress(value, start, end);
+    if (local == 0) return 0;
     return math.sin(local * math.pi);
   }
 }
 
-class _MascotMotion {
-  final double yOffset;
-  final double scaleX;
-  final double scaleY;
-  final double armWave;
-  final double eyeShift;
-  final double mouthOpen;
-  final double lean;
-
-  const _MascotMotion({
-    required this.yOffset,
-    required this.scaleX,
-    required this.scaleY,
-    required this.armWave,
-    required this.eyeShift,
-    required this.mouthOpen,
-    required this.lean,
-  });
-
-  factory _MascotMotion.fromMood({
-    required MascotMood mood,
-    required double value,
-    required double wave,
-    required double settle,
-  }) {
-    switch (mood) {
-      case MascotMood.success:
-        final hop = math.sin(value * math.pi * 4).clamp(0.0, 1.0);
-        return _MascotMotion(
-          yOffset: -0.038 * hop,
-          scaleX: 1 + (settle * 0.016),
-          scaleY: 1 - (settle * 0.022),
-          armWave: math.sin(value * math.pi * 6),
-          eyeShift: 0,
-          mouthOpen: 1,
-          lean: wave * 0.03,
-        );
-      case MascotMood.sad:
-        return _MascotMotion(
-          yOffset: 0.018 + (wave * 0.004),
-          scaleX: 0.985,
-          scaleY: 1.015,
-          armWave: -0.5,
-          eyeShift: 0,
-          mouthOpen: 0,
-          lean: -0.05,
-        );
-      case MascotMood.thinking:
-        return _MascotMotion(
-          yOffset: -0.008 * wave,
-          scaleX: 1 + (settle * 0.008),
-          scaleY: 1 - (settle * 0.012),
-          armWave: 0.15,
-          eyeShift: math.sin(value * math.pi * 2) * 4,
-          mouthOpen: 0.2,
-          lean: 0.04,
-        );
-      case MascotMood.listening:
-        return _MascotMotion(
-          yOffset: -0.01 * wave,
-          scaleX: 1 + (settle * 0.01),
-          scaleY: 1 - (settle * 0.014),
-          armWave: 0,
-          eyeShift: math.sin(value * math.pi * 2) * 2,
-          mouthOpen: 0,
-          lean: -0.025,
-        );
-      case MascotMood.idle:
-        return _MascotMotion(
-          yOffset: -0.014 * wave,
-          scaleX: 1 + (settle * 0.012),
-          scaleY: 1 - (settle * 0.018),
-          armWave: wave * 0.12,
-          eyeShift: 0,
-          mouthOpen: 0.45,
-          lean: 0,
-        );
-    }
-  }
-}
-
-class _OrbMascotPainter extends CustomPainter {
+class _NpcPainter extends CustomPainter {
   final MascotMood mood;
-  final double breath;
+  final double phase;
   final double blink;
-  final double armWave;
   final double eyeShift;
   final double mouthOpen;
-  final double lean;
 
-  const _OrbMascotPainter({
-    this.mood = MascotMood.idle,
-    this.breath = 0,
+  const _NpcPainter({
+    required this.mood,
+    this.phase = 0,
     this.blink = 0,
-    this.armWave = 0,
     this.eyeShift = 0,
     this.mouthOpen = 0.45,
-    this.lean = 0,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
     final shortest = math.min(size.width, size.height);
-    final scale = shortest / 300;
     canvas.save();
     canvas.translate((size.width - shortest) / 2, (size.height - shortest) / 2);
-    canvas.scale(scale);
+    canvas.scale(shortest / 220);
 
-    canvas.save();
-    canvas.translate(150, 145);
-    canvas.rotate(lean);
-    canvas.translate(-150, -145);
-    _drawGlow(canvas);
-    _drawShadow(canvas);
-    _drawHalo(canvas);
-    _drawOrb(canvas);
-    _drawSparkles(canvas);
-    _drawEyes(canvas);
-    _drawMouth(canvas);
-    canvas.restore();
-
+    final bob = math.sin(phase * math.pi * 2) * 4;
+    canvas.translate(0, bob);
+    _drawCharacter(canvas);
     canvas.restore();
   }
 
+  void _drawCharacter(Canvas canvas) {
+    _drawShadow(canvas);
+    switch (mood) {
+      case MascotMood.idle:
+        _drawTriangleBody(canvas, AppTheme.sky);
+        break;
+      case MascotMood.success:
+        _drawSquareBody(canvas, AppTheme.cta);
+        break;
+      case MascotMood.thinking:
+        _drawCloudBody(canvas, AppTheme.sun);
+        break;
+      case MascotMood.listening:
+        _drawCapsuleBody(canvas, AppTheme.coral);
+        break;
+      case MascotMood.sad:
+        _drawDiamondBody(canvas, AppTheme.lavender);
+        break;
+    }
+    _drawEyes(canvas);
+    _drawMouth(canvas);
+  }
+
   void _drawShadow(Canvas canvas) {
-    final paint = Paint()
-      ..color = AppTheme.skyDark.withValues(alpha: 0.18)
-      ..style = PaintingStyle.fill;
+    canvas.drawOval(
+      const Rect.fromLTWH(58, 170, 104, 14),
+      Paint()..color = AppTheme.shadow.withValues(alpha: 0.16),
+    );
+  }
+
+  void _drawTriangleBody(Canvas canvas, Color color) {
+    _drawTriangle(
+      canvas,
+      const Offset(110, 28),
+      const Offset(182, 158),
+      const Offset(38, 158),
+      color,
+    );
+  }
+
+  void _drawSquareBody(Canvas canvas, Color color) {
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(48, 46, 124, 124),
+        const Radius.circular(18),
+      ),
+      Paint()..color = color,
+    );
+  }
+
+  void _drawCloudBody(Canvas canvas, Color color) {
+    final paint = Paint()..color = color;
+    for (final circle in const [
+      Rect.fromLTWH(44, 80, 48, 48),
+      Rect.fromLTWH(72, 54, 58, 58),
+      Rect.fromLTWH(116, 70, 56, 56),
+      Rect.fromLTWH(82, 96, 64, 64),
+    ]) {
+      canvas.drawOval(circle, paint);
+    }
+  }
+
+  void _drawCapsuleBody(Canvas canvas, Color color) {
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(44, 62, 132, 92),
+        const Radius.circular(46),
+      ),
+      Paint()..color = color,
+    );
+  }
+
+  void _drawDiamondBody(Canvas canvas, Color color) {
+    _drawTriangle(
+      canvas,
+      const Offset(110, 26),
+      const Offset(188, 102),
+      const Offset(110, 178),
+      color,
+    );
+    _drawTriangle(
+      canvas,
+      const Offset(110, 26),
+      const Offset(110, 178),
+      const Offset(32, 102),
+      color,
+    );
+  }
+
+  void _drawTriangle(
+    Canvas canvas,
+    Offset a,
+    Offset b,
+    Offset c,
+    Color color,
+  ) {
+    canvas.drawPath(
+      Path()
+        ..moveTo(a.dx, a.dy)
+        ..lineTo(b.dx, b.dy)
+        ..lineTo(c.dx, c.dy)
+        ..close(),
+      Paint()..color = color,
+    );
+  }
+
+  void _drawEyes(Canvas canvas) {
+    switch (mood) {
+      case MascotMood.idle:
+        _drawOvalEyes(canvas, 88, 98);
+        break;
+      case MascotMood.success:
+        _drawDotEyes(canvas, 88, 98);
+        break;
+      case MascotMood.thinking:
+        _drawSleepyEyes(canvas, 88, 104);
+        break;
+      case MascotMood.listening:
+        _drawTallEyes(canvas, 88, 100);
+        break;
+      case MascotMood.sad:
+        _drawDowncastEyes(canvas, 88, 96);
+        break;
+    }
+  }
+
+  void _drawOvalEyes(Canvas canvas, double leftX, double y) {
+    final eyePaint = Paint()..color = Colors.white;
+    final pupilPaint = Paint()..color = AppTheme.text;
+    final eyeHeight = (34 * (1 - blink * 0.82)).clamp(5.0, 34.0);
+    final pupilHeight = (32 * (1 - blink * 0.92)).clamp(3.0, 32.0);
+    for (final x in [leftX, leftX + 44]) {
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: Offset(x + eyeShift, y),
+          width: 28,
+          height: eyeHeight,
+        ),
+        eyePaint,
+      );
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: Offset(x + 3 + eyeShift, y),
+          width: 11,
+          height: pupilHeight,
+        ),
+        pupilPaint,
+      );
+    }
+  }
+
+  void _drawTallEyes(Canvas canvas, double leftX, double y) {
+    final eyePaint = Paint()..color = Colors.white;
+    final pupilPaint = Paint()..color = AppTheme.text;
+    final eyeHeight = (48 * (1 - blink * 0.82)).clamp(5.0, 48.0);
+    final pupilHeight = (46 * (1 - blink * 0.92)).clamp(3.0, 46.0);
+    for (final x in [leftX, leftX + 44]) {
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: Offset(x + eyeShift, y),
+          width: 24,
+          height: eyeHeight,
+        ),
+        eyePaint,
+      );
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: Offset(x + 2 + eyeShift, y),
+          width: 11,
+          height: pupilHeight,
+        ),
+        pupilPaint,
+      );
+    }
+  }
+
+  void _drawDotEyes(Canvas canvas, double leftX, double y) {
+    final paint = Paint()..color = AppTheme.text;
+    final height = (16 * (1 - blink * 0.84)).clamp(3.0, 16.0);
     canvas.drawOval(
       Rect.fromCenter(
-        center: const Offset(150, 236),
-        width: 116 + (breath * 14),
-        height: 19,
+        center: Offset(leftX + eyeShift, y),
+        width: 16,
+        height: height,
+      ),
+      paint,
+    );
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(leftX + 44 + eyeShift, y),
+        width: 16,
+        height: height,
       ),
       paint,
     );
   }
 
-  void _drawGlow(Canvas canvas) {
-    final glowPaint = Paint()
-      ..shader = RadialGradient(
-        colors: [
-          _accentColor.withValues(alpha: 0.34 + breath * 0.08),
-          _accentColor.withValues(alpha: 0.12),
-          Colors.transparent,
-        ],
-      ).createShader(
-        Rect.fromCircle(
-          center: const Offset(150, 140),
-          radius: 116 + breath * 10,
-        ),
-      );
-    canvas.drawCircle(
-      const Offset(150, 140),
-      116 + breath * 10,
-      glowPaint,
+  void _drawSleepyEyes(Canvas canvas, double leftX, double y) {
+    final paint = Paint()..color = AppTheme.text;
+    _drawTriangle(
+      canvas,
+      Offset(leftX - 15, y - 5),
+      Offset(leftX + 15, y - 5),
+      Offset(leftX, y + 11),
+      paint.color,
+    );
+    _drawTriangle(
+      canvas,
+      Offset(leftX + 29, y - 5),
+      Offset(leftX + 59, y - 5),
+      Offset(leftX + 44, y + 11),
+      paint.color,
     );
   }
 
-  void _drawHalo(Canvas canvas) {
-    final haloPaint = Paint()
-      ..color = _accentColor.withValues(alpha: 0.16 + breath * 0.06)
+  void _drawDowncastEyes(Canvas canvas, double leftX, double y) {
+    final paint = Paint()
+      ..color = AppTheme.text
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 6
+      ..strokeWidth = 5
       ..strokeCap = StrokeCap.round;
-    canvas.drawArc(
-      Rect.fromCenter(
-        center: const Offset(150, 138),
-        width: 150 + breath * 10,
-        height: 150 + breath * 10,
-      ),
-      math.pi * 1.08,
-      math.pi * 1.34,
-      false,
-      haloPaint,
+    canvas.drawLine(Offset(leftX - 12, y - 7), Offset(leftX + 12, y + 4), paint);
+    canvas.drawLine(
+      Offset(leftX + 32, y + 4),
+      Offset(leftX + 56, y - 7),
+      paint,
     );
-  }
-
-  void _drawOrb(Canvas canvas) {
-    final center = Offset(150, 140 - breath * 3);
-    final radius = 70 + breath * 4;
-
-    final orbPaint = Paint()
-      ..shader = RadialGradient(
-        center: const Alignment(-0.38, -0.48),
-        radius: 0.95,
-        colors: [
-          Colors.white,
-          _softColor,
-          _accentColor,
-        ],
-        stops: const [0.0, 0.46, 1.0],
-      ).createShader(Rect.fromCircle(center: center, radius: radius));
-
-    canvas.drawCircle(center, radius, orbPaint);
-    canvas.drawCircle(
-      center,
-      radius,
-      Paint()
-        ..color = Colors.white.withValues(alpha: 0.55)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 3,
-    );
-    canvas.drawCircle(
-      Offset(center.dx - 24, center.dy - 28),
-      16,
-      Paint()
-        ..color = Colors.white.withValues(alpha: 0.52)
-        ..style = PaintingStyle.fill,
-    );
-    canvas.drawCircle(
-      Offset(center.dx + 34, center.dy + 34),
-      12,
-      Paint()
-        ..color = Colors.white.withValues(alpha: 0.16)
-        ..style = PaintingStyle.fill,
-    );
-  }
-
-  void _drawSparkles(Canvas canvas) {
-    final sparklePaint = Paint()
-      ..color = _accentColor.withValues(alpha: 0.62)
-      ..style = PaintingStyle.fill;
-
-    _drawSparkle(
-      canvas,
-      Offset(76, 83 + armWave * 8),
-      10 + breath * 2,
-      sparklePaint,
-    );
-    _drawSparkle(
-      canvas,
-      Offset(226, 89 - armWave * 7),
-      8 + breath * 2,
-      sparklePaint..color = _softColor.withValues(alpha: 0.7),
-    );
-    _drawSparkle(
-      canvas,
-      Offset(222, 190 + armWave * 5),
-      6 + breath,
-      Paint()
-        ..color = Colors.white.withValues(alpha: 0.78)
-        ..style = PaintingStyle.fill,
-    );
-  }
-
-  void _drawSparkle(Canvas canvas, Offset center, double radius, Paint paint) {
-    final path = Path()
-      ..moveTo(center.dx, center.dy - radius)
-      ..quadraticBezierTo(center.dx + radius * 0.22, center.dy - radius * 0.22,
-          center.dx + radius, center.dy)
-      ..quadraticBezierTo(center.dx + radius * 0.22, center.dy + radius * 0.22,
-          center.dx, center.dy + radius)
-      ..quadraticBezierTo(center.dx - radius * 0.22, center.dy + radius * 0.22,
-          center.dx - radius, center.dy)
-      ..quadraticBezierTo(center.dx - radius * 0.22, center.dy - radius * 0.22,
-          center.dx, center.dy - radius)
-      ..close();
-    canvas.drawPath(path, paint);
-  }
-
-  void _drawEyes(Canvas canvas) {
-    final eyePaint = Paint()
-      ..color = const Color(0xFF183047)
-      ..style = PaintingStyle.fill;
-    final glintPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.9)
-      ..style = PaintingStyle.fill;
-
-    final eyeHeight = (22 * (1 - blink * 0.8)).clamp(4.0, 22.0);
-    final y = 129 - (breath * 3);
-    final isSad = mood == MascotMood.sad;
-
-    for (final x in const [124.0, 176.0]) {
-      canvas.drawOval(
-        Rect.fromCenter(
-            center: Offset(x + eyeShift * 0.45, y + (isSad ? 5 : 0)),
-            width: 15,
-            height: eyeHeight),
-        eyePaint,
-      );
-      if (blink < 0.6) {
-        canvas.drawCircle(
-          Offset(x - 3 + eyeShift * 0.45, y - 5 + (isSad ? 5 : 0)),
-          2.4,
-          glintPaint,
-        );
-      }
-    }
   }
 
   void _drawMouth(Canvas canvas) {
-    final smilePaint = Paint()
-      ..color = const Color(0xFF183047)
+    final paint = Paint()
+      ..color = AppTheme.text
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 4
+      ..strokeWidth = 3
       ..strokeCap = StrokeCap.round;
-
-    final y = 153 - (breath * 3);
+    final path = Path();
     if (mood == MascotMood.sad) {
-      final path = Path()
-        ..moveTo(133, y + 10)
-        ..quadraticBezierTo(150, y - 1, 167, y + 10);
-      canvas.drawPath(path, smilePaint);
-      return;
+      path
+        ..moveTo(96, 128)
+        ..quadraticBezierTo(110, 122, 124, 128);
+    } else {
+      final smileDepth = 8 + mouthOpen * 7;
+      path
+        ..moveTo(96, 122)
+        ..quadraticBezierTo(110, 122 + smileDepth, 124, 122);
     }
-
-    final smileDepth = mood == MascotMood.success ? 18.0 : 10 + mouthOpen * 5;
-    final path = Path()
-      ..moveTo(131, y)
-      ..quadraticBezierTo(150, y + smileDepth, 169, y);
-    canvas.drawPath(path, smilePaint);
-  }
-
-  Color get _accentColor {
-    switch (mood) {
-      case MascotMood.success:
-        return AppTheme.cta;
-      case MascotMood.sad:
-        return AppTheme.lavender;
-      case MascotMood.thinking:
-        return AppTheme.sky;
-      case MascotMood.listening:
-        return AppTheme.sun;
-      case MascotMood.idle:
-        return AppTheme.sky;
-    }
-  }
-
-  Color get _softColor {
-    switch (mood) {
-      case MascotMood.success:
-        return const Color(0xFFC8F58D);
-      case MascotMood.sad:
-        return const Color(0xFFE9D7FF);
-      case MascotMood.thinking:
-        return const Color(0xFFC8F1FF);
-      case MascotMood.listening:
-        return const Color(0xFFFFE990);
-      case MascotMood.idle:
-        return const Color(0xFFD5F6FF);
-    }
+    canvas.drawPath(path, paint);
   }
 
   @override
-  bool shouldRepaint(covariant _OrbMascotPainter oldDelegate) {
+  bool shouldRepaint(covariant _NpcPainter oldDelegate) {
     return oldDelegate.mood != mood ||
-        oldDelegate.breath != breath ||
+        oldDelegate.phase != phase ||
         oldDelegate.blink != blink ||
-        oldDelegate.armWave != armWave ||
         oldDelegate.eyeShift != eyeShift ||
-        oldDelegate.mouthOpen != mouthOpen ||
-        oldDelegate.lean != lean;
+        oldDelegate.mouthOpen != mouthOpen;
   }
 }
