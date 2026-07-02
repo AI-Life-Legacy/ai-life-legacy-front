@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:ai_life_legacy/app/core/theme/app_theme.dart';
 import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
+import 'package:ai_life_legacy/app/core/utils/safe_navigation.dart';
 import 'package:ai_life_legacy/features/autobiography/presentation/controllers/autobiography_controller.dart';
 
 class GeneratingPage extends StatefulWidget {
@@ -58,7 +59,11 @@ class _GeneratingPageState extends State<GeneratingPage> {
 
   Future<void> _executeApi() async {
     final bool force = Get.arguments?['force'] == true;
-    final result = await _controller.generateFullBook(force: force);
+    final templateId = Get.arguments?['templateId']?.toString() ?? 'classic';
+    final result = await _controller.generateFullBook(
+      force: force,
+      templateId: templateId,
+    );
     _progressTimer?.cancel();
 
     if (!mounted) return;
@@ -153,7 +158,7 @@ class _GeneratingPageState extends State<GeneratingPage> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () => Get.back(),
+                    onPressed: () => SafeNavigation.back(context, fallbackRoute: Routes.autobiography),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: MascotFlowTheme.surface,
                       foregroundColor: MascotFlowTheme.text,

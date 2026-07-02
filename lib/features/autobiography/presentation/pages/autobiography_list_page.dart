@@ -1,7 +1,9 @@
 import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
 import 'package:ai_life_legacy/app/core/theme/app_theme.dart';
+import 'package:ai_life_legacy/app/core/theme/widgets/animated_mascot.dart';
 import 'package:ai_life_legacy/app/core/theme/widgets/app_buttons.dart';
 import 'package:ai_life_legacy/app/core/theme/widgets/app_indicators.dart';
+import 'package:ai_life_legacy/app/core/utils/safe_navigation.dart';
 import 'package:ai_life_legacy/features/autobiography/presentation/controllers/autobiography_controller.dart';
 import 'package:ai_life_legacy/features/autobiography/presentation/controllers/autobiography_list_controller.dart';
 import 'package:flutter/material.dart';
@@ -16,8 +18,8 @@ class AutobiographyListPage extends GetView<AutobiographyListController> {
 
     if (!canGenerate) {
       Get.snackbar(
-        '아직 준비 중이에요',
-        '남은 질문 ${controller.remainingQuestions.value}개를 채우면 자서전을 만들 수 있어요.',
+        '아직 준비 중입니다',
+        '남은 질문 ${controller.remainingQuestions.value}개를 채우면 제작할 수 있어요.',
         backgroundColor: AppTheme.error,
         colorText: Colors.white,
         snackPosition: SnackPosition.BOTTOM,
@@ -36,8 +38,8 @@ class AutobiographyListPage extends GetView<AutobiographyListController> {
 
     if (url == null || url.isEmpty) {
       Get.snackbar(
-        'PDF를 찾을 수 없어요',
-        '잠시 후 다시 시도해 주세요.',
+        '결과물을 찾을 수 없습니다',
+        '잠시 후 다시 시도해주세요.',
         backgroundColor: AppTheme.error,
         colorText: Colors.white,
         snackPosition: SnackPosition.BOTTOM,
@@ -57,39 +59,27 @@ class AutobiographyListPage extends GetView<AutobiographyListController> {
     );
   }
 
-  void _onRecreateAutobiographyPressed() {
+  void _onRecreateAutobiographyPressed(BuildContext context) {
     Get.dialog(
       AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        title: const Text(
-          '자서전을 다시 만들까요?',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w900,
-            color: AppTheme.text,
-          ),
-        ),
+        title: const Text('다시 제작할까요?'),
         content: const Text(
-          '현재 답변을 기준으로 자서전을 다시 생성합니다. 기존 PDF는 새 결과로 대체될 수 있어요.',
-          style: TextStyle(fontSize: 13, color: AppTheme.textSec, height: 1.5),
+          '현재 답변을 기준으로 결과물을 다시 생성합니다. 기존 결과는 새 결과로 대체될 수 있습니다.',
         ),
         actions: [
           TextButton(
-            onPressed: Get.back,
-            child: const Text('취소', style: TextStyle(color: AppTheme.textSec)),
+            onPressed: () => SafeNavigation.closeDialog(context),
+            child: const Text('취소'),
           ),
           TextButton(
             onPressed: () {
-              Get.back();
-              Get.toNamed(Routes.generating, arguments: {'force': true});
+              SafeNavigation.closeDialog(context);
+              Get.toNamed(
+                Routes.genConfirm,
+                arguments: {'canGenerate': true, 'force': true},
+              );
             },
-            child: const Text(
-              '다시 만들기',
-              style: TextStyle(
-                color: AppTheme.cta,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
+            child: const Text('다시 만들기'),
           ),
         ],
       ),
@@ -101,12 +91,7 @@ class AutobiographyListPage extends GetView<AutobiographyListController> {
     return Scaffold(
       backgroundColor: AppTheme.bg,
       appBar: AppBar(
-        title: const Text(
-          '나의 자서전',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
-        ),
-        backgroundColor: AppTheme.bg,
-        elevation: 0,
+        title: const Text('제작 스튜디오'),
         actions: [
           IconButton(
             tooltip: '새로고침',
@@ -115,14 +100,14 @@ class AutobiographyListPage extends GetView<AutobiographyListController> {
               await controller.fetchTocQuestions();
               await controller.syncAutobiographyStatus();
             },
-            icon: const Icon(Icons.refresh_rounded, color: AppTheme.textSec),
+            icon: const Icon(Icons.refresh_rounded),
           ),
         ],
       ),
       body: Obx(() {
         if (controller.isLoading.value && controller.chapters.isEmpty) {
           return const Center(
-            child: CircularProgressIndicator(color: AppTheme.cta),
+            child: CircularProgressIndicator(color: AppTheme.text),
           );
         }
 
@@ -136,7 +121,7 @@ class AutobiographyListPage extends GetView<AutobiographyListController> {
           children: [
             Expanded(
               child: RefreshIndicator(
-                color: AppTheme.cta,
+                color: AppTheme.text,
                 backgroundColor: AppTheme.surface,
                 onRefresh: () async {
                   await controller.fetchToc();
@@ -144,13 +129,11 @@ class AutobiographyListPage extends GetView<AutobiographyListController> {
                   await controller.syncAutobiographyStatus();
                 },
                 child: ListView(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
                   children: [
-                    _BookStatusPanel(
+                    _StudioPanel(
                       isGenerated: isGenerated,
                       canGenerate: canGenerate,
-                      totalChapters: controller.totalChapters.value,
-                      completedChapters: controller.completedChapters.value,
                       answeredQuestions: controller.answeredQuestions.value,
                       totalQuestions: controller.totalQuestions.value,
                       remainingQuestions: controller.remainingQuestions.value,
@@ -159,28 +142,10 @@ class AutobiographyListPage extends GetView<AutobiographyListController> {
                       hasPdf: (autoController.pdfUrl.value ?? '').isNotEmpty,
                       onView: () => _onViewAutobiographyPressed(autoController),
                     ),
-                    const SizedBox(height: 20),
-                    const _SectionHeader(
-                      title: '목차와 질문',
-                      subtitle: '오늘 떠오르는 시기부터 자유롭게 채워도 괜찮아요.',
-                    ),
-                    const SizedBox(height: 12),
-                    if (controller.errorMessage.value.isNotEmpty)
-                      _InfoPanel(
-                        icon: Icons.wifi_off_rounded,
-                        title: controller.errorMessage.value,
-                        subtitle: '아래로 당겨 다시 불러올 수 있어요.',
-                      )
-                    else if (controller.chapters.isEmpty)
-                      const _InfoPanel(
-                        icon: Icons.auto_stories_outlined,
-                        title: '아직 목차가 없어요',
-                        subtitle: '첫 질문을 시작하면 자서전 목차가 만들어집니다.',
-                      )
-                    else
-                      ...controller.chapters.map((chapter) {
-                        return _ChapterCard(chapter: chapter);
-                      }),
+                    const SizedBox(height: 22),
+                    _ChapterRail(controller: controller),
+                    const SizedBox(height: 22),
+                    _QuestionBoard(controller: controller),
                   ],
                 ),
               ),
@@ -193,7 +158,7 @@ class AutobiographyListPage extends GetView<AutobiographyListController> {
               hasPdf: (autoController.pdfUrl.value ?? '').isNotEmpty,
               onCreate: _onCreateAutobiographyPressed,
               onView: () => _onViewAutobiographyPressed(autoController),
-              onRecreate: _onRecreateAutobiographyPressed,
+              onRecreate: () => _onRecreateAutobiographyPressed(context),
             ),
           ],
         );
@@ -202,11 +167,9 @@ class AutobiographyListPage extends GetView<AutobiographyListController> {
   }
 }
 
-class _BookStatusPanel extends StatelessWidget {
+class _StudioPanel extends StatelessWidget {
   final bool isGenerated;
   final bool canGenerate;
-  final int totalChapters;
-  final int completedChapters;
   final int answeredQuestions;
   final int totalQuestions;
   final int remainingQuestions;
@@ -215,11 +178,9 @@ class _BookStatusPanel extends StatelessWidget {
   final bool hasPdf;
   final VoidCallback onView;
 
-  const _BookStatusPanel({
+  const _StudioPanel({
     required this.isGenerated,
     required this.canGenerate,
-    required this.totalChapters,
-    required this.completedChapters,
     required this.answeredQuestions,
     required this.totalQuestions,
     required this.remainingQuestions,
@@ -232,33 +193,22 @@ class _BookStatusPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final percent = (progress * 100).clamp(0, 100).round();
-    final headline = isGenerated
-        ? '자서전이 준비됐어요'
+    final title = isGenerated
+        ? '완성본이 준비됐어요'
         : canGenerate
-            ? '책으로 묶을 준비가 됐어요'
-            : '기억을 차곡차곡 모으는 중';
+            ? '이제 제작할 수 있어요'
+            : '질문을 모으는 중이에요';
     final subtitle = isGenerated
-        ? '새 답변을 더한 뒤 다시 만들 수도 있어요.'
+        ? '바로 열어보거나 현재 답변으로 다시 제작할 수 있습니다.'
         : canGenerate
-            ? '지금까지의 답변으로 첫 자서전을 만들 수 있어요.'
-            : '남은 질문 $remainingQuestions개를 원하는 순서로 채워보세요.';
+            ? '답변을 하나의 읽기 좋은 결과물로 묶어볼까요?'
+            : '남은 질문 $remainingQuestions개를 채우면 제작 버튼이 열립니다.';
 
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isGenerated || canGenerate ? AppTheme.cta : AppTheme.border,
-          width: 2,
-        ),
-        boxShadow: const [
-          BoxShadow(
-            color: AppTheme.shadow,
-            blurRadius: 0,
-            offset: Offset(0, 5),
-          ),
-        ],
+        color: AppTheme.text,
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -266,108 +216,95 @@ class _BookStatusPanel extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const Expanded(
+                child: AnimatedMascot(
+                  size: 108,
+                  mood: MascotMood.success,
+                ),
+              ),
               Container(
-                width: 54,
-                height: 54,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: isGenerated ? AppTheme.successBg : AppTheme.bgAlt,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: isGenerated ? AppTheme.cta : AppTheme.border,
-                    width: 2,
+                  color: AppTheme.sun,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  '$percent%',
+                  style: const TextStyle(
+                    color: AppTheme.text,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
-                child: Icon(
-                  isGenerated
-                      ? Icons.menu_book_rounded
-                      : Icons.edit_note_rounded,
-                  color: isGenerated ? AppTheme.cta : AppTheme.sky,
-                  size: 30,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      headline,
-                      style: const TextStyle(
-                        color: AppTheme.text,
-                        fontSize: 20,
-                        height: 1.25,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      subtitle,
-                      style: const TextStyle(
-                        color: AppTheme.textSec,
-                        fontSize: 13,
-                        height: 1.45,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
               ),
             ],
+          ),
+          const SizedBox(height: 14),
+          Text(
+            title,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 27,
+              height: 1.12,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            subtitle,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 14,
+              height: 1.45,
+              fontWeight: FontWeight.w700,
+            ),
           ),
           const SizedBox(height: 18),
-          Row(
-            children: [
-              Expanded(
-                child: _MetricTile(
-                  label: '챕터',
-                  value: '$completedChapters/$totalChapters',
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _MetricTile(
-                  label: '질문',
-                  value: '$answeredQuestions/$totalQuestions',
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _MetricTile(
-                  label: '진행률',
-                  value: '$percent%',
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
           AppProgressBar(
             value: progress,
             height: 10,
-            fill: canGenerate || isGenerated ? AppTheme.cta : AppTheme.sky,
+            fill: AppTheme.cta,
+            bg: Colors.white24,
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              _DarkMetric(label: '답변', value: '$answeredQuestions/$totalQuestions'),
+              const SizedBox(width: 8),
+              _DarkMetric(label: '남음', value: '$remainingQuestions'),
+              if (isGenerated) ...[
+                const Spacer(),
+                TextButton.icon(
+                  onPressed: onView,
+                  icon: const Icon(Icons.open_in_new_rounded, color: Colors.white),
+                  label: const Text(
+                    '열기',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ],
+            ],
           ),
           if (isGenerated) ...[
-            const SizedBox(height: 14),
-            Row(
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
               children: [
                 _Pill(
                   icon: Icons.picture_as_pdf_rounded,
-                  text: hasPdf ? 'PDF 사용 가능' : 'PDF 확인 필요',
+                  text: hasPdf ? 'PDF 연결됨' : 'PDF 확인 필요',
                   color: hasPdf ? AppTheme.cta : AppTheme.warning,
                 ),
-                if (pageCount != null) ...[
-                  const SizedBox(width: 8),
+                if (pageCount != null)
                   _Pill(
                     icon: Icons.layers_rounded,
                     text: '$pageCount쪽',
                     color: AppTheme.sky,
                   ),
-                ],
-                const Spacer(),
-                TextButton.icon(
-                  onPressed: onView,
-                  icon: const Icon(Icons.open_in_new_rounded, size: 18),
-                  label: const Text('보기'),
-                ),
               ],
             ),
           ],
@@ -377,11 +314,11 @@ class _BookStatusPanel extends StatelessWidget {
   }
 }
 
-class _MetricTile extends StatelessWidget {
+class _DarkMetric extends StatelessWidget {
   final String label;
   final String value;
 
-  const _MetricTile({
+  const _DarkMetric({
     required this.label,
     required this.value,
   });
@@ -389,11 +326,11 @@ class _MetricTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
       decoration: BoxDecoration(
-        color: AppTheme.bgAlt,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.border),
+        color: Colors.white12,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.white24),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -401,16 +338,15 @@ class _MetricTile extends StatelessWidget {
           Text(
             label,
             style: const TextStyle(
-              color: AppTheme.textPh,
+              color: Colors.white70,
               fontSize: 11,
               fontWeight: FontWeight.w800,
             ),
           ),
-          const SizedBox(height: 5),
           Text(
             value,
             style: const TextStyle(
-              color: AppTheme.text,
+              color: Colors.white,
               fontSize: 16,
               fontWeight: FontWeight.w900,
             ),
@@ -421,377 +357,331 @@ class _MetricTile extends StatelessWidget {
   }
 }
 
-class _SectionHeader extends StatelessWidget {
-  final String title;
-  final String subtitle;
+class _ChapterRail extends StatelessWidget {
+  final AutobiographyListController controller;
 
-  const _SectionHeader({
-    required this.title,
-    required this.subtitle,
-  });
+  const _ChapterRail({required this.controller});
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  color: AppTheme.text,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: const TextStyle(
-                  color: AppTheme.textSec,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ChapterCard extends GetView<AutobiographyListController> {
-  final Map<String, dynamic> chapter;
-
-  const _ChapterCard({required this.chapter});
-
-  @override
-  Widget build(BuildContext context) {
-    final tocId = _toInt(chapter['tocId'] ?? chapter['id'] ?? chapter['n']);
-    final title =
-        chapter['title'] ?? chapter['tocTitle'] ?? chapter['name'] ?? '제목 없음';
-    final done = (chapter['done'] as num?)?.toInt() ?? 0;
-    final total = (chapter['total'] as num?)?.toInt() ?? 0;
-    final percent = (chapter['percent'] as num?)?.toInt() ?? 0;
-    final status = chapter['status']?.toString().toLowerCase() ?? '';
-    final isCompleted = status == 'completed' ||
-        status == 'complete' ||
-        (total > 0 && done >= total) ||
-        percent >= 100;
-    final isInProgress = done > 0 && !isCompleted;
-    final progress = total > 0 ? done / total : percent / 100;
-    final accent = isCompleted
-        ? AppTheme.cta
-        : isInProgress
-            ? AppTheme.sky
-            : AppTheme.lavender;
-
     return Obx(() {
-      final isExpanded =
-          tocId != null && controller.expandedTocId.value == tocId;
-      final questions =
-          tocId == null ? [] : controller.tocQuestions[tocId] ?? [];
-      final isLoadingQuestions =
-          tocId != null && controller.loadingQuestionTocIds.contains(tocId);
+      if (controller.errorMessage.value.isNotEmpty) {
+        return _InfoPanel(
+          icon: Icons.wifi_off_rounded,
+          title: controller.errorMessage.value,
+          subtitle: '아래로 당겨 다시 불러올 수 있습니다.',
+        );
+      }
 
-      return Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: isExpanded ? accent : AppTheme.border,
-            width: 2,
+      if (controller.chapters.isEmpty) {
+        return const _InfoPanel(
+          icon: Icons.add_rounded,
+          title: '아직 목차가 없습니다',
+          subtitle: '첫 자기소개를 작성하면 목차가 생성됩니다.',
+        );
+      }
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _SectionHeader(
+            title: '목차 레일',
+            subtitle: '챕터를 누르면 아래 질문 보드가 바뀝니다.',
           ),
-        ),
-        child: Column(
-          children: [
-            InkWell(
-              onTap:
-                  tocId == null ? null : () => controller.toggleChapter(tocId),
-              borderRadius: BorderRadius.circular(14),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: accent.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: accent, width: 2),
-                          ),
-                          child: Icon(
-                            isCompleted
-                                ? Icons.check_rounded
-                                : isInProgress
-                                    ? Icons.edit_rounded
-                                    : Icons.auto_stories_outlined,
-                            color: accent,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                tocId == null ? 'Chapter' : 'Chapter $tocId',
-                                style: TextStyle(
-                                  color: accent,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                title.toString(),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: AppTheme.text,
-                                  fontSize: 16,
-                                  height: 1.25,
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        _ChapterStatusPill(
-                          isCompleted: isCompleted,
-                          isInProgress: isInProgress,
-                        ),
-                        const SizedBox(width: 6),
-                        Icon(
-                          isExpanded
-                              ? Icons.keyboard_arrow_up_rounded
-                              : Icons.keyboard_arrow_down_rounded,
-                          color: AppTheme.textPh,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: AppProgressBar(
-                            value: progress,
-                            height: 8,
-                            fill: accent,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          '$done / $total',
-                          style: const TextStyle(
-                            color: AppTheme.textSec,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 168,
+            child: ListView.separated(
+              padding: const EdgeInsets.fromLTRB(2, 12, 2, 6),
+              scrollDirection: Axis.horizontal,
+              itemBuilder: (context, index) {
+                final chapter = controller.chapters[index];
+                return _ChapterTile(
+                  index: index,
+                  chapter: chapter,
+                  onTap: () {
+                    final tocId = _toInt(
+                      chapter['tocId'] ?? chapter['id'] ?? chapter['n'],
+                    );
+                    if (tocId != null) controller.toggleChapter(tocId);
+                  },
+                );
+              },
+              separatorBuilder: (_, __) => const SizedBox(width: 10),
+              itemCount: controller.chapters.length,
             ),
-            if (isExpanded)
-              _QuestionList(
-                tocId: tocId,
-                done: done,
-                questions: questions.cast<Map<String, dynamic>>(),
-                isLoading: isLoadingQuestions,
-              ),
-          ],
-        ),
+          ),
+        ],
       );
     });
   }
-
-  int? _toInt(dynamic value) {
-    if (value is int) return value;
-    if (value is num) return value.toInt();
-    if (value is String) return int.tryParse(value);
-    return null;
-  }
 }
 
-class _QuestionList extends GetView<AutobiographyListController> {
-  final int? tocId;
-  final int done;
-  final List<Map<String, dynamic>> questions;
-  final bool isLoading;
-
-  const _QuestionList({
-    required this.tocId,
-    required this.done,
-    required this.questions,
-    required this.isLoading,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppTheme.bgAlt,
-        border: Border(top: BorderSide(color: AppTheme.border)),
-      ),
-      padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
-      child: isLoading
-          ? const Padding(
-              padding: EdgeInsets.all(18),
-              child: Center(
-                child: CircularProgressIndicator(color: AppTheme.cta),
-              ),
-            )
-          : questions.isEmpty
-              ? const Padding(
-                  padding: EdgeInsets.all(14),
-                  child: Text(
-                    '질문 목록이 아직 없어요.',
-                    style: TextStyle(color: AppTheme.textSec),
-                  ),
-                )
-              : Column(
-                  children: questions.asMap().entries.map((entry) {
-                    final index = entry.key + 1;
-                    final question = entry.value;
-                    final text = question['questionText'] ??
-                        question['question'] ??
-                        question['text'] ??
-                        '질문 내용 없음';
-                    final isDone = question['isAnswered'] == true ||
-                        question['status'] == 'completed' ||
-                        question['done'] == true ||
-                        question['answerId'] != null ||
-                        index <= done;
-
-                    return _QuestionRow(
-                      index: index,
-                      text: text.toString(),
-                      isDone: isDone,
-                      onTap: tocId == null
-                          ? null
-                          : () => controller.onQuestionTap(tocId!, question),
-                    );
-                  }).toList(),
-                ),
-    );
-  }
-}
-
-class _QuestionRow extends StatelessWidget {
+class _ChapterTile extends GetView<AutobiographyListController> {
   final int index;
-  final String text;
-  final bool isDone;
-  final VoidCallback? onTap;
+  final Map<String, dynamic> chapter;
+  final VoidCallback onTap;
 
-  const _QuestionRow({
+  const _ChapterTile({
     required this.index,
-    required this.text,
-    required this.isDone,
+    required this.chapter,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    final tocId = _toInt(chapter['tocId'] ?? chapter['id'] ?? chapter['n']);
+    final title = chapter['title'] ??
+        chapter['tocTitle'] ??
+        chapter['name'] ??
+        '제목 없는 챕터';
+    final done = (chapter['done'] as num?)?.toInt() ?? 0;
+    final total = (chapter['total'] as num?)?.toInt() ?? 0;
+    final progress = total > 0 ? done / total : 0.0;
+    final color = _palette[index % _palette.length];
+
+    return Obx(() {
+      final selected = tocId != null && controller.expandedTocId.value == tocId;
+
+      return AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+        transform: Matrix4.translationValues(0, selected ? -10 : 0, 0),
+        child: Stack(
           children: [
-            Container(
-              width: 28,
-              height: 28,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: isDone ? AppTheme.successBg : AppTheme.surface,
+            Material(
+              color: selected ? AppTheme.text : color,
+              elevation: selected ? 9 : 0,
+              shadowColor: const Color(0x66000000),
+              borderRadius: BorderRadius.circular(8),
+              child: InkWell(
+                onTap: onTap,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: isDone ? AppTheme.cta : AppTheme.border,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOutCubic,
+                  width: selected ? 166 : 154,
+                  padding: const EdgeInsets.all(13),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: selected ? Colors.white : AppTheme.text,
+                      width: selected ? 2.6 : 1.2,
+                    ),
+                    boxShadow: selected
+                        ? const [
+                            BoxShadow(
+                              color: Color(0x55000000),
+                              blurRadius: 0,
+                              offset: Offset(5, 6),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              '${index + 1}'.padLeft(2, '0'),
+                              style: TextStyle(
+                                color: selected ? Colors.white : AppTheme.text,
+                                fontSize: selected ? 24 : 22,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ),
+                          if (selected)
+                            const Icon(
+                              Icons.touch_app_rounded,
+                              color: AppTheme.sun,
+                              size: 22,
+                            ),
+                        ],
+                      ),
+                      const Spacer(),
+                      Text(
+                        title.toString(),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: selected ? Colors.white : AppTheme.text,
+                          fontSize: selected ? 15 : 14,
+                          height: 1.25,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      AppProgressBar(
+                        value: progress,
+                        height: selected ? 8 : 7,
+                        fill: selected ? AppTheme.cta : AppTheme.text,
+                        bg: selected ? Colors.white24 : Colors.black12,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              child: Text(
-                '$index',
-                style: TextStyle(
-                  color: isDone ? AppTheme.cta : AppTheme.textSec,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                text,
-                style: const TextStyle(
-                  color: AppTheme.text,
-                  fontSize: 13,
-                  height: 1.4,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Icon(
-              isDone ? Icons.check_circle_rounded : Icons.chevron_right_rounded,
-              color: isDone ? AppTheme.cta : AppTheme.textPh,
-              size: 20,
             ),
           ],
         ),
-      ),
-    );
+      );
+    });
   }
 }
 
-class _ChapterStatusPill extends StatelessWidget {
-  final bool isCompleted;
-  final bool isInProgress;
+class _QuestionBoard extends StatelessWidget {
+  final AutobiographyListController controller;
 
-  const _ChapterStatusPill({
-    required this.isCompleted,
-    required this.isInProgress,
+  const _QuestionBoard({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final selectedTocId = controller.expandedTocId.value ??
+          (controller.chapters.isEmpty
+              ? null
+              : _toInt(
+                  controller.chapters.first['tocId'] ??
+                      controller.chapters.first['id'] ??
+                      controller.chapters.first['n'],
+                ));
+
+      if (selectedTocId == null) {
+        return const SizedBox.shrink();
+      }
+
+      final loading = controller.loadingQuestionTocIds.contains(selectedTocId);
+      final questions = controller.tocQuestions[selectedTocId] ?? [];
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _SectionHeader(
+            title: '질문 보드',
+            subtitle: '각 질문은 독립된 블록입니다. 바로 눌러 작성하세요.',
+          ),
+          const SizedBox(height: 12),
+          if (loading)
+            const Padding(
+              padding: EdgeInsets.all(24),
+              child: Center(child: CircularProgressIndicator(color: AppTheme.text)),
+            )
+          else if (questions.isEmpty)
+            _InfoPanel(
+              icon: Icons.touch_app_rounded,
+              title: '질문을 불러오는 중이거나 아직 없습니다',
+              subtitle: '목차를 다시 누르거나 새로고침을 시도해보세요.',
+              onTap: () => controller.fetchQuestionsForToc(selectedTocId),
+            )
+          else
+            ...questions.asMap().entries.map((entry) {
+              return _QuestionTile(
+                tocId: selectedTocId,
+                index: entry.key,
+                question: Map<String, dynamic>.from(entry.value),
+              );
+            }),
+        ],
+      );
+    });
+  }
+}
+
+class _QuestionTile extends GetView<AutobiographyListController> {
+  final int tocId;
+  final int index;
+  final Map<String, dynamic> question;
+
+  const _QuestionTile({
+    required this.tocId,
+    required this.index,
+    required this.question,
   });
 
   @override
   Widget build(BuildContext context) {
-    final text = isCompleted
-        ? '완료'
-        : isInProgress
-            ? '작성 중'
-            : '선택 가능';
-    final color = isCompleted
-        ? AppTheme.cta
-        : isInProgress
-            ? AppTheme.sky
-            : AppTheme.lavender;
+    final text = question['questionText'] ??
+        question['question'] ??
+        question['text'] ??
+        '질문 내용 없음';
+    final done = question['isAnswered'] == true ||
+        question['status'] == 'completed' ||
+        question['done'] == true ||
+        question['answerId'] != null;
+    final color = _palette[index % _palette.length];
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.13),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withValues(alpha: 0.5)),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: color,
-          fontSize: 11,
-          fontWeight: FontWeight.w900,
+      margin: const EdgeInsets.only(bottom: 10),
+      child: Material(
+        color: done ? AppTheme.surfaceElevated : AppTheme.surface,
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          onTap: () => controller.onQuestionTap(tocId, question),
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppTheme.text, width: 1.1),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: done ? AppTheme.cta : color,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '${index + 1}',
+                    style: const TextStyle(
+                      color: AppTheme.text,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        done ? '작성 완료' : '작성 대기',
+                        style: TextStyle(
+                          color: done ? AppTheme.ctaDark : AppTheme.textPh,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        text.toString(),
+                        style: const TextStyle(
+                          color: AppTheme.text,
+                          fontSize: 14,
+                          height: 1.42,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Icon(
+                  done ? Icons.check_circle_rounded : Icons.arrow_forward_rounded,
+                  color: done ? AppTheme.ctaDark : AppTheme.text,
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -824,60 +714,33 @@ class _BottomComposer extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
       decoration: const BoxDecoration(
-        color: AppTheme.surface,
-        border: Border(top: BorderSide(color: AppTheme.border)),
+        color: AppTheme.sun,
+        border: Border(top: BorderSide(color: AppTheme.text)),
       ),
       child: SafeArea(
         top: false,
         child: isGenerated
-            ? Column(
-                mainAxisSize: MainAxisSize.min,
+            ? Row(
                 children: [
-                  Row(
-                    children: [
-                      _Pill(
-                        icon: Icons.menu_book_rounded,
-                        text: hasPdf ? '완성본 있음' : '완성 상태 확인 필요',
-                        color: hasPdf ? AppTheme.cta : AppTheme.warning,
-                      ),
-                      if (pageCount != null) ...[
-                        const SizedBox(width: 8),
-                        _Pill(
-                          icon: Icons.layers_rounded,
-                          text: '$pageCount쪽',
-                          color: AppTheme.sky,
-                        ),
-                      ],
-                    ],
+                  Expanded(
+                    child: SecondaryButton(
+                      text: '다시 제작',
+                      icon: const Icon(Icons.refresh_rounded, size: 18),
+                      onPressed: onRecreate,
+                    ),
                   ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: SecondaryButton(
-                          text: '다시 만들기',
-                          icon: const Icon(
-                            Icons.refresh_rounded,
-                            color: AppTheme.text,
-                            size: 18,
-                          ),
-                          onPressed: onRecreate,
-                        ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    flex: 2,
+                    child: PrimaryButton(
+                      text: '결과 보기',
+                      icon: const Icon(
+                        Icons.open_in_new_rounded,
+                        color: Colors.white,
+                        size: 18,
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        flex: 2,
-                        child: PrimaryButton(
-                          text: '자서전 보기',
-                          icon: const Icon(
-                            Icons.open_in_new_rounded,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                          onPressed: onView,
-                        ),
-                      ),
-                    ],
+                      onPressed: onView,
+                    ),
                   ),
                 ],
               )
@@ -886,20 +749,20 @@ class _BottomComposer extends StatelessWidget {
                 children: [
                   Text(
                     canGenerate
-                        ? '답변이 모두 모였어요. 이제 책으로 엮을 수 있습니다.'
-                        : '남은 질문 $remainingQuestions개를 채우면 자서전을 만들 수 있어요.',
+                        ? '모든 질문이 채워졌습니다. 바로 제작할 수 있어요.'
+                        : '남은 질문 $remainingQuestions개를 채우면 제작할 수 있어요.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: canGenerate ? AppTheme.ctaDark : AppTheme.warning,
+                    style: const TextStyle(
+                      color: AppTheme.text,
                       fontSize: 12,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
                   const SizedBox(height: 10),
                   PrimaryButton(
-                    text: '자서전 만들기',
+                    text: '결과물 제작',
                     icon: const Icon(
-                      Icons.auto_stories_outlined,
+                      Icons.auto_awesome_rounded,
                       color: Colors.white,
                       size: 18,
                     ),
@@ -909,6 +772,42 @@ class _BottomComposer extends StatelessWidget {
                 ],
               ),
       ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  final String subtitle;
+
+  const _SectionHeader({
+    required this.title,
+    required this.subtitle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            color: AppTheme.text,
+            fontSize: 19,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          subtitle,
+          style: const TextStyle(
+            color: AppTheme.textSec,
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -929,9 +828,9 @@ class _Pill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.13),
+        color: color.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withValues(alpha: 0.45)),
+        border: Border.all(color: color),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -956,53 +855,77 @@ class _InfoPanel extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
+  final VoidCallback? onTap;
 
   const _InfoPanel({
     required this.icon,
     required this.title,
     required this.subtitle,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.border, width: 2),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: AppTheme.sky, size: 28),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: AppTheme.text,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    color: AppTheme.textSec,
-                    fontSize: 12,
-                    height: 1.4,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
+    return Material(
+      color: AppTheme.surfaceElevated,
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: AppTheme.text, width: 1.1),
           ),
-        ],
+          child: Row(
+            children: [
+              Icon(icon, color: AppTheme.text, size: 28),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: AppTheme.text,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        color: AppTheme.textSec,
+                        fontSize: 12,
+                        height: 1.4,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 }
+
+int? _toInt(dynamic value) {
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value);
+  return null;
+}
+
+const _palette = [
+  AppTheme.sky,
+  AppTheme.coral,
+  AppTheme.cta,
+  AppTheme.lavender,
+  AppTheme.sun,
+];

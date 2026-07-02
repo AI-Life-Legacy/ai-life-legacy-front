@@ -72,10 +72,17 @@ class AutobiographyApi {
   }
 
   /// 자서전 생성 및 PDF 발행
-  Future<Response> generateAutobiography({bool force = false}) async {
+  Future<Response> generateAutobiography({
+    bool force = false,
+    String templateId = 'classic',
+  }) async {
     return await _apiProvider.post(
       ApiEndpoints.aiAutobiography,
       queryParameters: force ? {'force': 'true'} : null,
+      data: {
+        'templateId': templateId,
+        'theme': templateId,
+      },
       options: Options(receiveTimeout: const Duration(minutes: 6)),
     );
   }

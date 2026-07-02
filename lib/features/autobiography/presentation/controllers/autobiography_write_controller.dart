@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
+import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
 import 'package:ai_life_legacy/features/autobiography/data/autobiography_api.dart';
 
 class AutobiographyWriteController extends GetxController {
@@ -83,7 +84,12 @@ class AutobiographyWriteController extends GetxController {
         updateAnswer: answerText.value,
       );
 
-      Get.back(result: true);
+      final navigator = Get.key.currentState;
+      if (navigator?.canPop() == true) {
+        navigator!.pop(true);
+      } else {
+        Get.offNamed(Routes.autobiography);
+      }
     } catch (e) {
       debugPrint('[AutobiographyWriteController] save error: $e');
       errorMessage.value = '답변 저장에 실패했어요.';

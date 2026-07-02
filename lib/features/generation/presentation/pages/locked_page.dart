@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:ai_life_legacy/app/core/theme/app_theme.dart';
 import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
+import 'package:ai_life_legacy/app/core/utils/safe_navigation.dart';
 
 class LockedPage extends StatelessWidget {
   const LockedPage({super.key});
@@ -19,7 +20,7 @@ class LockedPage extends StatelessWidget {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: TextButton(
-                  onPressed: () => Get.back(),
+                  onPressed: () => SafeNavigation.back(context),
                   style: TextButton.styleFrom(
                     padding: EdgeInsets.zero,
                     minimumSize: Size.zero,

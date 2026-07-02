@@ -1,7 +1,9 @@
 import 'package:ai_life_legacy/app/core/config/env.dart';
 import 'package:ai_life_legacy/app/core/network/dio_client.dart';
+import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
 import 'package:ai_life_legacy/app/core/theme/app_theme.dart';
 import 'package:ai_life_legacy/app/core/theme/widgets/mascot_flow_widgets.dart';
+import 'package:ai_life_legacy/app/core/utils/safe_navigation.dart';
 import 'package:ai_life_legacy/features/autobiography/presentation/controllers/autobiography_controller.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -160,7 +162,7 @@ class _EbookReaderPageState extends State<EbookReaderPage> {
         backgroundColor: bg,
         elevation: 0,
         leading: IconButton(
-          onPressed: Get.back,
+          onPressed: () => SafeNavigation.back(context, fallbackRoute: Routes.generated),
           icon: Icon(Icons.arrow_back_ios_new, color: text),
         ),
         title: Text(

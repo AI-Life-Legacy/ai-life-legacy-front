@@ -558,13 +558,19 @@ class AutobiographyController extends GetxController {
     }
   }
 
-  Future<Map<String, dynamic>?> generateFullBook({bool force = false}) async {
+  Future<Map<String, dynamic>?> generateFullBook({
+    bool force = false,
+    String templateId = 'classic',
+  }) async {
     if (isGenerating.value) return null;
     try {
       isGenerating.value = true;
       lastGenerationError.value = '';
 
-      final response = await _api.generateAutobiography(force: force);
+      final response = await _api.generateAutobiography(
+        force: force,
+        templateId: templateId,
+      );
       if (response.statusCode == 200 || response.statusCode == 201) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('avatarUnlocked', true);

@@ -80,10 +80,14 @@ class _ChapterChatPageState extends State<ChapterChatPage> {
               progress: progress,
               onBack: () {
                 if (controller.isSavingAnswer.value) return;
-                if (Get.key.currentState?.canPop() == true) {
-                  Get.back();
+                final navigator = Navigator.of(context);
+                if (navigator.canPop()) {
+                  navigator.pop();
                 } else {
-                  Get.offAllNamed(Routes.home);
+                  navigator.pushNamedAndRemoveUntil(
+                    Routes.home,
+                    (route) => false,
+                  );
                 }
               },
             ),

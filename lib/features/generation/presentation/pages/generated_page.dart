@@ -3,6 +3,7 @@ import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
 import 'package:ai_life_legacy/app/core/theme/app_theme.dart';
 import 'package:ai_life_legacy/app/core/theme/widgets/animated_mascot.dart';
 import 'package:ai_life_legacy/app/core/theme/widgets/mascot_flow_widgets.dart';
+import 'package:ai_life_legacy/app/core/utils/safe_navigation.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -168,7 +169,10 @@ class _GeneratedPageState extends State<GeneratedPage> {
               final saved =
                   await _submitFeedback(wantsRegeneration: true);
               if (saved && mounted) {
-                Get.offNamed(Routes.generating, arguments: {'force': true});
+                Get.offNamed(
+                  Routes.genConfirm,
+                  arguments: {'canGenerate': true, 'force': true},
+                );
               }
             },
           ),
@@ -204,7 +208,7 @@ class _GeneratedPageState extends State<GeneratedPage> {
             icon: Icons.refresh,
             title: '다시 제작하기',
             subtitle: '현재 답변 기준으로 자서전을 다시 생성합니다.',
-            onTap: _confirmRegenerate,
+            onTap: () => _confirmRegenerate(context),
           ),
           const SizedBox(height: 18),
         ],
@@ -298,7 +302,7 @@ class _GeneratedPageState extends State<GeneratedPage> {
     }
   }
 
-  void _confirmRegenerate() {
+  void _confirmRegenerate(BuildContext context) {
     Get.dialog(
       AlertDialog(
         backgroundColor: MascotFlowTheme.surface,
@@ -321,7 +325,7 @@ class _GeneratedPageState extends State<GeneratedPage> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Get.back(),
+            onPressed: () => SafeNavigation.closeDialog(context),
             child: const Text(
               '취소',
               style: TextStyle(color: MascotFlowTheme.textMuted),
@@ -329,8 +333,11 @@ class _GeneratedPageState extends State<GeneratedPage> {
           ),
           TextButton(
             onPressed: () {
-              Get.back();
-              Get.offNamed(Routes.generating, arguments: {'force': true});
+              SafeNavigation.closeDialog(context);
+              Get.offNamed(
+                Routes.genConfirm,
+                arguments: {'canGenerate': true, 'force': true},
+              );
             },
             child: const Text(
               '다시 제작하기',

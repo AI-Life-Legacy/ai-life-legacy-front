@@ -42,7 +42,10 @@ class CompletionPage extends StatelessWidget {
             title: '내 인생책 만들기',
             subtitle: '완성된 답변을 바탕으로 자서전을 생성합니다.',
             selected: true,
-            onTap: () => Get.toNamed(Routes.generating),
+            onTap: () => Get.toNamed(
+              Routes.genConfirm,
+              arguments: {'canGenerate': true},
+            ),
           ),
           FlowOptionCard(
             icon: Icons.home_rounded,
@@ -53,7 +56,10 @@ class CompletionPage extends StatelessWidget {
           const Spacer(),
           FlowPrimaryButton(
             text: '책 만들기',
-            onPressed: () => Get.toNamed(Routes.generating),
+            onPressed: () => Get.toNamed(
+              Routes.genConfirm,
+              arguments: {'canGenerate': true},
+            ),
           ),
         ],
       ),

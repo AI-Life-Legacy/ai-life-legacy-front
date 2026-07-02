@@ -1,5 +1,6 @@
 import 'package:ai_life_legacy/app/core/theme/app_theme.dart';
 import 'package:ai_life_legacy/app/core/theme/widgets/mascot_flow_widgets.dart';
+import 'package:ai_life_legacy/app/core/utils/safe_navigation.dart';
 import 'package:ai_life_legacy/features/autobiography/presentation/controllers/autobiography_write_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -59,7 +60,7 @@ class _AutobiographyWritePageState extends State<AutobiographyWritePage> {
             child: Row(
               children: [
                 IconButton(
-                  onPressed: () => Get.back(),
+                  onPressed: () => SafeNavigation.back(context),
                   icon: const Icon(
                     Icons.close,
                     color: MascotFlowTheme.textMuted,
