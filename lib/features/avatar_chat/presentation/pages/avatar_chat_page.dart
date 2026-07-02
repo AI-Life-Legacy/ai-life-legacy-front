@@ -1,8 +1,6 @@
 import 'package:ai_life_legacy/app/core/theme/app_theme.dart';
-import 'package:ai_life_legacy/app/core/theme/widgets/animated_mascot.dart';
 import 'package:ai_life_legacy/app/core/theme/widgets/app_chat_input.dart';
 import 'package:ai_life_legacy/app/core/theme/widgets/chat_widgets.dart';
-import 'package:ai_life_legacy/app/core/theme/widgets/mascot_flow_widgets.dart';
 import 'package:ai_life_legacy/app/core/utils/token_storage.dart';
 import 'package:ai_life_legacy/features/avatar_chat/presentation/controllers/avatar_chat_controller.dart';
 import 'package:flutter/material.dart';
@@ -30,7 +28,7 @@ class AvatarChatPage extends GetView<AvatarChatController> {
     final familyRoles = controller.roles.where((r) => r.group == '가족').toList();
 
     return _AvatarShell(
-      title: '대화 상대 선택',
+      title: '대화 모드',
       onBack: controller.handleBack,
       child: Column(
         children: [
@@ -39,14 +37,13 @@ class AvatarChatPage extends GetView<AvatarChatController> {
               padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
               children: [
                 _HeroPanel(
-                  eyebrow: Obx(
-                      () => Text('${controller.authorName.value}님의 기억과 대화')),
-                  title: '어떤 목소리로\n이야기를 들어볼까요?',
-                  body: '선택한 관계에 따라 말투와 질문 방식이 달라져요. 언제든 다시 바꿀 수 있습니다.',
-                  mood: MascotMood.thinking,
+                  eyebrow:
+                      Obx(() => Text('${controller.authorName.value}님의 기록')),
+                  title: '어떤 말투로\n기억을 열어볼까요?',
+                  body: '역할은 말투와 질문의 속도만 바꿉니다. 언제든 다시 선택할 수 있습니다.',
                 ),
                 const SizedBox(height: 22),
-                _SectionLabel('추천'),
+                const _SectionLabel('추천'),
                 const SizedBox(height: 10),
                 ...basicRoles.map((role) => Obx(() {
                       return _RoleCard(
@@ -56,7 +53,7 @@ class AvatarChatPage extends GetView<AvatarChatController> {
                       );
                     })),
                 const SizedBox(height: 18),
-                _SectionLabel('가족과 가까운 관계'),
+                const _SectionLabel('가족 톤'),
                 const SizedBox(height: 10),
                 ...familyRoles.map((role) => Obx(() {
                       return _RoleCard(
@@ -74,7 +71,7 @@ class AvatarChatPage extends GetView<AvatarChatController> {
               return ElevatedButton.icon(
                 onPressed: controller.goToIntro,
                 icon: const Icon(Icons.arrow_forward_rounded, size: 18),
-                label: Text('${role.name} 목소리로 만나기'),
+                label: Text('${role.name}으로 계속'),
                 style: _primaryButtonStyle(),
               );
             }),
@@ -90,54 +87,31 @@ class AvatarChatPage extends GetView<AvatarChatController> {
     return _AvatarShell(
       title: '대화 준비',
       onBack: controller.handleBack,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
-            child: ConstrainedBox(
-              constraints:
-                  BoxConstraints(minHeight: constraints.maxHeight - 42),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  MascotCoachBubble(
-                    message: '좋아요. ${role.name}의 말투로 먼저 인사를 건넬게요.',
-                    mood: MascotMood.listening,
-                    mascotSize: 148,
-                    maxBubbleWidth: 300,
-                  ),
-                  const SizedBox(height: 18),
-                  _AvatarProfileCard(role: role),
-                  const SizedBox(height: 18),
-                  _MemoryStatsCard(controller: controller),
-                  const SizedBox(height: 22),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 54,
-                    child: ElevatedButton.icon(
-                      onPressed: controller.startChat,
-                      icon: const Icon(Icons.chat_bubble_outline_rounded,
-                          size: 19),
-                      label: Text('${role.name}와 대화 시작하기'),
-                      style: _primaryButtonStyle(),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextButton(
-                    onPressed: controller.goToRoleSelect,
-                    child: const Text(
-                      '다른 목소리 고르기',
-                      style: TextStyle(
-                        color: AppTheme.textSec,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                ],
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+        child: Column(
+          children: [
+            _PreviewPanel(role: role),
+            const SizedBox(height: 14),
+            _MemoryStatsCard(controller: controller),
+            const SizedBox(height: 22),
+            SizedBox(
+              width: double.infinity,
+              height: 54,
+              child: ElevatedButton.icon(
+                onPressed: controller.startChat,
+                icon: const Icon(Icons.forum_outlined, size: 19),
+                label: Text('${role.name} 시작'),
+                style: _primaryButtonStyle(),
               ),
             ),
-          );
-        },
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: controller.goToRoleSelect,
+              child: const Text('다른 톤 선택'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -147,15 +121,14 @@ class AvatarChatPage extends GetView<AvatarChatController> {
 
     return _AvatarShell(
       title: controller.authorName.value,
-      subtitle: '${role.emoji} ${role.name}와 대화 중',
+      subtitle: '${role.name} 대화 중',
       onBack: controller.handleBack,
       action: TokenStorage.isViewerMode()
           ? null
           : IconButton(
               tooltip: '공유 코드 만들기',
               onPressed: controller.generateViewerCode,
-              icon:
-                  const Icon(Icons.ios_share_rounded, color: AppTheme.textSec),
+              icon: const Icon(Icons.ios_share_rounded),
             ),
       child: Column(
         children: [
@@ -169,10 +142,7 @@ class AvatarChatPage extends GetView<AvatarChatController> {
                 return Center(
                   child: Padding(
                     padding: const EdgeInsets.all(24),
-                    child: MascotCoachBubble(
-                      message: '첫 질문을 건네면 ${role.name}가 기억을 함께 짚어줄 거예요.',
-                      mood: MascotMood.listening,
-                    ),
+                    child: _EmptyChat(role: role),
                   ),
                 );
               }
@@ -184,7 +154,7 @@ class AvatarChatPage extends GetView<AvatarChatController> {
                 itemBuilder: (context, index) {
                   if (index == controller.messages.length) {
                     return AvatarAIBubble(
-                      text: '${role.name}가 답을 고르고 있어요...',
+                      text: '${role.name}이 답변을 정리하고 있습니다.',
                       label: role.name,
                       emoji: role.emoji,
                       muted: true,
@@ -211,7 +181,6 @@ class AvatarChatPage extends GetView<AvatarChatController> {
           Obx(() {
             final error = controller.errorMessage.value;
             if (error.isEmpty) return const SizedBox.shrink();
-
             return _InlineNotice(
               icon: Icons.error_outline_rounded,
               text: error,
@@ -222,7 +191,6 @@ class AvatarChatPage extends GetView<AvatarChatController> {
           Obx(() {
             final viewerCode = controller.viewerCode.value;
             if (viewerCode.isEmpty) return const SizedBox.shrink();
-
             return _InlineNotice(
               icon: Icons.key_rounded,
               text: '공유 코드: $viewerCode',
@@ -232,7 +200,7 @@ class AvatarChatPage extends GetView<AvatarChatController> {
           }),
           Obx(() {
             return AppChatInput(
-              placeholder: '${role.name}에게 묻고 싶은 이야기를 적어보세요.',
+              placeholder: '${role.name}에게 묻거나 기억을 적어보세요',
               enabled: !controller.isLoading.value,
               onSend: controller.sendMessage,
             );
@@ -244,15 +212,12 @@ class AvatarChatPage extends GetView<AvatarChatController> {
 
   ButtonStyle _primaryButtonStyle() {
     return ElevatedButton.styleFrom(
-      backgroundColor: AppTheme.cta,
+      backgroundColor: AppTheme.text,
       foregroundColor: Colors.white,
       disabledBackgroundColor: AppTheme.border,
       elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      textStyle: const TextStyle(
-        fontSize: 15,
-        fontWeight: FontWeight.w900,
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
     );
   }
 }
@@ -292,15 +257,13 @@ class _AvatarShell extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 11,
                   color: AppTheme.textSec,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],
           ],
         ),
         centerTitle: true,
-        backgroundColor: AppTheme.surface,
-        elevation: 0,
         actions: [if (action != null) action!],
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
@@ -316,61 +279,57 @@ class _HeroPanel extends StatelessWidget {
   final Widget eyebrow;
   final String title;
   final String body;
-  final MascotMood mood;
 
   const _HeroPanel({
     required this.eyebrow,
     required this.title,
     required this.body,
-    required this.mood,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppTheme.surface,
-        border: Border.all(color: AppTheme.border, width: 2),
+        color: AppTheme.text,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AnimatedMascot(size: 92, mood: mood),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                DefaultTextStyle(
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    color: AppTheme.textPh,
-                  ),
-                  child: eyebrow,
-                ),
-                const SizedBox(height: 7),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 23,
-                    height: 1.22,
-                    fontWeight: FontWeight.w900,
-                    color: AppTheme.text,
-                  ),
-                ),
-                const SizedBox(height: 9),
-                Text(
-                  body,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    height: 1.55,
-                    color: AppTheme.textSec,
-                  ),
-                ),
-              ],
+          Row(
+            children: [
+              Container(width: 48, height: 14, color: AppTheme.sun),
+              const SizedBox(width: 8),
+              Container(width: 20, height: 20, color: AppTheme.sky),
+            ],
+          ),
+          const SizedBox(height: 18),
+          DefaultTextStyle(
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              color: Colors.white70,
+            ),
+            child: eyebrow,
+          ),
+          const SizedBox(height: 7),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 28,
+              height: 1.12,
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 9),
+          Text(
+            body,
+            style: const TextStyle(
+              fontSize: 13,
+              height: 1.55,
+              color: Colors.white70,
             ),
           ),
         ],
@@ -395,7 +354,7 @@ class _RoleCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Material(
-        color: selected ? AppTheme.cta : AppTheme.surface,
+        color: selected ? AppTheme.surfaceElevated : AppTheme.surface,
         borderRadius: BorderRadius.circular(8),
         child: InkWell(
           onTap: onTap,
@@ -406,18 +365,9 @@ class _RoleCard extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: selected ? AppTheme.ctaDark : AppTheme.border,
-                width: selected ? 2.4 : 2,
+                color: selected ? AppTheme.text : AppTheme.border,
+                width: selected ? 1.5 : 1,
               ),
-              boxShadow: selected
-                  ? [
-                      BoxShadow(
-                        color: AppTheme.cta.withValues(alpha: 0.18),
-                        blurRadius: 14,
-                        offset: const Offset(0, 8),
-                      ),
-                    ]
-                  : null,
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -433,21 +383,19 @@ class _RoleCard extends StatelessWidget {
                           Expanded(
                             child: Text(
                               role.name,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w900,
-                                color: selected ? Colors.white : AppTheme.text,
+                                color: AppTheme.text,
                               ),
                             ),
                           ),
                           Text(
                             role.sub,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
-                              color: selected
-                                  ? Colors.white.withValues(alpha: 0.78)
-                                  : AppTheme.textPh,
+                              color: AppTheme.textPh,
                             ),
                           ),
                         ],
@@ -455,22 +403,30 @@ class _RoleCard extends StatelessWidget {
                       const SizedBox(height: 6),
                       Text(
                         role.desc,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 13,
                           height: 1.45,
-                          color: selected
-                              ? Colors.white.withValues(alpha: 0.88)
-                              : AppTheme.textSec,
+                          color: AppTheme.textSec,
                         ),
                       ),
                       if (selected) ...[
                         const SizedBox(height: 12),
-                        SpeechBubble(
-                          text: role.greet,
-                          tail: SpeechBubbleTail.none,
-                          backgroundColor: Colors.white.withValues(alpha: 0.14),
-                          borderColor: Colors.white.withValues(alpha: 0.25),
-                          textColor: Colors.white,
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppTheme.surface,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: AppTheme.border),
+                          ),
+                          child: Text(
+                            role.greet,
+                            style: const TextStyle(
+                              color: AppTheme.text,
+                              height: 1.45,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                         ),
                       ],
                     ],
@@ -481,7 +437,7 @@ class _RoleCard extends StatelessWidget {
                   selected
                       ? Icons.check_circle_rounded
                       : Icons.radio_button_unchecked_rounded,
-                  color: selected ? Colors.white : AppTheme.border,
+                  color: selected ? AppTheme.ctaDark : AppTheme.border,
                   size: 22,
                 ),
               ],
@@ -508,24 +464,27 @@ class _RoleAvatar extends StatelessWidget {
       width: 44,
       height: 44,
       decoration: BoxDecoration(
-        color: selected ? Colors.white.withValues(alpha: 0.16) : AppTheme.bgAlt,
-        shape: BoxShape.circle,
-        border: Border.all(
-          color:
-              selected ? Colors.white.withValues(alpha: 0.34) : AppTheme.border,
-          width: 2,
-        ),
+        color: selected ? AppTheme.sun : AppTheme.bgAlt,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: selected ? AppTheme.text : AppTheme.border),
       ),
       alignment: Alignment.center,
-      child: Text(role.emoji, style: const TextStyle(fontSize: 20)),
+      child: Text(
+        role.emoji,
+        style: const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w900,
+          color: AppTheme.text,
+        ),
+      ),
     );
   }
 }
 
-class _AvatarProfileCard extends StatelessWidget {
+class _PreviewPanel extends StatelessWidget {
   final AvatarRole role;
 
-  const _AvatarProfileCard({required this.role});
+  const _PreviewPanel({required this.role});
 
   @override
   Widget build(BuildContext context) {
@@ -535,11 +494,11 @@ class _AvatarProfileCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.surface,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppTheme.border, width: 2),
+        border: Border.all(color: AppTheme.text),
       ),
       child: Column(
         children: [
-          _RoleAvatar(role: role, selected: false),
+          _RoleAvatar(role: role, selected: true),
           const SizedBox(height: 10),
           Text(
             role.name,
@@ -559,11 +518,49 @@ class _AvatarProfileCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
-          SpeechBubble(
-            text: role.greet,
-            tail: SpeechBubbleTail.none,
-            backgroundColor: AppTheme.bg,
-            borderColor: AppTheme.border,
+          Text(
+            role.greet,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: AppTheme.text,
+              height: 1.5,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmptyChat extends StatelessWidget {
+  final AvatarRole role;
+
+  const _EmptyChat({required this.role});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppTheme.border),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _RoleAvatar(role: role, selected: true),
+          const SizedBox(height: 12),
+          Text(
+            role.sample,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: AppTheme.text,
+              fontSize: 15,
+              height: 1.45,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ],
       ),
@@ -584,7 +581,7 @@ class _MemoryStatsCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.surface,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppTheme.border, width: 2),
+        border: Border.all(color: AppTheme.border),
       ),
       child: Obx(() {
         return Row(
@@ -601,7 +598,7 @@ class _MemoryStatsCard extends StatelessWidget {
             const _StatDivider(),
             _StatItem(
               value: DateTime.now().year.toString(),
-              label: '작성 연도',
+              label: '연도',
             ),
           ],
         );
@@ -652,11 +649,7 @@ class _StatDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 1,
-      height: 34,
-      color: AppTheme.border,
-    );
+    return Container(width: 1, height: 34, color: AppTheme.border);
   }
 }
 
@@ -686,7 +679,7 @@ class _ChatContextBar extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${role.name}의 관점으로 답변합니다',
+                  '${role.name}으로 듣고 있습니다',
                   style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w900,
@@ -698,24 +691,12 @@ class _ChatContextBar extends StatelessWidget {
                   role.desc,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: AppTheme.textSec,
-                  ),
+                  style: const TextStyle(fontSize: 11, color: AppTheme.textSec),
                 ),
               ],
             ),
           ),
-          TextButton(
-            onPressed: onChangeRole,
-            child: const Text(
-              '변경',
-              style: TextStyle(
-                color: AppTheme.ctaDark,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ),
+          TextButton(onPressed: onChangeRole, child: const Text('변경')),
         ],
       ),
     );
@@ -780,11 +761,7 @@ class _BottomAction extends StatelessWidget {
         color: AppTheme.surface,
         border: Border(top: BorderSide(color: AppTheme.border)),
       ),
-      child: SizedBox(
-        width: double.infinity,
-        height: 54,
-        child: child,
-      ),
+      child: SizedBox(width: double.infinity, height: 54, child: child),
     );
   }
 }

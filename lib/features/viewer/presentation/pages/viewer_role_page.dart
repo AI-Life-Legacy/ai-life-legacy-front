@@ -1,6 +1,8 @@
+import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:ai_life_legacy/app/core/theme/app_theme.dart';
+import 'package:ai_life_legacy/app/core/utils/safe_navigation.dart';
 import 'package:ai_life_legacy/app/core/utils/token_storage.dart';
 
 class ViewerRolePage extends StatefulWidget {
@@ -29,7 +31,7 @@ class _ViewerRolePageState extends State<ViewerRolePage> {
                 child: IconButton(
                   icon: const Icon(Icons.arrow_back,
                       color: AppTheme.text, size: 20),
-                  onPressed: () => Get.back(),
+                  onPressed: () => SafeNavigation.back(context, fallbackRoute: Routes.main),
                 ),
               ),
             ),

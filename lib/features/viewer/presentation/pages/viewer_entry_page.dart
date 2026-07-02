@@ -1,11 +1,12 @@
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
 import 'package:ai_life_legacy/app/core/theme/app_theme.dart';
-import 'package:ai_life_legacy/app/core/theme/app_text_styles.dart';
+import 'package:ai_life_legacy/app/core/theme/widgets/animated_mascot.dart';
 import 'package:ai_life_legacy/app/core/theme/widgets/app_buttons.dart';
 import 'package:ai_life_legacy/app/core/theme/widgets/app_inputs.dart';
+import 'package:ai_life_legacy/app/core/utils/safe_navigation.dart';
 import 'package:ai_life_legacy/features/viewer/presentation/controllers/viewer_controller.dart';
-import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class ViewerEntryPage extends GetView<ViewerController> {
   const ViewerEntryPage({super.key});
@@ -16,11 +17,9 @@ class ViewerEntryPage extends GetView<ViewerController> {
       backgroundColor: AppTheme.bg,
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Get.back(),
+          icon: const Icon(Icons.arrow_back_rounded),
+          onPressed: () => SafeNavigation.back(context, fallbackRoute: Routes.main),
         ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
       ),
       body: SafeArea(
         child: Padding(
@@ -28,14 +27,9 @@ class ViewerEntryPage extends GetView<ViewerController> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 40),
-              const Text('뷰어 코드를 입력해주세요', style: AppTextStyles.h1),
-              const SizedBox(height: 8),
-              const Text(
-                '이야기를 공유해주신 분께 받은\n6자리 코드를 입력하세요.',
-                style: AppTextStyles.bodySec,
-              ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 28),
+              const _ViewerHeader(),
+              const SizedBox(height: 32),
               AppInput(
                 placeholder: '예: A3F7K2',
                 autofocus: true,
@@ -44,7 +38,6 @@ class ViewerEntryPage extends GetView<ViewerController> {
                 },
               ),
               const SizedBox(height: 16),
-              // 에러 메시지 노출
               Obx(() {
                 if (controller.errorMessage.value.isEmpty) {
                   return const SizedBox.shrink();
@@ -53,7 +46,7 @@ class ViewerEntryPage extends GetView<ViewerController> {
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Text(
                     controller.errorMessage.value,
-                    style: const TextStyle(color: Colors.red, fontSize: 13),
+                    style: const TextStyle(color: AppTheme.error, fontSize: 13),
                   ),
                 );
               }),
@@ -74,17 +67,17 @@ class ViewerEntryPage extends GetView<ViewerController> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Text(
-                    '코드가 없으신가요? ',
+                    '코드가 없나요? ',
                     style: TextStyle(fontSize: 13, color: AppTheme.textPh),
                   ),
                   GestureDetector(
                     onTap: () => Get.offAllNamed(Routes.signup),
                     child: const Text(
-                      '내 이야기 쓰기',
+                      '내 기록 시작하기',
                       style: TextStyle(
                         fontSize: 13,
                         color: AppTheme.text,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w800,
                         decoration: TextDecoration.underline,
                       ),
                     ),
@@ -95,6 +88,61 @@ class ViewerEntryPage extends GetView<ViewerController> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ViewerHeader extends StatelessWidget {
+  const _ViewerHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppTheme.text,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const AnimatedMascot(size: 92, mood: MascotMood.sad),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  '공유 코드로\n기록에 입장하세요',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 25,
+                    height: 1.12,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Container(width: 46, height: 14, color: AppTheme.sky),
+              const SizedBox(width: 8),
+              Container(width: 20, height: 20, color: AppTheme.lavender),
+            ],
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            '전달받은 6자리 코드를 입력하면 읽기와 대화 화면으로 이동합니다.',
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 14,
+              height: 1.45,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
       ),
     );
   }

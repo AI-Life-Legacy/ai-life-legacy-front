@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
 import 'package:ai_life_legacy/app/core/theme/app_theme.dart';
+import 'package:ai_life_legacy/app/core/utils/safe_navigation.dart';
 
 class ChapterChatPage extends StatefulWidget {
   const ChapterChatPage({super.key});
@@ -90,7 +92,7 @@ class _ChapterChatPageState extends State<ChapterChatPage> {
               child: Row(
                 children: [
                   GestureDetector(
-                    onTap: () => Get.back(),
+                    onTap: () => SafeNavigation.back(context, fallbackRoute: Routes.home),
                     child: Container(
                       width: 40,
                       height: 40,

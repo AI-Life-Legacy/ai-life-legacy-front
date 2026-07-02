@@ -1,8 +1,9 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:ai_life_legacy/app/core/routes/app_routes.dart';
 import 'package:ai_life_legacy/app/core/theme/app_theme.dart';
+import 'package:ai_life_legacy/app/core/utils/safe_navigation.dart';
 
 class ViewerAudioPage extends StatefulWidget {
   const ViewerAudioPage({super.key});
@@ -49,7 +50,7 @@ class _ViewerAudioPageState extends State<ViewerAudioPage> {
                 alignment: Alignment.centerRight,
                 child: IconButton(
                   icon: const Icon(Icons.close, color: AppTheme.text, size: 20),
-                  onPressed: () => Get.back(),
+                  onPressed: () => SafeNavigation.back(context, fallbackRoute: Routes.viewerChat),
                 ),
               ),
             ),
@@ -104,7 +105,7 @@ class _ViewerAudioPageState extends State<ViewerAudioPage> {
 
                     // Stop Button
                     GestureDetector(
-                      onTap: () => Get.back(),
+                      onTap: () => SafeNavigation.back(context, fallbackRoute: Routes.viewerChat),
                       child: Container(
                         width: 72,
                         height: 72,
