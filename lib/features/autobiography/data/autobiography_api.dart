@@ -83,7 +83,7 @@ class AutobiographyApi {
         'templateId': templateId,
         'theme': templateId,
       },
-      options: Options(receiveTimeout: const Duration(minutes: 6)),
+      options: Options(receiveTimeout: const Duration(minutes: 10)),
     );
   }
 
