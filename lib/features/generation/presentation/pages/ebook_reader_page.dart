@@ -41,11 +41,22 @@ class _EbookReaderPageState extends State<EbookReaderPage> {
 
     try {
       if (_isBlank(markdown)) {
-        markdownUrl = await _resolveMarkdownUrl(markdownUrl, pdfUrl);
-      }
+        final candidates = await _candidateMarkdownUrls(markdownUrl, pdfUrl);
+        Object? lastError;
 
-      if (_isBlank(markdown) && !_isBlank(markdownUrl)) {
-        markdown = await _fetchMarkdown(markdownUrl!);
+        for (final candidate in candidates) {
+          try {
+            markdown = await _fetchMarkdown(candidate);
+            markdownUrl = candidate;
+            break;
+          } catch (e) {
+            lastError = e;
+          }
+        }
+
+        if (_isBlank(markdown) && lastError != null) {
+          throw lastError;
+        }
       }
 
       if (!mounted) return;
@@ -87,13 +98,25 @@ class _EbookReaderPageState extends State<EbookReaderPage> {
     return Get.find<AutobiographyController>().pdfUrl.value;
   }
 
-  Future<String?> _resolveMarkdownUrl(String? currentUrl, String? pdfUrl) async {
-    if (!_isBlank(currentUrl)) return currentUrl;
+  Future<List<String>> _candidateMarkdownUrls(
+    String? currentUrl,
+    String? pdfUrl,
+  ) async {
+    final urls = <String>[];
 
-    final statusUrl = await _fetchStatusMarkdownUrl();
-    if (!_isBlank(statusUrl)) return statusUrl;
+    void add(String? value) {
+      if (_isBlank(value)) return;
+      final normalized = value!.trim();
+      if (!urls.contains(normalized)) {
+        urls.add(normalized);
+      }
+    }
 
-    return _inferMarkdownUrlFromPdfUrl(pdfUrl);
+    add(currentUrl);
+    add(await _fetchStatusMarkdownUrl());
+    add(_inferMarkdownUrlFromPdfUrl(pdfUrl));
+
+    return urls;
   }
 
   Future<String?> _fetchStatusMarkdownUrl() async {
