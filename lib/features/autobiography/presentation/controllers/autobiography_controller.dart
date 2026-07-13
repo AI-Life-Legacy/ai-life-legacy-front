@@ -14,6 +14,33 @@ String _formatTime(DateTime dt) {
   return '$period $h12:$minute';
 }
 
+String? _extractFollowUpQuestion(dynamic raw) {
+  if (raw is String) return raw;
+  if (raw is! Map) return null;
+
+  final directQuestion = raw['question'];
+  if (directQuestion is String) return directQuestion;
+
+  final result = raw['result'];
+  if (result is Map) {
+    final question = result['question'] ?? result['message'];
+    if (question is String) return question;
+  }
+
+  final data = raw['data'];
+  if (data is Map) {
+    final question = data['question'] ?? data['message'];
+    if (question is String) return question;
+  }
+
+  final directMessage = raw['message'];
+  if (directMessage is String && directMessage != 'Success') {
+    return directMessage;
+  }
+
+  return null;
+}
+
 enum ChatStep {
   answeringFixedQuestion,
   waitingFollowUpChoice,
@@ -389,12 +416,7 @@ class AutobiographyController extends GetxController {
 
       messages.removeWhere((msg) => msg['type'] == 'loading');
 
-      final raw = response.data;
-      final result = raw is Map<String, dynamic> ? raw['result'] : null;
-
-      final followUpQuestion = result is Map<String, dynamic>
-          ? result['question']?.toString()
-          : null;
+      final followUpQuestion = _extractFollowUpQuestion(response.data);
 
       if (_closed) return;
 
@@ -558,6 +580,59 @@ class AutobiographyController extends GetxController {
     }
   }
 
+  Map<String, dynamic> _extractAutobiographyResult(dynamic response) {
+    final raw = response.data;
+    if (raw is! Map) return <String, dynamic>{};
+
+    final data = Map<String, dynamic>.from(raw);
+    final result = data['result'];
+    if (result is Map) {
+      return Map<String, dynamic>.from(result);
+    }
+    return data;
+  }
+
+  Future<Map<String, dynamic>?> _waitForAutobiographyCompletion() async {
+    const pollInterval = Duration(seconds: 3);
+    const pollingTimeout = Duration(minutes: 30);
+    final deadline = DateTime.now().add(pollingTimeout);
+    var consecutiveNetworkErrors = 0;
+
+    while (DateTime.now().isBefore(deadline)) {
+      await Future<void>.delayed(pollInterval);
+
+      try {
+        final response = await _api.getAutobiographyStatus();
+        final result = _extractAutobiographyResult(response);
+        final status = result['status']?.toString().toUpperCase();
+        consecutiveNetworkErrors = 0;
+
+        if (status == 'COMPLETED') return result;
+        if (status == 'FAILED') {
+          lastGenerationError.value =
+              result['errorMessage']?.toString().trim().isNotEmpty == true
+                  ? result['errorMessage'].toString()
+                  : '자서전 생성에 실패했습니다.\n잠시 후 다시 시도해주세요.';
+          return null;
+        }
+      } on DioException catch (e) {
+        consecutiveNetworkErrors++;
+        debugPrint(
+            '[AutobiographyController] status polling error '
+            '($consecutiveNetworkErrors): $e');
+        if (consecutiveNetworkErrors >= 3) {
+          lastGenerationError.value =
+              '생성 상태를 확인하지 못했습니다.\n네트워크를 확인한 후 다시 시도해주세요.';
+          return null;
+        }
+      }
+    }
+
+    lastGenerationError.value =
+        '자서전 생성이 예상보다 오래 걸리고 있어요.\n잠시 후 다시 확인해주세요.';
+    return null;
+  }
+
   Future<Map<String, dynamic>?> generateFullBook({
     bool force = false,
     String templateId = 'classic',
@@ -572,26 +647,26 @@ class AutobiographyController extends GetxController {
         templateId: templateId,
       );
       if (response.statusCode == 200 || response.statusCode == 201) {
+        var targetMap = _extractAutobiographyResult(response);
+        var status = targetMap['status']?.toString().toUpperCase();
+        if (status == 'PROCESSING') {
+          final completedResult = await _waitForAutobiographyCompletion();
+          if (completedResult == null) return null;
+          targetMap = completedResult;
+          status = targetMap['status']?.toString().toUpperCase();
+        }
+
+        if (status != 'COMPLETED') {
+          lastGenerationError.value =
+              targetMap['errorMessage']?.toString().trim().isNotEmpty == true
+                  ? targetMap['errorMessage'].toString()
+                  : '자서전 생성을 완료하지 못했습니다.\n잠시 후 다시 시도해주세요.';
+          return null;
+        }
+
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('avatarUnlocked', true);
 
-        // Parse response data safely
-        Map<String, dynamic>? dataMap;
-        if (response.data is Map<String, dynamic>) {
-          dataMap = response.data as Map<String, dynamic>;
-        }
-
-        Map<String, dynamic> targetMap = {};
-        if (dataMap != null) {
-          if (dataMap.containsKey('result') &&
-              dataMap['result'] is Map<String, dynamic>) {
-            targetMap = dataMap['result'] as Map<String, dynamic>;
-          } else {
-            targetMap = dataMap;
-          }
-        }
-
-        final status = targetMap['status']?.toString();
         final pdfUrlVal =
             (targetMap['pdfUrl'] ?? targetMap['pdf_url'])?.toString();
         final markdownVal = targetMap['markdown']?.toString();

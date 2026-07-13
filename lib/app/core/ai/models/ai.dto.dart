@@ -66,7 +66,9 @@ class AiQuestionResponseDto {
   AiQuestionResponseDto({required this.message});
 
   factory AiQuestionResponseDto.fromJson(Map<String, dynamic> json) =>
-      AiQuestionResponseDto(message: json['message'] as String);
+      AiQuestionResponseDto(
+        message: (json['question'] ?? json['message'] ?? '').toString(),
+      );
 
   Map<String, dynamic> toJson() => {'message': message};
 }

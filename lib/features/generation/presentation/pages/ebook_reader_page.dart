@@ -41,6 +41,14 @@ class _EbookReaderPageState extends State<EbookReaderPage> {
 
     try {
       if (_isBlank(markdown)) {
+        try {
+          markdown = await _fetchManuscriptFromApi();
+        } catch (e) {
+          debugPrint('[EbookReader] manuscript API failed: $e');
+        }
+      }
+
+      if (_isBlank(markdown)) {
         final candidates = await _candidateMarkdownUrls(markdownUrl, pdfUrl);
         Object? lastError;
 
@@ -130,6 +138,15 @@ class _EbookReaderPageState extends State<EbookReaderPage> {
     } catch (_) {
       return null;
     }
+  }
+
+  Future<String> _fetchManuscriptFromApi() async {
+    final response = await DioClient.instance.get('/api/autobiography/manuscript');
+    final data = response.data;
+    if (data is! Map) return '';
+    final result = data['result'];
+    final target = result is Map ? result : data;
+    return target['markdown']?.toString() ?? '';
   }
 
   String? _inferMarkdownUrlFromPdfUrl(String? pdfUrl) {
